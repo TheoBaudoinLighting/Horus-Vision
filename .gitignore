@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+/out
+/Horus Vision/cache
+/Horus Vision/external/glad/src
+/Horus Vision/external/glad/include
+/Horus Vision/external
+/Horus Vision/hipbin
+/Horus Vision/logs
+/Horus Vision/resources
+*.ini
+/.vs/Horus Vision

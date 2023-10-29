@@ -1,0 +1,1819 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Fichiers sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Fichiers d%27en-tête">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Fichiers de ressources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="external\GLAD\SRC\glad.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_demo.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_draw.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_tables.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_widgets.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glm\DETAIL\glm.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\RadeonProRender\common\common.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\shaders\hrs_shader_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\hrs_horus.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\implementations\hrs_opengl.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\implementations\hrs_imgui.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\implementations\hrs_radeon.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\hrs_engine.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\window\hrs_window.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\config\hrs_logger.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\camera\hrs_camera.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\mesh\hrs_importer.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\mesh\hrs_mesh.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\material\hrs_material.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\objects\hrs_object_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imnodes.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\ImGuizmo.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\light\hrs_light.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\material\hrs_material_editor.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\scene\hrs_scene.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="external\GLAD\INCLUDE\GLAD\glad.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GLAD\INCLUDE\KHR\khrplatform.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GLFW\INCLUDE\GLFW\glfw3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GLFW\INCLUDE\GLFW\glfw3native.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imconfig.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imgui.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imgui_internal.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_rectpack.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_textedit.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_truetype.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\backends\imgui_impl_opengl3_loader.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\exponential.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\ext.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\fwd.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\geometric.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\glm.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\mat4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\matrix.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\packing.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\trigonometric.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\vec2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\vec3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\vec4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\vector_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_features.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_fixes.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_noise.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_swizzle.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_swizzle_func.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\_vectorize.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\compute_common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\compute_vector_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\qualifier.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\setup.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_float.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_half.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_mat4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_quat.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_vec1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_vec2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_vec3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\DETAIL\type_vec4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\_matrix_vectorize.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_clip_space.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double2x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double3x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_double4x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float2x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float3x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_float4x4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int2x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int3x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_int4x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_projection.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_transform.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint2x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint3x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\matrix_uint4x4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_double.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_double_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_exponential.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_float.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_float_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_geometric.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_transform.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\quaternion_trigonometric.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_constants.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_int_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_packing.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_reciprocal.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_uint_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\scalar_ulp.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool1_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_bool4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double1_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_double4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float1_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float2_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float3_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_float4_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int1_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_int4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_packing.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_reciprocal.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint1_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint2_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint3.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint3_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint4.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_uint4_sized.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\EXT\vector_ulp.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\bitfield.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\color_space.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\constants.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\epsilon.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\matrix_access.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\matrix_integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\matrix_inverse.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\matrix_transform.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\noise.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\packing.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\quaternion.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\random.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\reciprocal.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\round.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\type_aligned.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\type_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\type_ptr.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\ulp.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTC\vec1.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\associated_min_max.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\bit.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\closest_point.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\color_encoding.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\color_space.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\color_space_YCoCg.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\common.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\compatibility.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\component_wise.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\dual_quaternion.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\easing.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\euler_angles.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\extend.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\extended_min_max.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\exterior_product.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\fast_exponential.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\fast_square_root.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\fast_trigonometry.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\functions.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\gradient_paint.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\handed_coordinate_space.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\hash.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\integer.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\intersect.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\io.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\log_base.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_cross_product.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_decompose.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_factorisation.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_interpolation.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_major_storage.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_operation.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_query.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\matrix_transform_2d.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\mixed_product.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\norm.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\normal.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\normalize_dot.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\number_precision.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\optimum_pow.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\orthonormalize.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\pca.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\perpendicular.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\polar_coordinates.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\projection.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\quaternion.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\range.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\raw_data.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\rotate_normalized_axis.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\rotate_vector.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\scalar_multiplication.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\scalar_relational.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\spline.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\std_based_type.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\string_cast.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\texture.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\transform.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\transform2.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\type_aligned.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\type_trait.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\vec_swizzle.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\vector_angle.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\vector_query.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\GTX\wrap.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\common.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\exponential.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\geometric.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\integer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\matrix.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\neon.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\packing.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\platform.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\trigonometric.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glm\SIMD\vector_relational.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\common\common.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\common\picojson.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\common\tiny_obj_loader.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\shaders\hrs_shader_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\hrs_horus.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\hrs_opengl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\hrs_imgui.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\hrs_radeon.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\hrs_engine.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\window\hrs_window.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_config.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_logger.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_context.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\cfg\argv.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\cfg\env.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\cfg\helpers.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\cfg\helpers-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\backtracer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\backtracer-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\circular_q.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\console_globals.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\file_helper.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\file_helper-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\fmt_helper.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\log_msg.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\log_msg_buffer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\log_msg_buffer-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\log_msg-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\mpmc_blocking_q.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\null_mutex.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\os.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\os-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\periodic_worker.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\periodic_worker-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\registry.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\registry-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\synchronous_factory.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client-windows.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\thread_pool.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\thread_pool-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client-windows.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\windows_include.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\args.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\chrono.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\color.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\compile.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\core.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\format.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\format-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\locale.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\os.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\ostream.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\printf.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\ranges.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\std.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\xchar.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\bin_to_hex.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\chrono.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\compile.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\fmt.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\ostr.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\ranges.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\std.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fmt\xchar.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\android_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\ansicolor_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\ansicolor_sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\base_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\base_sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\basic_file_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\basic_file_sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\callback_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\daily_file_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\dist_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\dup_filter_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\hourly_file_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\kafka_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\mongo_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\msvc_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\null_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\ostream_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\qt_sinks.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\ringbuffer_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\rotating_file_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\rotating_file_sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\stdout_color_sinks.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\stdout_color_sinks-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\stdout_sinks.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\stdout_sinks-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\syslog_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\systemd_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\tcp_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\udp_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\win_eventlog_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\wincolor_sink.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\sinks\wincolor_sink-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\async.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\async_logger.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\async_logger-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\common.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\common-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\formatter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\fwd.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\logger.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\logger-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\pattern_formatter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\pattern_formatter-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\spdlog.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\spdlog-inl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\stopwatch.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\tweakme.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\version.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\camera\hrs_camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_importer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_mesh.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_material.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_object_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imnodes_internal.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imnodes.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\ImGuizmo.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\light\hrs_light.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\L2DFileDialog.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_material_editor.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_scene.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_graph.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="external\GLFW\LIB-VC2022\glfw3.dll" />
+    <None Include="external\glm\DETAIL\func_common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_common_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_exponential.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_exponential_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_geometric.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_geometric_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_integer_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_matrix.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_matrix_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_packing.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_packing_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_trigonometric.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_trigonometric_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_vector_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\func_vector_relational_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_half.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat2x2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat2x3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat2x4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat3x2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat3x3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat3x4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat4x2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat4x3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat4x4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_mat4x4_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_quat.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_quat_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_vec1.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_vec2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_vec3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_vec4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\DETAIL\type_vec4_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_clip_space.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_projection.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\matrix_transform.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_common_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_exponential.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_geometric.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_transform.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\quaternion_trigonometric.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_constants.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_packing.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_reciprocal.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\scalar_ulp.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_packing.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_reciprocal.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\EXT\vector_ulp.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\bitfield.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\color_space.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\constants.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\epsilon.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\matrix_access.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\matrix_inverse.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\matrix_transform.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\noise.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\packing.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\quaternion.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\quaternion_simd.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\random.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\round.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\type_precision.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\type_ptr.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTC\ulp.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\associated_min_max.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\bit.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\closest_point.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\color_encoding.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\color_space.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\color_space_YCoCg.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\common.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\compatibility.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\component_wise.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\dual_quaternion.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\easing.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\euler_angles.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\extend.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\extended_min_max.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\exterior_product.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\fast_exponential.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\fast_square_root.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\fast_trigonometry.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\float_notmalize.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\functions.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\gradient_paint.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\handed_coordinate_space.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\hash.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\integer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\intersect.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\io.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\log_base.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_cross_product.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_decompose.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_factorisation.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_interpolation.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_major_storage.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_operation.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_query.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\matrix_transform_2d.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\mixed_product.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\norm.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\normal.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\normalize_dot.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\number_precision.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\optimum_pow.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\orthonormalize.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\pca.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\perpendicular.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\polar_coordinates.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\projection.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\quaternion.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\raw_data.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\rotate_normalized_axis.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\rotate_vector.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\scalar_relational.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\spline.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\std_based_type.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\string_cast.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\texture.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\transform.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\transform2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\type_aligned.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\type_trait.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\vector_angle.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\vector_query.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\glm\GTX\wrap.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="core\shaders\shader.frag" />
+    <None Include="core\shaders\shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="external\glfw\lib-vc2022\glfw3.lib" />
+    <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
+    <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
+  </ItemGroup>
+</Project>
