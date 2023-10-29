@@ -15,6 +15,13 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 
 ![2023-10-29 16_46_56-Material Editor](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/4a3fdbe9-c44c-4c9e-a333-fc4afcca8412)
 
+## Upcoming Features
+
+- **Complete Node Editor**: Further development and enhancement of the material node editor.
+- **OpenGL Scene Interface**: Implement an OpenGL-based interface for real-time scene modification.
+- **Outliner Interface**: Introduce an outliner interface for easier selection and modification of meshes, lights, cameras, etc.
+- **Advanced Material System**: Extend and improve the existing material system for even more realistic renders.
+
 ## Dependencies
 
 - Radeon Pro Render SDK
