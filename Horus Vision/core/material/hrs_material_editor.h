@@ -79,6 +79,83 @@ private:
 
 };
 
+enum class HorusNodeType
+{
+	Horus_PBR_Material,
+	Horus_Material,
+	Add,
+	Ao_map,
+	Arithmetic,
+	Blend,
+	Blend_value,
+	Buffer_sampler,
+	Bump_map,
+	Checker_texture,
+	Constant_texture,
+	Diffuse,
+	Diffuse_refraction,
+	Dot_texture,
+	Emissive,
+	Fresnel,
+	Fresnel_schlick,
+	Gradient_texture,
+	Image_texture,
+	Input_lookup,
+	Microfacet,
+	Microfacet_anisotropic_reflection,
+	Microfacet_anisotropic_refraction,
+	Microfacet_beckmann,
+	Microfacet_refraction,
+	Noise2D_texture,
+	Normal_map,
+	Oren_nayar,
+	Passthrough,
+	Phong,
+	Reflection,
+	Refraction,
+	Transparent,
+	Twosided,
+	UV_procedural_texture,
+	UV_Triplanar,
+	Volume,
+	Ward,
+	Print,
+	Debug_color01,
+	Debug_color02,
+	Debug_color03,
+	Output,
+	Value,
+};
+
+class HorusNodeMeta
+{
+public:
+
+	HorusNodeMeta() : m_node_(nullptr), m_node_type_(HorusNodeType::Horus_PBR_Material)
+	{
+	}
+
+	rpr_material_node get_node() const { return m_node_; }
+
+	rpr_image get_image() const { return m_image_; }
+
+	HorusNodeType get_node_type() const { return m_node_type_; }
+
+	void set_node(const rpr_material_node node) { m_node_ = node; }
+
+	void set_node_type(const HorusNodeType type) { m_node_type_ = type; }
+
+	void set_image(const rpr_image image) { m_image_ = image; }
+
+private:
+
+	rpr_material_node m_node_;
+	rpr_image m_image_;
+	HorusNodeType m_node_type_;
+
+};
+
+
 class HorusMaterialEditor
 {
 public:
@@ -96,53 +173,7 @@ public:
 	HorusMaterialEditor() : m_graph_(), m_nodes_(), m_root_node_ID_(-1), m_mini_map_location_(ImNodesMiniMapLocation_BottomRight), m_out_node_(nullptr), m_out_modified_(nullptr)
 	{}
 
-	enum class HorusNodeType
-	{
-		Horus_PBR_Material,
-		Horus_Material,
-		Add,
-		Ao_map,
-		Arithmetic,
-		Blend,
-		Blend_value,
-		Buffer_sampler,
-		Bump_map,
-		Checker_texture,
-		Constant_texture,
-		Diffuse,
-		Diffuse_refraction,
-		Dot_texture,
-		Emissive,
-		Fresnel,
-		Fresnel_schlick,
-		Gradient_texture,
-		Image_texture,
-		Input_lookup,
-		Microfacet,
-		Microfacet_anisotropic_reflection,
-		Microfacet_anisotropic_refraction,
-		Microfacet_beckmann,
-		Microfacet_refraction,
-		Noise2D_texture,
-		Normal_map,
-		Oren_nayar,
-		Passthrough,
-		Phong,
-		Reflection,
-		Refraction,
-		Transparent,
-		Twosided,
-		UV_procedural_texture,
-		UV_Triplanar,
-		Volume,
-		Ward,
-		Print,
-		Debug_color01,
-		Debug_color02,
-		Debug_color03,
-		Output,
-		Value,
-	};
+	
 
 	enum class HorusLookupValue
 	{
@@ -210,7 +241,8 @@ public:
 	struct HorusNode
 	{
 		HorusNodeType m_type_;
-		rpr_material_node m_value_;
+		//rpr_material_node m_value_;
+		HorusNodeMeta m_value_;
 		ImVec4 m_color_;
 		ImVec2 m_uv_scale_;
 		HorusArithmeticOperation m_arithmetic_op_;
@@ -300,14 +332,17 @@ public:
 
 		float m_blend_value_ = 0.5f;
 
-		explicit HorusNode(const HorusNodeType type) : m_type_(type), m_value_(nullptr), m_image_(nullptr), m_texture_loaded_(false)
+		explicit HorusNode(const HorusNodeType type) : m_type_(type), m_value_(), m_image_(nullptr), m_texture_loaded_(false)
 		{}
 
-		HorusNode(const HorusNodeType type, const float value) : m_type_(type), m_value_(nullptr), m_image_(nullptr), m_texture_loaded_(false)
+		HorusNode(const HorusNodeType type, const float value) : m_type_(type), m_value_(), m_image_(nullptr), m_texture_loaded_(false)
 		{
 			spdlog::info("Node instance");
 		}
+
 	};
+
+	
 
 	rpr_material_node evaluate_rpr_material_node(const HorusGraph<HorusNode>& graph, const int root_node);
 

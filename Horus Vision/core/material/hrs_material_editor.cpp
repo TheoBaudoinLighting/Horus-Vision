@@ -51,8 +51,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 	dfs_traverse(
 		graph, root_node_id, [&post_order_stack](const int node_id) -> void { post_order_stack.push(node_id); });
 
-	std::stack<rpr_material_node> material_node_stack;
-	std::unordered_map<int, rpr_material_node> node_cache;
+	std::stack<HorusNodeMeta> material_node_stack;
 
 	while (!post_order_stack.empty())
 	{
@@ -67,26 +66,55 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 		{
 			const HorusNode& node = graph.node(current_node_id);
 
-			rpr_material_node new_node = material_node_stack.top();
+			//rpr_material_node new_node = material_node_stack.top(); // Get the material node from the stack -> first is the texture node
+			//material_node_stack.pop();
+
+			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
 			material_node_stack.pop();
+
+			rpr_material_node new_node = meta_top.get_node();
+
+
+			spdlog::info("Material node created.");
+			/*spdlog::info("Material node id: {}", current_node_id);
+			spdlog::info("Material node type: {}", current_type.m_type_);*/
 
 			rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
 			m_garbage_collector_.GCAdd(new_node);
 
 
-
-			/*if (node.m_use_diffuse_texture_)
+			if (node.m_use_diffuse_texture_)
 			{
-				CHECK(rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR, material_node_stack.top()));
+				/*rpr_material_node uv_node = nullptr;
+				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_INPUT_LOOKUP, &uv_node));
+				m_garbage_collector_.GCAdd(uv_node);
+				CHECK(rprMaterialNodeSetInputUByKey(uv_node, RPR_MATERIAL_INPUT_VALUE, RPR_MATERIAL_NODE_LOOKUP_UV));
 
-				spdlog::info("Diffuse texture used.");
+				rpr_material_node texture_node = nullptr;
+				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_USER_TEXTURE, &texture_node));
+				m_garbage_collector_.GCAdd(texture_node);
+				CHECK(rprMaterialNodeSetInputUByKey(texture_node, RPR_MATERIAL_INPUT_OP, 2));
 
+				CHECK(rprMaterialNodeSetInputNByKey(texture_node, RPR_MATERIAL_INPUT_2, new_node));
+				CHECK(rprMaterialNodeSetInputNByKey(texture_node, RPR_MATERIAL_INPUT_1, uv_node));
+
+				rpr_material_node diffuse_texture_node = nullptr;
+				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_DIFFUSE, &diffuse_texture_node));
+				m_garbage_collector_.GCAdd(diffuse_texture_node);
+				CHECK(rprMaterialNodeSetInputNByKey(diffuse_texture_node, RPR_MATERIAL_INPUT_COLOR, texture_node));
+
+				CHECK(rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, diffuse_texture_node));*/
+
+				spdlog::info("Diffuse texture loaded.");
 			}
 			else
 			{
-				CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_diffuse_.x, node.m_color_diffuse_.y, node.m_color_diffuse_.z, node.m_color_diffuse_.w));
-				spdlog::info("Diffuse texture not used.");
-			}*/
+
+				//CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_diffuse_.x, node.m_color_diffuse_.y, node.m_color_diffuse_.z, node.m_color_diffuse_.w));
+				spdlog::info("Diffuse color loaded.");
+			}
+
+
 
 
 
@@ -157,12 +185,9 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 
 
-
-
-
-
-
-			material_node_stack.push(new_node);
+			meta_top.set_node(new_node);
+			meta_top.set_node_type(HorusNodeType::Horus_PBR_Material);
+			material_node_stack.push(meta_top);
 
 		}
 		break;
@@ -172,7 +197,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 		case HorusNodeType::Add:
 		{
-			const HorusNode& node = graph.node(current_node_id);
+			/*const HorusNode& node = graph.node(current_node_id);
 
 			rpr_material_node operand1 = material_node_stack.top(); material_node_stack.pop();
 			rpr_material_node operand2 = material_node_stack.top(); material_node_stack.pop();
@@ -198,14 +223,14 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
 			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
 
-			material_node_stack.push(new_node);
+			material_node_stack.push(new_node);*/
 		}
 		break;
 
 		case HorusNodeType::Blend:
 		{
 
-			const HorusNode& node = graph.node(current_node_id);
+			/*const HorusNode& node = graph.node(current_node_id);
 
 			rpr_material_node baseLayer = material_node_stack.top(); material_node_stack.pop();
 			rpr_material_node topLayer = material_node_stack.top(); material_node_stack.pop();
@@ -234,164 +259,171 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_WEIGHT, weight);
 
 
-			material_node_stack.push(new_node);
+			material_node_stack.push(new_node);*/
 		}
 		break;
 
 		case HorusNodeType::Arithmetic:
 		{
-			const HorusNode& node = graph.node(current_node_id); // Get current node information
+			//const HorusNode& node = graph.node(current_node_id); // Get current node information
 
-			rpr_material_node new_node = nullptr;
+			//rpr_material_node new_node = nullptr;
 
-			// Pop the operands off the stack. Assume that they are already there.
-			rpr_material_node operand1 = material_node_stack.top();
-			material_node_stack.pop();
-			m_garbage_collector_.GCAdd(operand1);
-			rpr_material_node operand2 = material_node_stack.top();
-			material_node_stack.pop();
-			m_garbage_collector_.GCAdd(operand2);
+			//// Pop the operands off the stack. Assume that they are already there.
+			//rpr_material_node operand1 = material_node_stack.top();
+			//material_node_stack.pop();
+			//m_garbage_collector_.GCAdd(operand1);
+			//rpr_material_node operand2 = material_node_stack.top();
+			//material_node_stack.pop();
+			//m_garbage_collector_.GCAdd(operand2);
 
-			switch (node.m_arithmetic_op_) {
-			case HorusArithmeticOperation::ADD:
+			//switch (node.m_arithmetic_op_) {
+			//case HorusArithmeticOperation::ADD:
 
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_ADD);
-			}
-			break;
-			case HorusArithmeticOperation::SUB:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SUB);
-			}
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_ADD);
+			//}
+			//break;
+			//case HorusArithmeticOperation::SUB:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SUB);
+			//}
 
-			break;
-			case HorusArithmeticOperation::MUL:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_MUL);
-			}
-			break;
-			case HorusArithmeticOperation::DIV:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_DIV);
-			}
-			break;
-			case HorusArithmeticOperation::SIN:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SIN);
-			}
-			break;
-			case HorusArithmeticOperation::COS:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COS);
-			}
-			break;
-			case HorusArithmeticOperation::TAN:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_TAN);
-			}
-			break;
-			case HorusArithmeticOperation::SELECT_X:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_X);
-			}
-			break;
-			case HorusArithmeticOperation::SELECT_Y:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//break;
+			//case HorusArithmeticOperation::MUL:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_MUL);
+			//}
+			//break;
+			//case HorusArithmeticOperation::DIV:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_DIV);
+			//}
+			//break;
+			//case HorusArithmeticOperation::SIN:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SIN);
+			//}
+			//break;
+			//case HorusArithmeticOperation::COS:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COS);
+			//}
+			//break;
+			//case HorusArithmeticOperation::TAN:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_TAN);
+			//}
+			//break;
+			//case HorusArithmeticOperation::SELECT_X:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_X);
+			//}
+			//break;
+			//case HorusArithmeticOperation::SELECT_Y:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
 
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
 
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Y);
-			}
-			break;
-			case HorusArithmeticOperation::SELECT_Z:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Y);
+			//}
+			//break;
+			//case HorusArithmeticOperation::SELECT_Z:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
 
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
 
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Z);
-			}
-			case HorusArithmeticOperation::COMBINE:
-			{
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Z);
+			//}
+			//case HorusArithmeticOperation::COMBINE:
+			//{
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
 
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-				rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
+			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
 
-				rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COMBINE);
-			}
-
-
+			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COMBINE);
+			//}
 
 
 
 
-			// ... autres cas ...
-			default:
-				// Gérer les cas non pris en charge ou les erreurs
-				break;
-			}
 
-			// Commun à tous les types de nœuds arithmétiques
-			if (new_node != nullptr) {
-				// Ajouter le nouveau nœud à la pile
-				material_node_stack.push(new_node);
 
-				// Ajouter le nouveau nœud au garbage collector
-				m_garbage_collector_.GCAdd(new_node);
-			}
+			//// ... autres cas ...
+			//default:
+			//	// Gérer les cas non pris en charge ou les erreurs
+			//	break;
+			//}
+
+			//// Commun à tous les types de nœuds arithmétiques
+			//if (new_node != nullptr) {
+			//	// Ajouter le nouveau nœud à la pile
+			//	material_node_stack.push(new_node);
+
+			//	// Ajouter le nouveau nœud au garbage collector
+			//	m_garbage_collector_.GCAdd(new_node);
+			//}
 		}
 		break;
 
 		case HorusNodeType::Checker_texture:
-		{
-			// Supprimer cette ligne si vous allez utiliser node.uv_value_ pour les UV
-			// rpr_material_node uv = material_node_stack.top();
-			// material_node_stack.pop();
+			//{
+			//	// Supprimer cette ligne si vous allez utiliser node.uv_value_ pour les UV
+			//	// rpr_material_node uv = material_node_stack.top();
+			//	// material_node_stack.pop();
 
-			const HorusNode& node = graph.node(current_node_id);
+			//	const HorusNode& node = graph.node(current_node_id);
 
-			rpr_material_node new_node = nullptr;
-			rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_CHECKER_TEXTURE, &new_node);
-			m_garbage_collector_.GCAdd(new_node);
+			//	rpr_material_node new_node = nullptr;
+			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_CHECKER_TEXTURE, &new_node);
+			//	m_garbage_collector_.GCAdd(new_node);
 
 
-			rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UV, node.m_uv_scale_.x, node.m_uv_scale_.y, 0, 1);
+			//	rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UV, node.m_uv_scale_.x, node.m_uv_scale_.y, 0, 1);
 
-			material_node_stack.push(new_node);
-		}
-		break;
+			//	material_node_stack.push(new_node);
+			//}
+			break;
 
 		case HorusNodeType::Image_texture:
 		{
 			const HorusNode& node = graph.node(current_node_id);
+
+			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
+			material_node_stack.pop();
+
+
+
+
 
 			rpr_image image = nullptr;
 
@@ -407,7 +439,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			{
 				std::cout << "Image texture -> " << node.m_image_ << " loaded." << std::endl;
 
-				rpr_material_node new_node = material_node_stack.top();
+				rpr_material_node new_node = meta_top.get_node();
 				material_node_stack.pop();
 
 				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
@@ -415,10 +447,14 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 				CHECK(rprMaterialNodeSetInputImageDataByKey(new_node, RPR_MATERIAL_INPUT_DATA, image));
 
-				material_node_stack.push(new_node);
+
+				meta_top.set_node(new_node);
+				meta_top.set_node_type(HorusNodeType::Image_texture);
+				meta_top.set_image(image);
+				material_node_stack.push(meta_top);
 			}
 
-				
+
 		}
 		break;
 
@@ -428,8 +464,12 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			// ID ok ici -> bonne methode pour le get
 			const HorusNode& node = graph.node(current_node_id);
 
-			rpr_material_node new_node = material_node_stack.top();
+			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
 			material_node_stack.pop();
+
+			rpr_material_node new_node = meta_top.get_node();
+			material_node_stack.pop();
+
 
 
 			rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
@@ -437,31 +477,54 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 			rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_.x, node.m_color_.y, node.m_color_.z, node.m_color_.w);
 
-			material_node_stack.push(new_node);
+			meta_top.set_node(new_node);
+			meta_top.set_node_type(HorusNodeType::Debug_color01);
+
+			material_node_stack.push(meta_top);
 		}
 		break;
 
 		case HorusNodeType::Value:
 		{
-			if (graph.num_edges_from_node(current_node_id) == 0ull)
+			if (graph.num_edges_from_node(current_node_id) == 0ull) // Previous code
 			{
 				material_node_stack.push(current_type.m_value_);
 			}
+
+			/*if (graph.num_edges_from_node(current_node_id) == 0ull)
+			{
+
+				HorusNodeMeta new_meta;
+
+				new_meta.set_node_type(HorusNodeType::Value);
+
+				material_node_stack.push(new_meta);
+			}*/
+
+
 		}
 		break;
-		default:
-			break;
 		}
 	}
 
+
+	/*if (!material_node_stack.empty())
+	{
+		m_out_modified_ = material_node_stack.top(); // Previous code
+
+		return m_out_modified_;
+	}*/
 
 	if (!material_node_stack.empty())
 	{
-		m_out_modified_ = material_node_stack.top();
+		HorusNodeMeta meta_top = material_node_stack.top();
+		rpr_material_node new_node = meta_top.get_node();
 
-		//spdlog::info("m_out_modified_: {}", (void*)m_out_modified_);  // Pour des pointeurs
+		m_out_modified_ = new_node;
+
 		return m_out_modified_;
 	}
+
 
 }
 
@@ -1085,6 +1148,7 @@ void HorusMaterialEditor::update()
 			ImNodes::BeginNode(node.id_);
 			HorusNode& nodeU = m_graph_.node(node.id_);
 
+
 			ImNodes::BeginNodeTitleBar();
 			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "PRB Material");
 			ImNodes::EndNodeTitleBar();
@@ -1127,10 +1191,13 @@ void HorusMaterialEditor::update()
 							needUpdate = true;
 						}
 					}
-					else
+					else if (m_graph_.num_edges_from_node(node.pbr_material.input_color_diffuse) == 1ull)
 					{
 						nodeU.m_use_diffuse_texture_ = true;
-						spdlog::info("Diffuse texture");
+					}
+					else if (m_graph_.num_edges_from_node(node.pbr_material.input_color_diffuse) > 1ull)
+					{
+						nodeU.m_use_diffuse_texture_ = true;
 					}
 
 
