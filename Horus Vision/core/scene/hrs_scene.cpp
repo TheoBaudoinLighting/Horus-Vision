@@ -57,7 +57,7 @@ void HorusScene::show_dummy_dragon()
 
 	g_object_imps.create_material_editor_node(0, "M_Dragon");
 
-	g_object_imps.assign_material_editor_node(0, 0); // assign material to mesh
+	g_object_imps.assign_material_editor_node(0, 0); 
 
 
 	g_object_imps.set_shape_rotation(0, { 0.f, 1.f, 0.0f }, 10.0f);

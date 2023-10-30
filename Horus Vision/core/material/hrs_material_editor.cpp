@@ -75,6 +75,18 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 
 
+			/*if (node.m_use_diffuse_texture_)
+			{
+				CHECK(rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR, material_node_stack.top()));
+
+				spdlog::info("Diffuse texture used.");
+
+			}
+			else
+			{
+				CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_diffuse_.x, node.m_color_diffuse_.y, node.m_color_diffuse_.z, node.m_color_diffuse_.w));
+				spdlog::info("Diffuse texture not used.");
+			}*/
 
 
 
@@ -381,6 +393,11 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 		{
 			const HorusNode& node = graph.node(current_node_id);
 
+			rpr_image image = nullptr;
+
+			image = load_texture(node.m_image_);
+			m_garbage_collector_.GCAdd(image);
+
 			if (node.m_image_ == nullptr)
 			{
 				std::cout << "Error: Image texture -> " << node.m_image_ << " not found." << std::endl;
@@ -396,12 +413,12 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
 				m_garbage_collector_.GCAdd(new_node);
 
-				CHECK(rprMaterialNodeSetInputImageDataByKey(new_node, RPR_MATERIAL_INPUT_DATA, node.m_image_));
-				//CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_.x, node.m_color_.y, node.m_color_.z, node.m_color_.w));
+				CHECK(rprMaterialNodeSetInputImageDataByKey(new_node, RPR_MATERIAL_INPUT_DATA, image));
 
 				material_node_stack.push(new_node);
 			}
 
+				
 		}
 		break;
 
@@ -441,6 +458,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 	if (!material_node_stack.empty())
 	{
 		m_out_modified_ = material_node_stack.top();
+
 		//spdlog::info("m_out_modified_: {}", (void*)m_out_modified_);  // Pour des pointeurs
 		return m_out_modified_;
 	}
@@ -1065,7 +1083,7 @@ void HorusMaterialEditor::update()
 			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(255, 102, 102, 255));
 
 			ImNodes::BeginNode(node.id_);
-			const HorusNode& nodeU = m_graph_.node(node.id_);
+			HorusNode& nodeU = m_graph_.node(node.id_);
 
 			ImNodes::BeginNodeTitleBar();
 			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "PRB Material");
@@ -1087,119 +1105,109 @@ void HorusMaterialEditor::update()
 
 			// Diffuse Section ---------------------------------------------------------------------------------------- Diffuse Section
 
-
 			{
-				ImGui::PushItemWidth(150);
-				if (ImGui::TreeNode("PBR Material Settings"))
 				{
+					ImNodes::BeginInputAttribute(node.pbr_material.input_color_diffuse);
+					const float label_width = ImGui::CalcTextSize("Diffuse color").x;
+					ImGui::Text("Diffuse color");
 
+					ImGui::SameLine(max_label_width + 10);
+					ImGui::SetNextItemWidth(width_node);
+
+					if (m_graph_.num_edges_from_node(node.pbr_material.input_color_diffuse) == 0ull)
 					{
-						ImNodes::BeginInputAttribute(node.pbr_material.input_color_diffuse);
-						const float label_width = ImGui::CalcTextSize("Diffuse color").x;
-						ImGui::Text("Diffuse color");
 
 						ImGui::SameLine(max_label_width + 10);
 						ImGui::SetNextItemWidth(width_node);
 
-						if (m_graph_.num_edges_from_node(node.pbr_material.input_color_diffuse) == 0ull)
+						if (ImGui::ColorEdit4("##color_diffuse", (float*)&nodeU.m_color_diffuse_))
 						{
-
-							ImGui::SameLine(max_label_width + 10);
-							ImGui::SetNextItemWidth(width_node);
-
-							if (ImGui::ColorEdit4("##color_diffuse", (float*)&nodeU.m_color_diffuse_))
-							{
-
-								needUpdate = true;
-							}
+							nodeU.m_use_diffuse_texture_ = false;
+							spdlog::info("not Diffuse color");
+							needUpdate = true;
 						}
-
-
-
-
-						ImNodes::EndInputAttribute();
 					}
-
+					else
 					{
-						ImNodes::BeginInputAttribute(node.pbr_material.input_weight_diffuse);
-						const float label_width = ImGui::CalcTextSize("Diffuse weight ").x;
-						ImGui::Text("Diffuse weight");
-
-						if (m_graph_.num_edges_from_node(node.pbr_material.input_weight_diffuse) == 0ull)
-						{
-
-							ImGui::SameLine(max_label_width + 10);
-							ImGui::SetNextItemWidth(width_node);
-
-							if (ImGui::DragFloat("##weight_diffuse", (float*)&nodeU.m_weight_diffuse_, speed_value, 0.f, 1.f)) // Speed, VMin, Vmax
-							{
-								needUpdate = true;
-							}
-						}
-						ImNodes::EndInputAttribute();
-					}
-
-					{
-						ImNodes::BeginInputAttribute(node.pbr_material.input_roughness_diffuse);
-						const float label_width = ImGui::CalcTextSize("Roughness Diffuse").x;
-						ImGui::Text("Roughness Diffuse");
-
-						if (m_graph_.num_edges_from_node(node.pbr_material.input_roughness_diffuse) == 0ull)
-						{
-							ImGui::SameLine(max_label_width + 10);
-							ImGui::SetNextItemWidth(width_node);
-							if (ImGui::DragFloat("##roughness_diffuse", (float*)&nodeU.m_roughness_diffuse_, speed_value, 0.0f, 1.0f))
-							{
-								needUpdate = true;
-							}
-						}
-						ImNodes::EndInputAttribute();
-					}
-
-					{
-						ImNodes::BeginInputAttribute(node.pbr_material.input_backscattering_color);
-						const float label_width = ImGui::CalcTextSize("Backscattering color").x;
-						ImGui::Text("Backscattering color");
-						if (m_graph_.num_edges_from_node(node.pbr_material.input_backscattering_color) == 0ull)
-						{
-							ImGui::SameLine(max_label_width + 10);
-							ImGui::SetNextItemWidth(width_node);
-							if (ImGui::ColorEdit4("##backscattering_color", (float*)&nodeU.m_backscattering_color_))
-							{
-								needUpdate = true;
-							}
-						}
-						ImNodes::EndInputAttribute();
-					}
-
-					{
-						ImNodes::BeginInputAttribute(node.pbr_material.input_backscattering_weight);
-						const float label_width = ImGui::CalcTextSize("Backscattering weight").x;
-						ImGui::Text("Backscattering weight");
-						if (m_graph_.num_edges_from_node(node.pbr_material.input_backscattering_weight) == 0ull)
-						{
-							ImGui::SameLine(max_label_width + 10);
-							ImGui::SetNextItemWidth(width_node);
-							if (ImGui::DragFloat("##backscattering_weight", (float*)&nodeU.m_backscattering_weight_, speed_value, 0.0f, 1.0f))
-							{
-								needUpdate = true;
-							}
-						}
-						ImNodes::EndInputAttribute();
+						nodeU.m_use_diffuse_texture_ = true;
+						spdlog::info("Diffuse texture");
 					}
 
 
-					ImGui::TreePop();
+
+					ImNodes::EndInputAttribute();
 				}
-				else
+
 				{
-					ImGui::PopItemWidth();  // Restaurer l'ancienne largeur même si le TreeNode n'est pas ouvert
+					ImNodes::BeginInputAttribute(node.pbr_material.input_weight_diffuse);
+					const float label_width = ImGui::CalcTextSize("Diffuse weight ").x;
+					ImGui::Text("Diffuse weight");
+
+					if (m_graph_.num_edges_from_node(node.pbr_material.input_weight_diffuse) == 0ull)
+					{
+
+						ImGui::SameLine(max_label_width + 10);
+						ImGui::SetNextItemWidth(width_node);
+
+						if (ImGui::DragFloat("##weight_diffuse", (float*)&nodeU.m_weight_diffuse_, speed_value, 0.f, 1.f)) // Speed, VMin, Vmax
+						{
+							needUpdate = true;
+						}
+					}
+					ImNodes::EndInputAttribute();
+				}
+
+				{
+					ImNodes::BeginInputAttribute(node.pbr_material.input_roughness_diffuse);
+					const float label_width = ImGui::CalcTextSize("Roughness Diffuse").x;
+					ImGui::Text("Roughness Diffuse");
+
+					if (m_graph_.num_edges_from_node(node.pbr_material.input_roughness_diffuse) == 0ull)
+					{
+						ImGui::SameLine(max_label_width + 10);
+						ImGui::SetNextItemWidth(width_node);
+						if (ImGui::DragFloat("##roughness_diffuse", (float*)&nodeU.m_roughness_diffuse_, speed_value, 0.0f, 1.0f))
+						{
+							needUpdate = true;
+						}
+					}
+					ImNodes::EndInputAttribute();
+				}
+
+				{
+					ImNodes::BeginInputAttribute(node.pbr_material.input_backscattering_color);
+					const float label_width = ImGui::CalcTextSize("Backscattering color").x;
+					ImGui::Text("Backscattering color");
+					if (m_graph_.num_edges_from_node(node.pbr_material.input_backscattering_color) == 0ull)
+					{
+						ImGui::SameLine(max_label_width + 10);
+						ImGui::SetNextItemWidth(width_node);
+						if (ImGui::ColorEdit4("##backscattering_color", (float*)&nodeU.m_backscattering_color_))
+						{
+							needUpdate = true;
+						}
+					}
+					ImNodes::EndInputAttribute();
+				}
+
+				{
+					ImNodes::BeginInputAttribute(node.pbr_material.input_backscattering_weight);
+					const float label_width = ImGui::CalcTextSize("Backscattering weight").x;
+					ImGui::Text("Backscattering weight");
+					if (m_graph_.num_edges_from_node(node.pbr_material.input_backscattering_weight) == 0ull)
+					{
+						ImGui::SameLine(max_label_width + 10);
+						ImGui::SetNextItemWidth(width_node);
+						if (ImGui::DragFloat("##backscattering_weight", (float*)&nodeU.m_backscattering_weight_, speed_value, 0.0f, 1.0f))
+						{
+							needUpdate = true;
+						}
+					}
+					ImNodes::EndInputAttribute();
 				}
 			}
 
 			// Reflection Section ------------------------------------------------------------------------------------- Reflection Section
-
-
 
 			{
 				{
@@ -2069,6 +2077,8 @@ void HorusMaterialEditor::update()
 
 		case HorusUiNodeType::Image_texture:
 		{
+
+
 			const float node_width = 100.f;
 
 			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255));
@@ -2087,28 +2097,43 @@ void HorusMaterialEditor::update()
 				ImNodes::EndOutputAttribute();
 			}
 
-
 			HorusNode& nodeU = m_graph_.node(node.id_);
-
 
 			ImGui::TextUnformatted("Path: ");
 			ImGui::InputText("##path", nodeU.path, sizeof(nodeU.path));
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(300);
 			if (ImGui::Button("Browse##path"))
 			{
-				nodeU.file_dialog_buffer = nodeU.path;
-				FileDialog::file_dialog_open = true;
-				FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-
-
+				nodeU.local_file_dialog_open = true;
 			}
 
-			if (FileDialog::file_dialog_open)
+
+			if (nodeU.local_file_dialog_open)
 			{
-				FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, nodeU.file_dialog_buffer, sizeof(nodeU.file_dialog_buffer), FileDialog::file_dialog_open_type);
+				char buffer[1024];
+
+				// Show a file dialog to select a file
+				FileDialog::ShowFileDialog(&nodeU.local_file_dialog_open, buffer, sizeof(buffer), FileDialog::FileDialogType::OpenFile, true);
+
+				// If a file has been selected
+				if (strlen(buffer) < sizeof(nodeU.path))
+				{
+					strncpy_s(nodeU.path, buffer, sizeof(nodeU.path));
+					nodeU.local_file_dialog_open = false; // Reset if file has been selected
+				}
+				else
+				{
+					nodeU.path[sizeof(nodeU.path) - 1] = '\0';
+				}
+
+
+
 			}
+
+
+
+
 
 			static bool needUpdate = false;
 
@@ -2117,20 +2142,15 @@ void HorusMaterialEditor::update()
 			{
 				if (nodeU.last_used_path != std::string(nodeU.path))
 				{
-					rpr_image newTexture = load_texture(std::string(nodeU.path));
-					if (newTexture != nullptr)
-					{
-						nodeU.m_image_ = newTexture;
-						ImGui::Text("Texture loaded.");
-						needUpdate = true;
-						nodeU.last_used_path = std::string(nodeU.path);
-					}
-					else
-					{
-						ImGui::Text("Texture not loaded.");
-					}
+					nodeU.last_used_path = _strdup(nodeU.path);
+
+					needUpdate = true;
 				}
+				nodeU.m_image_ = nodeU.last_used_path;
 			}
+
+
+
 
 
 
@@ -2500,19 +2520,6 @@ void HorusMaterialEditorBrowser::update()
 		}
 		ImGui::TreePop();
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	ImGui::End();
 }

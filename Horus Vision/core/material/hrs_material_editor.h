@@ -219,6 +219,7 @@ public:
 
 		// Diffuse parameters
 		ImVec4 m_color_diffuse_ = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+		bool m_use_diffuse_texture_ = false;
 		ImVec4 m_weight_diffuse_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		ImVec4 m_roughness_diffuse_ = ImVec4(0.f, 0.f, 0.f, 1.0f);
 
@@ -288,12 +289,14 @@ public:
 
 
 
-		rpr_image m_image_;
+		rpr_char const* m_image_;
 		bool m_texture_loaded_;
 
 		inline static char* file_dialog_buffer = nullptr;
-		inline static char path[500] = "";
-		inline static std::string last_used_path = "";
+		char path[500] = "";
+		rpr_char const* last_used_path = "";
+
+		bool local_file_dialog_open = false;
 
 		float m_blend_value_ = 0.5f;
 
