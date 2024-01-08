@@ -1,6 +1,7 @@
 #include "hrs_material_editor.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include "hrs_engine.h"
 #include "spdlog/spdlog.h"
@@ -11,10 +12,12 @@
 #include "L2DFileDialog.h"
 #include "objects/hrs_object_manager.h"
 
-HorusRadeon& radeon_matedit = HorusRadeon::get_instance();
-HorusObjectManager& g_object_impedit = HorusObjectManager::get_instance();
-HorusEngine& g_engine_impediet = HorusEngine::get_instance();
+//HorusRadeon& Radeon = HorusRadeon::get_instance();
+//HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+//HorusEngine& Engine = HorusEngine::get_instance();
 
+static float current_time_seconds = 0.f;
+static bool  emulate_three_button_mouse = false;
 
 template<class T>
 T clamp(T x, T a, T b)
@@ -22,20 +25,19 @@ T clamp(T x, T a, T b)
 	return std::min(b, std::max(x, a));
 }
 
-static float current_time_seconds = 0.f;
-static bool  emulate_three_button_mouse = false;
-
 rpr_image load_texture(std::string path)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	rpr_image image = nullptr;
 
-	if (rprContextCreateImageFromFile(radeon_matedit.get_context(), path.c_str(), &image) != RPR_SUCCESS)
+	if (rprContextCreateImageFromFile(Radeon.get_context(), path.c_str(), &image) != RPR_SUCCESS)
 	{
 		spdlog::error("Error: Texture -> {} not found.", path);
 		return nullptr;
 	}
 
-	radeon_matedit.get_gc().GCAdd(image);
+	Radeon.get_gc().GCAdd(image);
 
 	spdlog::info("Texture -> {} loaded.", path);
 
@@ -44,12 +46,16 @@ rpr_image load_texture(std::string path)
 
 rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGraph<HorusNode>& graph, const int root_node_id)
 {
-	m_garbage_collector_.GCClean();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance(); m_garbage_collector_.GCClean();
 
 	std::stack<int> post_order_stack;
 
 	dfs_traverse(
 		graph, root_node_id, [&post_order_stack](const int node_id) -> void { post_order_stack.push(node_id); });
+
+
 
 	std::stack<HorusNodeMeta> material_node_stack;
 
@@ -66,55 +72,15 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 		{
 			const HorusNode& node = graph.node(current_node_id);
 
-			//rpr_material_node new_node = material_node_stack.top(); // Get the material node from the stack -> first is the texture node
-			//material_node_stack.pop();
 
-			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
+			HorusNodeMeta meta_top = material_node_stack.top();
 			material_node_stack.pop();
 
 			rpr_material_node new_node = meta_top.get_node();
 
 
-			spdlog::info("Material node created.");
-			/*spdlog::info("Material node id: {}", current_node_id);
-			spdlog::info("Material node type: {}", current_type.m_type_);*/
-
-			rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
+			rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
 			m_garbage_collector_.GCAdd(new_node);
-
-
-			if (node.m_use_diffuse_texture_)
-			{
-				/*rpr_material_node uv_node = nullptr;
-				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_INPUT_LOOKUP, &uv_node));
-				m_garbage_collector_.GCAdd(uv_node);
-				CHECK(rprMaterialNodeSetInputUByKey(uv_node, RPR_MATERIAL_INPUT_VALUE, RPR_MATERIAL_NODE_LOOKUP_UV));
-
-				rpr_material_node texture_node = nullptr;
-				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_USER_TEXTURE, &texture_node));
-				m_garbage_collector_.GCAdd(texture_node);
-				CHECK(rprMaterialNodeSetInputUByKey(texture_node, RPR_MATERIAL_INPUT_OP, 2));
-
-				CHECK(rprMaterialNodeSetInputNByKey(texture_node, RPR_MATERIAL_INPUT_2, new_node));
-				CHECK(rprMaterialNodeSetInputNByKey(texture_node, RPR_MATERIAL_INPUT_1, uv_node));
-
-				rpr_material_node diffuse_texture_node = nullptr;
-				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_DIFFUSE, &diffuse_texture_node));
-				m_garbage_collector_.GCAdd(diffuse_texture_node);
-				CHECK(rprMaterialNodeSetInputNByKey(diffuse_texture_node, RPR_MATERIAL_INPUT_COLOR, texture_node));
-
-				CHECK(rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, diffuse_texture_node));*/
-
-				spdlog::info("Diffuse texture loaded.");
-			}
-			else
-			{
-
-				//CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_diffuse_.x, node.m_color_diffuse_.y, node.m_color_diffuse_.z, node.m_color_diffuse_.w));
-				spdlog::info("Diffuse color loaded.");
-			}
-
-
 
 
 
@@ -178,13 +144,6 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			CHECK(rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_BACKSCATTER_COLOR, node.m_backscattering_color_.x, node.m_backscattering_color_.y, node.m_backscattering_color_.z, node.m_backscattering_color_.w));
 
 
-
-
-
-
-
-
-
 			meta_top.set_node(new_node);
 			meta_top.set_node_type(HorusNodeType::Horus_PBR_Material);
 			material_node_stack.push(meta_top);
@@ -192,236 +151,12 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 		}
 		break;
 
-
-
-
-		case HorusNodeType::Add:
-		{
-			/*const HorusNode& node = graph.node(current_node_id);
-
-			rpr_material_node operand1 = material_node_stack.top(); material_node_stack.pop();
-			rpr_material_node operand2 = material_node_stack.top(); material_node_stack.pop();
-
-			rpr_material_node new_node = nullptr;
-
-
-			auto it = node_cache.find(current_node_id);
-			if (it != node_cache.end())
-			{
-				new_node = it->second;
-
-			}
-			else
-			{
-
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ADD, &new_node);
-				m_garbage_collector_.GCAdd(new_node);
-
-				node_cache[current_node_id] = new_node;
-			}
-
-			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-
-			material_node_stack.push(new_node);*/
-		}
-		break;
-
-		case HorusNodeType::Blend:
-		{
-
-			/*const HorusNode& node = graph.node(current_node_id);
-
-			rpr_material_node baseLayer = material_node_stack.top(); material_node_stack.pop();
-			rpr_material_node topLayer = material_node_stack.top(); material_node_stack.pop();
-			rpr_material_node weight = material_node_stack.top(); material_node_stack.pop();
-
-			rpr_material_node new_node = nullptr;
-
-			auto it = node_cache.find(current_node_id);
-			if (it != node_cache.end())
-			{
-
-				new_node = it->second;
-
-			}
-			else
-			{
-
-				rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_BLEND, &new_node);
-				m_garbage_collector_.GCAdd(new_node);
-
-				node_cache[current_node_id] = new_node;
-			}
-
-			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, baseLayer);
-			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, topLayer);
-			rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_WEIGHT, weight);
-
-
-			material_node_stack.push(new_node);*/
-		}
-		break;
-
-		case HorusNodeType::Arithmetic:
-		{
-			//const HorusNode& node = graph.node(current_node_id); // Get current node information
-
-			//rpr_material_node new_node = nullptr;
-
-			//// Pop the operands off the stack. Assume that they are already there.
-			//rpr_material_node operand1 = material_node_stack.top();
-			//material_node_stack.pop();
-			//m_garbage_collector_.GCAdd(operand1);
-			//rpr_material_node operand2 = material_node_stack.top();
-			//material_node_stack.pop();
-			//m_garbage_collector_.GCAdd(operand2);
-
-			//switch (node.m_arithmetic_op_) {
-			//case HorusArithmeticOperation::ADD:
-
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_ADD);
-			//}
-			//break;
-			//case HorusArithmeticOperation::SUB:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SUB);
-			//}
-
-			//break;
-			//case HorusArithmeticOperation::MUL:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_MUL);
-			//}
-			//break;
-			//case HorusArithmeticOperation::DIV:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_DIV);
-			//}
-			//break;
-			//case HorusArithmeticOperation::SIN:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SIN);
-			//}
-			//break;
-			//case HorusArithmeticOperation::COS:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COS);
-			//}
-			//break;
-			//case HorusArithmeticOperation::TAN:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_TAN);
-			//}
-			//break;
-			//case HorusArithmeticOperation::SELECT_X:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_X);
-			//}
-			//break;
-			//case HorusArithmeticOperation::SELECT_Y:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Y);
-			//}
-			//break;
-			//case HorusArithmeticOperation::SELECT_Z:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_SELECT_Z);
-			//}
-			//case HorusArithmeticOperation::COMBINE:
-			//{
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_ARITHMETIC, &new_node);
-
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR0, operand1);
-			//	rprMaterialNodeSetInputNByKey(new_node, RPR_MATERIAL_INPUT_COLOR1, operand2);
-
-			//	rprMaterialNodeSetInputUByKey(new_node, RPR_MATERIAL_INPUT_OP, RPR_MATERIAL_NODE_OP_COMBINE);
-			//}
-
-
-
-
-
-
-			//// ... autres cas ...
-			//default:
-			//	// Gérer les cas non pris en charge ou les erreurs
-			//	break;
-			//}
-
-			//// Commun à tous les types de nœuds arithmétiques
-			//if (new_node != nullptr) {
-			//	// Ajouter le nouveau nœud à la pile
-			//	material_node_stack.push(new_node);
-
-			//	// Ajouter le nouveau nœud au garbage collector
-			//	m_garbage_collector_.GCAdd(new_node);
-			//}
-		}
-		break;
-
-		case HorusNodeType::Checker_texture:
-			//{
-			//	// Supprimer cette ligne si vous allez utiliser node.uv_value_ pour les UV
-			//	// rpr_material_node uv = material_node_stack.top();
-			//	// material_node_stack.pop();
-
-			//	const HorusNode& node = graph.node(current_node_id);
-
-			//	rpr_material_node new_node = nullptr;
-			//	rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_CHECKER_TEXTURE, &new_node);
-			//	m_garbage_collector_.GCAdd(new_node);
-
-
-			//	rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UV, node.m_uv_scale_.x, node.m_uv_scale_.y, 0, 1);
-
-			//	material_node_stack.push(new_node);
-			//}
-			break;
-
 		case HorusNodeType::Image_texture:
 		{
 			const HorusNode& node = graph.node(current_node_id);
 
-			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
+			HorusNodeMeta meta_top = material_node_stack.top();
 			material_node_stack.pop();
-
-
 
 
 
@@ -442,7 +177,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 				rpr_material_node new_node = meta_top.get_node();
 				material_node_stack.pop();
 
-				CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
+				CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
 				m_garbage_collector_.GCAdd(new_node);
 
 				CHECK(rprMaterialNodeSetInputImageDataByKey(new_node, RPR_MATERIAL_INPUT_DATA, image));
@@ -464,15 +199,15 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			// ID ok ici -> bonne methode pour le get
 			const HorusNode& node = graph.node(current_node_id);
 
-			HorusNodeMeta meta_top = material_node_stack.top(); // Obtenez le nœud matériel HorusNodeMeta depuis la pile
-			material_node_stack.pop();
+
+			HorusNodeMeta meta_top = material_node_stack.top();
 
 			rpr_material_node new_node = meta_top.get_node();
 			material_node_stack.pop();
 
 
 
-			rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
+			rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
 			m_garbage_collector_.GCAdd(new_node);
 
 			rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_.x, node.m_color_.y, node.m_color_.z, node.m_color_.w);
@@ -490,30 +225,10 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			{
 				material_node_stack.push(current_type.m_value_);
 			}
-
-			/*if (graph.num_edges_from_node(current_node_id) == 0ull)
-			{
-
-				HorusNodeMeta new_meta;
-
-				new_meta.set_node_type(HorusNodeType::Value);
-
-				material_node_stack.push(new_meta);
-			}*/
-
-
 		}
 		break;
 		}
 	}
-
-
-	/*if (!material_node_stack.empty())
-	{
-		m_out_modified_ = material_node_stack.top(); // Previous code
-
-		return m_out_modified_;
-	}*/
 
 	if (!material_node_stack.empty())
 	{
@@ -524,18 +239,20 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 		return m_out_modified_;
 	}
-
-
 }
 
 void HorusMaterialEditor::init()
 {
-	RPRGarbageCollector m_gco = radeon_matedit.get_gc();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
 
-	CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
+	RPRGarbageCollector m_gco = Radeon.get_gc();
+
+	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
 	m_gco.GCAdd(m_out_node_);
 
-	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 1.f, 0.0f, 0.5f, 1.0f));
+	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 1.f, 0.5f, 0.5f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_ROUGHNESS, 0.5f, 0.5f, 0.5f, 1.0f));
 
@@ -587,10 +304,10 @@ void HorusMaterialEditor::init()
 
 
 
-	CHECK(rprMaterialSystemCreateNode(radeon_matedit.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_modified_));
+	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_modified_));
 	m_gco.GCAdd(m_out_modified_);
 
-	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.0f, 0.5f, 1.0f, 1.0f));
+	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_ROUGHNESS, 0.5f, 0.5f, 0.5f, 1.0f));
 
@@ -642,12 +359,15 @@ void HorusMaterialEditor::init()
 
 
 
-
-	//g_object_impedit.set_material_from_editor_node(1, m_out_node_);
+	//ObjectManager.set_material_from_editor_node(1, m_out_node_);
 }
 
 void HorusMaterialEditor::update()
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
+
 	auto flags = ImGuiWindowFlags_MenuBar;
 	ImGui::Begin("Material Editor", nullptr, flags);
 
@@ -691,6 +411,8 @@ void HorusMaterialEditor::update()
 
 			ImGui::EndMenu();
 		}
+
+
 
 		ImGui::EndMenuBar();
 	}
@@ -816,18 +538,12 @@ void HorusMaterialEditor::update()
 					m_graph_.insert_edge(ui_node.id_, ui_node.pbr_material.input_direction_sss);
 					m_graph_.insert_edge(ui_node.id_, ui_node.pbr_material.input_multi_scatter);
 
+					HorusNodeMeta meta;
+					meta.set_id(ui_node.id_);
+					meta.set_type(HorusNodeType::Horus_PBR_Material);
+
 					m_nodes_.push_back(ui_node);
 					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Horus Material"))
-				{
-
-				}
-
-				if (ImGui::MenuItem("Horus SSS Material"))
-				{
-
 				}
 
 				ImGui::EndMenu();
@@ -847,39 +563,15 @@ void HorusMaterialEditor::update()
 
 					m_graph_.insert_edge(ui_node.id_, ui_node.image_texture.input0);
 					m_nodes_.push_back(ui_node);
-					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
 
-				if (ImGui::MenuItem("Bump_map"))
-				{
-					// ... (Votre code pour ajouter un nœud Bump_map ici)
-				}
-
-				if (ImGui::MenuItem("Normal_map"))
-				{
-					// ... (Votre code pour ajouter un nœud Normal_map ici)
-				}
-
-				if (ImGui::MenuItem("Constant Color"))
-				{
-					const HorusNode value(HorusNodeType::Value, 0.0f);
-					const HorusNode op(HorusNodeType::Constant_texture);
-
-					HorusUiNode ui_node = {};
-					ui_node.type_ = HorusUiNodeType::Constant_texture;
-					ui_node.constant_texture.input0 = m_graph_.insert_node(value);
-					ui_node.id_ = m_graph_.insert_node(op);
-
-					m_graph_.insert_edge(ui_node.id_, ui_node.constant_texture.input0);
-					m_nodes_.push_back(ui_node);
+					HorusNodeMeta meta;
+					meta.set_id(ui_node.id_);
+					meta.set_type(HorusNodeType::Image_texture);
 
 					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
 				}
 
-				if (ImGui::MenuItem("Noise2D_texture"))
-				{
-					// ... (Votre code pour ajouter un nœud Noise2D_texture ici)
-				}
+				// ....
 
 				ImGui::EndMenu();
 			}
@@ -905,189 +597,6 @@ void HorusMaterialEditor::update()
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Math"))
-			{
-				if (ImGui::MenuItem("Add"))
-				{
-					const HorusNode value(HorusNodeType::Value, 0.0f);
-					const HorusNode op(HorusNodeType::Add);
-
-					HorusUiNode ui_node = {};
-					ui_node.type_ = HorusUiNodeType::Add;
-					ui_node.add.input0 = m_graph_.insert_node(value);
-					ui_node.add.input1 = m_graph_.insert_node(value);
-					ui_node.id_ = m_graph_.insert_node(op);
-
-					m_graph_.insert_edge(ui_node.id_, ui_node.add.input0);
-					m_graph_.insert_edge(ui_node.id_, ui_node.add.input1);
-
-					m_nodes_.push_back(ui_node);
-					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Arithmetic")) // A voir, je crois qu'il n'est pas censer etre la , mais plutot de servir a creer des operations arithmetique
-				{
-					const HorusNode value(HorusNodeType::Value, 0.0f);
-					const HorusNode op(HorusNodeType::Arithmetic);
-
-					HorusUiNode ui_node = {};
-					ui_node.type_ = HorusUiNodeType::Arithmetic;
-					ui_node.arithmetic.input0 = m_graph_.insert_node(value);
-					ui_node.arithmetic.input1 = m_graph_.insert_node(value);
-					ui_node.arithmetic.input2 = m_graph_.insert_node(value);
-					ui_node.arithmetic.input3 = m_graph_.insert_node(value);
-					ui_node.id_ = m_graph_.insert_node(op);
-
-					m_graph_.insert_edge(ui_node.id_, ui_node.arithmetic.input0);
-					m_graph_.insert_edge(ui_node.id_, ui_node.arithmetic.input1);
-					m_graph_.insert_edge(ui_node.id_, ui_node.arithmetic.input2);
-					m_graph_.insert_edge(ui_node.id_, ui_node.arithmetic.input3);
-
-					m_nodes_.push_back(ui_node);
-					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Blend"))
-				{
-					const HorusNode value(HorusNodeType::Value, 0.0f);
-					const HorusNode op(HorusNodeType::Blend);
-
-					HorusUiNode ui_node = {};
-					ui_node.type_ = HorusUiNodeType::Blend;
-					ui_node.blend.input0 = m_graph_.insert_node(value);
-					ui_node.blend.input1 = m_graph_.insert_node(value);
-					ui_node.blend.input2 = m_graph_.insert_node(value);
-					ui_node.id_ = m_graph_.insert_node(op);
-
-					m_graph_.insert_edge(ui_node.id_, ui_node.blend.input0);
-					m_graph_.insert_edge(ui_node.id_, ui_node.blend.input1);
-					m_graph_.insert_edge(ui_node.id_, ui_node.blend.input2);
-
-					m_nodes_.push_back(ui_node);
-					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Blend_value"))
-				{
-					// ... (Votre code pour ajouter un nœud Blend_value ici)
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Utility"))
-			{
-				if (ImGui::MenuItem("Checker_texture"))
-				{
-					HorusNode value(HorusNodeType::Value, 0.0f);
-					HorusNode op(HorusNodeType::Checker_texture);
-					op.m_uv_scale_ = { 1.0f, 1.0f };
-
-					HorusUiNode ui_node = {};
-					ui_node.type_ = HorusUiNodeType::Checker_texture;
-					ui_node.checker_texture.input0 = m_graph_.insert_node(value);
-					ui_node.id_ = m_graph_.insert_node(op);
-
-					m_graph_.insert_edge(ui_node.id_, ui_node.checker_texture.input0);
-
-					m_nodes_.push_back(ui_node);
-					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Constant_texture"))
-				{
-					// ... (Votre code pour ajouter un nœud Constant_texture ici)
-				}
-
-				if (ImGui::MenuItem("Gradient_texture"))
-				{
-					// ... (Votre code pour ajouter un nœud Gradient_texture ici)
-				}
-
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Shader"))
-			{
-				if (ImGui::MenuItem("Ao_map"))
-				{
-					std::cout << "Ao_map" << std::endl;
-				}
-
-				if (ImGui::MenuItem("Diffuse"))
-				{
-					// ... (Votre code pour ajouter un nœud Diffuse ici)
-				}
-
-				if (ImGui::MenuItem("Diffuse_refraction"))
-				{
-					// ... (Votre code pour ajouter un nœud Diffuse_refraction ici)
-				}
-
-				if (ImGui::MenuItem("Dot_texture"))
-				{
-					// ... (Votre code pour ajouter un nœud Dot_texture ici)
-				}
-
-				if (ImGui::MenuItem("Emissive"))
-				{
-					// ... (Votre code pour ajouter un nœud Emissive ici)
-				}
-
-				if (ImGui::MenuItem("Fresnel"))
-				{
-					// ... (Votre code pour ajouter un nœud Fresnel ici)
-				}
-
-				if (ImGui::MenuItem("Fresnel_schlick"))
-				{
-					// ... (Votre code pour ajouter un nœud Fresnel_schlick ici)
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Vector"))
-			{
-				if (ImGui::MenuItem("Input_lookup"))
-				{
-					// ... (Votre code pour ajouter un nœud Input_lookup ici)
-				}
-
-				if (ImGui::MenuItem("Microfacet"))
-				{
-					// ... (Votre code pour ajouter un nœud Microfacet ici)
-				}
-
-				if (ImGui::MenuItem("Microfacet_anisotropic_reflection"))
-				{
-					// ... (Votre code pour ajouter un nœud Microfacet_anisotropic_reflection ici)
-				}
-
-				if (ImGui::MenuItem("Microfacet_anisotropic_refraction"))
-				{
-					// ... (Votre code pour ajouter un nœud Microfacet_anisotropic_refraction ici)
-				}
-
-				if (ImGui::MenuItem("Microfacet_beckmann"))
-				{
-					// ... (Votre code pour ajouter un nœud Microfacet_beckmann ici)
-				}
-
-				if (ImGui::MenuItem("Microfacet_refraction"))
-				{
-					// ... (Votre code pour ajouter un nœud Microfacet_refraction ici)
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Converter"))
-			{
-
-
-
-
-				ImGui::EndMenu();
-			}
-
 			if (ImGui::BeginMenu("Debug"))
 			{
 				if (ImGui::MenuItem("Color 01"))
@@ -1107,22 +616,11 @@ void HorusMaterialEditor::update()
 					m_graph_.insert_edge(ui_node.id_, ui_node.Debug_color01.input);
 					m_nodes_.push_back(ui_node);
 
+					HorusNodeMeta meta;
+					meta.set_id(ui_node.id_);
+					meta.set_type(HorusNodeType::Debug_color01);
+
 					ImNodes::SetNodeScreenSpacePos(ui_node.id_, click_pos_on_canvas);
-				}
-
-				if (ImGui::MenuItem("Color 02"))
-				{
-					// ... (Votre code pour ajouter un nœud Debug ici)
-				}
-
-				if (ImGui::MenuItem("Color 03"))
-				{
-					// ... (Votre code pour ajouter un nœud Debug ici)
-				}
-
-				if (ImGui::MenuItem("Print"))
-				{
-					// ... (Votre code pour ajouter un nœud Debug ici)
 				}
 
 				ImGui::EndMenu();
@@ -1137,7 +635,7 @@ void HorusMaterialEditor::update()
 	{
 		switch (node.type_)
 		{
-		case HorusUiNodeType::Horus_PBR_Material:
+		case HorusUiNodeType::Horus_PBR_Material: // Horus PBR Material, First test with this node
 		{
 			const float node_width = 100.f;
 
@@ -1688,14 +1186,6 @@ void HorusMaterialEditor::update()
 				ImNodes::EndInputAttribute();
 			}
 
-
-
-
-
-
-
-
-
 			if (needUpdate)
 			{
 
@@ -1706,443 +1196,11 @@ void HorusMaterialEditor::update()
 				update_material();
 			}
 
-
-
-
-			ImNodes::EndNode();
-
-		}
-		break;
-
-
-
-
-
-
-
-
-
-
-
-		case HorusUiNodeType::Add:
-		{
-			const float node_width = 100.f;
-
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255)); // Light blue
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(135, 206, 250, 255)); // Light sky blue
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(100, 149, 237, 255)); // Cornflower blue
-			ImNodes::BeginNode(node.id_);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "Add");
-			ImNodes::EndNodeTitleBar();
-			{
-				ImNodes::BeginInputAttribute(node.add.input0);
-				const float label_width = ImGui::CalcTextSize("Value 0").x;
-				ImGui::Text("Value 0");
-
-				if (m_graph_.num_edges_from_node(node.add.input0) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					//ImGui::DragFloat("##value0", &m_graph_.node(node.ui.add.input0).m_value_, 0.01f);
-
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-			{
-				ImNodes::BeginInputAttribute(node.add.input1);
-				const float label_width = ImGui::CalcTextSize("Value 1").x;
-				ImGui::Text("Value 1");
-				if (m_graph_.num_edges_from_node(node.add.input1) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					//ImGui::DragFloat("##value1", &m_graph_.node(node.ui.add.input1).m_value_, 0.01f);
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-
-			ImGui::Spacing();
-			{
-				ImNodes::BeginOutputAttribute(node.id_);
-				const float label_width = ImGui::CalcTextSize("Result").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Result");
-				ImNodes::EndOutputAttribute();
-			}
-
-			ImNodes::EndNode();
-		}
-		break;
-		case HorusUiNodeType::Blend:
-		{
-			const float node_width = 100.f;
-
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(152, 251, 152, 255)); // Pale green
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(124, 252, 0, 255)); // Lawn green
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(0, 250, 154, 255)); // Medium spring green
-			ImNodes::BeginNode(node.id_);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "Blend");
-			ImNodes::EndNodeTitleBar();
-
-			HorusNode& nodeU = m_graph_.node(node.id_);
-
-			{
-				ImNodes::BeginInputAttribute(node.blend.input0);
-				const float label_width = ImGui::CalcTextSize("Input 1").x;
-				ImGui::Text("Input 1");
-
-				if (m_graph_.num_edges_from_node(node.blend.input0) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-			{
-				ImNodes::BeginInputAttribute(node.blend.input1);
-				const float label_width = ImGui::CalcTextSize("Input 2").x;
-				ImGui::Text("Input 2");
-				if (m_graph_.num_edges_from_node(node.blend.input1) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-
-			{
-				ImNodes::BeginInputAttribute(node.blend.input2);
-				const float label_width = ImGui::CalcTextSize("Blend value").x;
-				ImGui::Text("Blend value");
-				if (m_graph_.num_edges_from_node(node.blend.input2) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					if (ImGui::DragFloat("##value1", &nodeU.m_blend_value_, 0.5f))
-					{
-						need_reevaluate = true;
-						change_detected = true;
-
-						root_node_changed();
-						update_material();
-					}
-
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-
-			ImGui::Spacing();
-			{
-				ImNodes::BeginOutputAttribute(node.id_);
-				const float label_width = ImGui::CalcTextSize("Output").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Output");
-				ImNodes::EndOutputAttribute();
-			}
-
-			ImNodes::EndNode();
-
-
-
-
-		}
-		break;
-
-
-
-
-		case HorusUiNodeType::Arithmetic:
-		{
-			const float node_width = 100.f;
-
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(135, 206, 250, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(100, 149, 237, 255));
-			ImNodes::BeginNode(node.id_);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "Arithmetic");
-			ImNodes::EndNodeTitleBar();
-
-			{
-				ImNodes::BeginInputAttribute(node.arithmetic.input0);
-				const float label_width = ImGui::CalcTextSize("Value 1").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Value 1");
-				ImNodes::EndInputAttribute();
-			}
-
-			{
-				ImNodes::BeginInputAttribute(node.arithmetic.input1);
-				const float label_width = ImGui::CalcTextSize("Value 2").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Value 2");
-				ImNodes::EndInputAttribute();
-			}
-
-			{
-				ImNodes::BeginInputAttribute(node.arithmetic.input2);
-				const float label_width = ImGui::CalcTextSize("Value 3").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Value 3");
-				ImNodes::EndInputAttribute();
-			}
-
-			{
-				ImNodes::BeginInputAttribute(node.arithmetic.input3);
-				const float label_width = ImGui::CalcTextSize("Value 4").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Value 4");
-				ImNodes::EndInputAttribute();
-			}
-
-
-
-
-			{
-				ImNodes::BeginOutputAttribute(node.id_);
-				const float label_width = ImGui::CalcTextSize("Result").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Result");
-				ImNodes::EndOutputAttribute();
-			}
-
-			HorusNode& nodeU = m_graph_.node(node.id_);
-
-			ImGui::SetNextItemWidth(300);
-
-
-			static const char* items[] = {
-													"Add", "Subtract",
-													"Multiply","Divide",
-													"Sine","Cosine",
-													"Tangent","Select X",
-													"Select Y","Select Z",
-													"Combine","Dot3",
-													"Cross3","Length3",
-													"Normalize3","Power",
-													"ArcCosine","ArcSine",
-													"ArcTangent","Average XYZ",
-													"Average","Min",
-													"Max","Floor",
-													"Modulus","Absolute",
-													"Shuffle YZWX","Shuffle ZWXY",
-													"Shuffle WXYZ","Matrix Multiply",
-													"Select W","Dot4",
-													"Log","Lower or Equal",
-													"Lower","Greater or Equal",
-													"Greater","Equal",
-													"Not Equal","And",
-													"Or","Ternary"
-			};
-
-			static int selectedItem = 0;
-
-			if (ImGui::Combo("Operation", &selectedItem, items, IM_ARRAYSIZE(items)))
-			{
-				nodeU.m_arithmetic_op_ = static_cast<HorusArithmeticOperation>(selectedItem);
-
-				need_reevaluate = true;
-				change_detected = true;
-				root_node_changed();
-				update_material();
-			}
-
-
-			ImNodes::EndNode();
-
-
-
-
-
-
-		}
-		break;
-
-
-
-
-
-		case HorusUiNodeType::Constant_texture:
-		{
-			const float node_width = 100.f;
-
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(135, 206, 250, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(100, 149, 237, 255));
-			ImNodes::BeginNode(node.id_);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "Constant color");
-			ImNodes::EndNodeTitleBar();
-
-
-			{
-				ImNodes::BeginInputAttribute(node.constant_texture.input0);  // Assurez-vous que lookup_value est bien défini dans votre structure
-
-				const float label_width = ImGui::CalcTextSize("Lookup").x;
-				ImGui::Text("Lookup");
-
-				ImGui::SameLine();
-				ImGui::PushItemWidth(node_width - label_width);
-
-				const char* items[] = {
-										"UV",
-										"Normal",
-										"XYZ (world space)",
-										"Incoming Ray",
-										"Outgoing Ray",
-										"Second UV",
-										"XYZ (object space)",
-										"0 float value assigned to vertex",
-										"1 float value assigned to vertex",
-										"2 float value assigned to vertex",
-										"3 float value assigned to vertex",
-										"Random color per shape",
-										"Object ID",
-										"Random color per mesh"
-				};
-
-				static int item_current = static_cast<int>(node.constant_texture.input0);
-
-				if (ImGui::Combo("##lookup_value", &item_current, items, IM_ARRAYSIZE(items)))
-				{
-					// Mettez à jour la valeur de recherche (lookup value) dans votre structure de noeud
-					//node.ui.constant_texture.lookup_value = static_cast<HorusLookupValue>(item_current);
-
-					need_reevaluate = true;
-					change_detected = true;
-					root_node_changed();
-					update_material();
-				}
-
-				ImGui::PopItemWidth();
-				ImNodes::EndInputAttribute();
-			}
-
-
-
-
-
-
-			//{
-			//	ImNodes::BeginInputAttribute(node.ui.constant_texture.color);
-
-			//	const float label_width = ImGui::CalcTextSize("Color").x;
-			//	ImGui::Text("Color");
-
-
-			//	if (m_graph_.num_edges_from_node(node.ui.constant_texture.color) == 0ull) // check if there is no edge
-			//	{
-			//		ImGui::SameLine();
-			//		ImGui::PushItemWidth(node_width - label_width);
-
-
-
-
-
-
-
-			//		{
-
-			//			need_reevaluate = true;
-			//			change_detected = true;
-			//			root_node_changed();
-			//			update_material();
-			//		}
-
-
-
-
-
-
-
-
-
-
-			//		ImGui::PopItemWidth();
-			//	}
-			//	ImNodes::EndInputAttribute();
-			//}
-
-			ImGui::Spacing();
-			{
-
-
-				ImNodes::BeginOutputAttribute(node.id_);
-				const float label_width = ImGui::CalcTextSize("Result").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Result");
-				ImNodes::EndOutputAttribute();
-			}
-
 			ImNodes::EndNode();
 		}
 		break;
 
-
-		case HorusUiNodeType::Checker_texture:
-		{
-			const float node_width = 100.f;
-
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(135, 206, 250, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(100, 149, 237, 255));
-
-			ImNodes::BeginNode(node.id_);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "Checker_texture");
-			ImNodes::EndNodeTitleBar();
-
-			{
-				ImNodes::BeginInputAttribute(node.checker_texture.input0);
-				const float label_width = ImGui::CalcTextSize("UV").x;
-				ImGui::Text("UV");
-
-				const HorusNode& nodeU = m_graph_.node(node.id_);
-
-
-				if (m_graph_.num_edges_from_node(node.checker_texture.input0) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					ImGui::SetNextItemWidth(150);
-					if (ImGui::DragFloat2("##UV", (float*)&nodeU.m_uv_scale_, 0.01f))
-					{
-
-						need_reevaluate = true;
-						change_detected = true;
-						root_node_changed();
-						update_material();
-					}
-
-					ImGui::PopItemWidth();
-				}
-				ImNodes::EndInputAttribute();
-			}
-
-			// Sortie du résultat
-			ImGui::Spacing();
-			{
-				ImNodes::BeginOutputAttribute(node.id_);
-				const float label_width = ImGui::CalcTextSize("Result").x;
-				ImGui::Indent(node_width - label_width);
-				ImGui::Text("Result");
-				ImNodes::EndOutputAttribute();
-			}
-
-			// Fin du nœud
-			ImNodes::EndNode();
-		}
-		break;
-
-		case HorusUiNodeType::Image_texture:
+		case HorusUiNodeType::Image_texture: // Image texture node for development purposes, not a final node
 		{
 
 
@@ -2240,7 +1298,7 @@ void HorusMaterialEditor::update()
 		break;
 
 
-		case HorusUiNodeType::Debug_color01:
+		case HorusUiNodeType::Debug_color01: // Debug Color Node for development purposes, not a final node
 		{
 			const float node_width = 100.f;
 
@@ -2279,13 +1337,14 @@ void HorusMaterialEditor::update()
 		}
 		break;
 
-		case HorusUiNodeType::Output:
+		case HorusUiNodeType::Output: // Output node for development purposes, not a final node
 		{
 			const float node_width = 100.f;
 
-			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(173, 216, 230, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(135, 206, 250, 255));
-			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(100, 149, 237, 255));
+			ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(204, 229, 255, 255)); 
+			ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(179, 217, 255, 255)); 
+			ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(153, 204, 255, 255)); 
+
 			ImNodes::BeginNode(node.id_);
 
 			ImNodes::BeginNodeTitleBar();
@@ -2298,13 +1357,6 @@ void HorusMaterialEditor::update()
 				const float label_width = ImGui::CalcTextSize("Output").x;
 				ImGui::Text("Output");
 
-				if (m_graph_.num_edges_from_node(node.output.output) == 0ull)
-				{
-					ImGui::SameLine();
-					ImGui::PushItemWidth(node_width - label_width);
-					//ImGui::DragFloat("##output", &m_graph_.node(node.ui.output.output0).m_value_, 0.01f);
-					ImGui::PopItemWidth();
-				}
 				ImNodes::EndInputAttribute();
 			}
 
@@ -2312,9 +1364,6 @@ void HorusMaterialEditor::update()
 			ImNodes::PopColorStyle();
 		}
 		break;
-
-
-
 
 		}
 	}
@@ -2330,16 +1379,23 @@ void HorusMaterialEditor::update()
 	ImNodes::MiniMap(0.2f, m_mini_map_location_);
 	ImNodes::EndNodeEditor();
 
+
+	// Create and destroy nodes / Links here.
+
 	{ // Handle creation of new links
 		int start_attr, end_attr;
-		if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
+		if (ImNodes::IsLinkCreated(&start_attr, &end_attr)) // check if a link is being created
 		{
-			const HorusNodeType start_attr_type = m_graph_.node(start_attr).m_type_;
-			const HorusNodeType end_attr_type = m_graph_.node(end_attr).m_type_;
+			HorusNodeType start_attr_type = m_graph_.node(start_attr).m_type_; // get the type of the starting attribute
+			HorusNodeType end_attr_type = m_graph_.node(end_attr).m_type_; // get the type of the ending attribute
+
+
 
 			const bool valid_link = start_attr_type != end_attr_type;
 			if (valid_link)
 			{
+
+
 				if (start_attr_type != HorusNodeType::Value)
 				{
 					std::swap(start_attr, end_attr);
@@ -2398,6 +1454,68 @@ void HorusMaterialEditor::update()
 
 				switch (iter->type_)
 				{
+				case HorusUiNodeType::Horus_PBR_Material:
+				{
+					// base color
+					m_graph_.erase_node(iter->pbr_material.input_color_diffuse);
+					m_graph_.erase_node(iter->pbr_material.input_weight_diffuse);
+					m_graph_.erase_node(iter->pbr_material.input_roughness_diffuse);
+					m_graph_.erase_node(iter->pbr_material.input_backscattering_color);
+					m_graph_.erase_node(iter->pbr_material.input_backscattering_weight);
+
+					// reflection
+					m_graph_.erase_node(iter->pbr_material.input_color_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_roughness_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_weight_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_ior_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_BRDF_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_anisotropy_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_rotation_reflection);
+					m_graph_.erase_node(iter->pbr_material.input_mode_reflection);
+
+					// refraction
+					m_graph_.erase_node(iter->pbr_material.input_color_transmission);
+					m_graph_.erase_node(iter->pbr_material.input_ior_transmission);
+					m_graph_.erase_node(iter->pbr_material.input_roughness_transmission);
+					m_graph_.erase_node(iter->pbr_material.input_weight_transmission);
+
+					// normal
+					m_graph_.erase_node(iter->pbr_material.input_normal);
+					m_graph_.erase_node(iter->pbr_material.input_bump);
+					m_graph_.erase_node(iter->pbr_material.input_displacement);
+
+					// emission
+					m_graph_.erase_node(iter->pbr_material.input_emission_color);
+					m_graph_.erase_node(iter->pbr_material.input_emission_weight);
+
+					// opacity
+					m_graph_.erase_node(iter->pbr_material.input_opacity);
+					m_graph_.erase_node(iter->pbr_material.input_opacity_weight);
+
+					// sss
+					m_graph_.erase_node(iter->pbr_material.input_color_sss);
+					m_graph_.erase_node(iter->pbr_material.input_weight_sss);
+					m_graph_.erase_node(iter->pbr_material.input_radius_sss);
+					m_graph_.erase_node(iter->pbr_material.input_weight_sss);
+
+					// Sheen
+					m_graph_.erase_node(iter->pbr_material.input_color_sheen);
+					m_graph_.erase_node(iter->pbr_material.input_weight_sheen);
+					m_graph_.erase_node(iter->pbr_material.input_tint_sheen);
+
+					// Clearcoat
+					m_graph_.erase_node(iter->pbr_material.input_color_clearcoat);
+					m_graph_.erase_node(iter->pbr_material.input_weight_clearcoat);
+					m_graph_.erase_node(iter->pbr_material.input_roughness_clearcoat);
+					m_graph_.erase_node(iter->pbr_material.input_ior_clearcoat);
+
+
+
+					break;
+				}
+
+
+
 				case HorusUiNodeType::Add:
 				{
 					m_graph_.erase_node(iter->add.input0);
@@ -2454,6 +1572,10 @@ void HorusMaterialEditor::update()
 
 void HorusMaterialEditor::update_material()
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
+
 	root_node_changed();
 
 	if (m_root_node_ID_ != -1)
@@ -2462,12 +1584,12 @@ void HorusMaterialEditor::update_material()
 		{
 			if (!material_already_set)
 			{
-				g_object_impedit.set_material_from_editor_node(g_object_impedit.get_mesh_id_to_set_material(), m_out_modified_);
+				// TODO : Check here if the material is already set or if it's correctly set after a change
+
+				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_modified_);
 				material_already_set = true;
 				change_detected = true;
 			}
-
-			spdlog::info("m_IsOutputConnected_ is true");
 
 			output_connected_last_frame = true;
 		}
@@ -2475,7 +1597,7 @@ void HorusMaterialEditor::update_material()
 		{
 			if (output_connected_last_frame)
 			{
-				g_object_impedit.set_material_from_editor_node(g_object_impedit.get_mesh_id_to_set_material(), m_out_node_);
+				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_node_);
 				material_already_set = false;
 				change_detected = true;
 			}
@@ -2485,11 +1607,8 @@ void HorusMaterialEditor::update_material()
 	}
 	else  // m_root_node_ID_ is -1
 	{
-
-
 		output_connected_last_frame = false;
 	}
-
 
 	if (change_detected)
 	{
@@ -2507,8 +1626,8 @@ void HorusMaterialEditor::update_material()
 
 				m_out_modified_ = evaluate_rpr_material_node(m_graph_, m_root_node_ID_);
 
-				g_object_impedit.set_material_from_editor_node(g_object_impedit.get_mesh_id_to_set_material(), m_out_modified_); // Set final material 
-				spdlog::info("id to set is {}", g_object_impedit.get_mesh_id_to_set_material());
+				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_modified_); // Set final material 
+				spdlog::info("id to set is {}", ObjectManager.get_mesh_id_to_set_material());
 
 				need_reevaluate = false;
 
@@ -2517,26 +1636,17 @@ void HorusMaterialEditor::update_material()
 			{
 				m_IsThisMaterial_ = false;
 
-				g_object_impedit.set_material_from_editor_node(g_object_impedit.get_mesh_id_to_set_material(), m_out_node_);
+				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_node_);
 
-				spdlog::info("id to set is {}", g_object_impedit.get_mesh_id_to_set_material());
+				spdlog::info("id to set is {}", ObjectManager.get_mesh_id_to_set_material());
 
 				need_reevaluate = false;
 			}
 		}
 
-		spdlog::info("change detected");
-
-		g_engine_impediet.call_reset_buffer();
+		Engine.call_reset_buffer();
 		change_detected = false;
 	}
-
-	else
-	{
-		spdlog::info("no change detected");
-	}
-
-	spdlog::info("update material");
 }
 
 bool HorusMaterialEditor::root_node_changed()
@@ -2563,10 +1673,20 @@ void HorusMaterialEditorBrowser::init()
 
 void HorusMaterialEditorBrowser::update()
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
+
 	ImGui::Begin("Material Browser");
 
 	std::vector<std::string> materials;
-	g_object_impedit.get_material_editor_materials(materials);
+
+	/*if (!materials.empty()) {
+		selectedMaterial = materials[0];
+	}*/
+
+	ObjectManager.get_material_editor_materials(materials);
+
 
 
 	if (ImGui::TreeNode("Materials"))
@@ -2578,10 +1698,10 @@ void HorusMaterialEditorBrowser::update()
 			{
 				selectedMaterial = material;
 
-				int id = g_object_impedit.get_material_editor_id_by_name(material.c_str());
+				int id = ObjectManager.get_material_editor_id_by_name(material.c_str());
 
-				g_object_impedit.set_material_editor_to_show(id);
-				g_object_impedit.set_material_editor_mesh_to_set_material(id);
+				ObjectManager.set_material_editor_mesh_to_set_material(id);
+				ObjectManager.set_material_editor_to_show(id);
 
 			}
 		}

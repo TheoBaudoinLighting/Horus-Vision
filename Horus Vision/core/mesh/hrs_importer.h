@@ -2,10 +2,7 @@
 
 #include <RadeonProRender_v2.h>
 #include <vector>
-#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 
 class HorusMeshImporter
 {
@@ -29,9 +26,9 @@ public:
 
 private:
 
-	HorusMeshImporter()	{}
-
-	void process_mesh(aiMesh* mesh);
+	HorusMeshImporter(): m_num_faces(0), m_shape_(nullptr), m_imported_shape_(nullptr)
+	{
+	}
 
 	std::vector<aiMesh*> m_meshes_;
 	std::vector<float> m_vertices_;

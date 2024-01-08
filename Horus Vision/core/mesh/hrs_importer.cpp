@@ -1,24 +1,22 @@
 #include "hrs_importer.h"
 
 #include <RadeonProRender_v2.h>
-#include <RadeonProRender_GL.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
 
 #include <iostream>
 
 #include "hrs_radeon.h"
 #include "glm/glm.hpp"
 
-HorusRadeon& radeon_importer = HorusRadeon::get_instance();
-
 rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	spdlog::info("Loading mesh: {}", pFile);
 
 	Assimp::Importer importer;
@@ -36,7 +34,6 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 
 	aiMesh* mesh = scene->mMeshes[0];
 
-	// Vecteurs pour stocker les données
 	std::vector<rpr_float> vertices;
 	std::vector<rpr_float> normals;
 	std::vector<rpr_float> texcoords;
@@ -106,6 +103,7 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 			for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
 			{
 				aiFace face = mesh->mFaces[i];
+
 				faceVert.push_back(face.mNumIndices);
 
 
@@ -132,9 +130,20 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 			}
 		});
 
+	/*for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+	{
+		aiFace& face = mesh->mFaces[i];
+
+		unsigned int material_index = mesh->mMaterialIndex;
+
+
+	}*/
+
+
+
 	load_mesh_thread.join();
 
-	rpr_context context = radeon_importer.get_context();
+	rpr_context context = Radeon.get_context();
 
 	bool isValidNorm = mesh->HasNormals();
 	bool isValidTex = mesh->HasTextureCoords(0);

@@ -10,22 +10,24 @@
 
 #include "objects/hrs_object_manager.h"
 
-HorusRadeon& radeon_ImLigth = HorusRadeon::get_instance();
-HorusObjectManager& g_object_imp = HorusObjectManager::get_instance();
-
-RPRGarbageCollector m_gc = radeon_ImLigth.get_gc();
-
 std::mutex mtx;
 
 void HorusLight::init(const std::string& light_type, const std::string& hdri_image)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	RPRGarbageCollector& gc = Radeon.get_gc();
+
 	m_light = create_light(light_type, hdri_image);
 
-	m_gc.GCAdd(m_light);
+	gc.GCAdd(m_light);
 }
 
 rpr_light create_hdri_light(const std::string& hdri_image)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	RPRGarbageCollector& gc = Radeon.get_gc();
+
 	rpr_light light = nullptr;
 	rpr_image image = nullptr;
 
@@ -36,12 +38,12 @@ rpr_light create_hdri_light(const std::string& hdri_image)
 		return nullptr;
 	}
 
-	CHECK(rprContextCreateEnvironmentLight(radeon_ImLigth.get_context(), &light));
-	m_gc.GCAdd(light);
+	CHECK(rprContextCreateEnvironmentLight(Radeon.get_context(), &light));
+	gc.GCAdd(light);
 
 	const std::string path = hdri_image;
 
-	rpr_status status = rprContextCreateImageFromFile(radeon_ImLigth.get_context(), path.c_str(), &image);
+	rpr_status status = rprContextCreateImageFromFile(Radeon.get_context(), path.c_str(), &image);
 
 	if (status != RPR_SUCCESS)
 	{
@@ -50,11 +52,11 @@ rpr_light create_hdri_light(const std::string& hdri_image)
 		return nullptr;
 	}
 	CHECK(status);
-	m_gc.GCAdd(image);
+	gc.GCAdd(image);
 
 	CHECK(rprEnvironmentLightSetImage(light, image));
 	CHECK(rprEnvironmentLightSetIntensityScale(light, 1.f));
-	CHECK(rprSceneAttachLight(g_object_imp.get_scene(), light));
+	CHECK(rprSceneAttachLight(ObjectManager.get_scene(), light));
 
 	spdlog::info("Light created");
 
@@ -63,6 +65,9 @@ rpr_light create_hdri_light(const std::string& hdri_image)
 
 rpr_light HorusLight::create_light(const std::string& light_type, const std::string& hdri_image)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+RPRGarbageCollector& gc = Radeon.get_gc();
+
 	spdlog::info("Create light of type: {}", light_type);
 
 	rpr_light light = nullptr;
@@ -73,7 +78,7 @@ rpr_light HorusLight::create_light(const std::string& light_type, const std::str
 			{
 				std::lock_guard<std::mutex> lock(mtx);
 				light = create_hdri_light(hdri_image);
-				m_gc.GCAdd(light);
+				gc.GCAdd(light);
 			}); t.join();
 
 	}
@@ -85,9 +90,11 @@ rpr_light HorusLight::create_light(const std::string& light_type, const std::str
 
 void HorusLight::destroy_light()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	if (m_light != nullptr)
 	{
-		CHECK(rprSceneDetachLight(g_object_imp.get_scene(), m_light));
+		CHECK(rprSceneDetachLight(ObjectManager.get_scene(), m_light));
 		CHECK(rprObjectDelete(m_light));
 		m_light = nullptr;
 	}

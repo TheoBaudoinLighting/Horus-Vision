@@ -340,7 +340,7 @@ public:
 	{
 		for (auto& material : m_material_editors_)
 		{
-			int id = material.first;
+			int id = material.first; 
 			std::string material_name = m_material_editor_names_[id];
 
 			if (material_name == name)

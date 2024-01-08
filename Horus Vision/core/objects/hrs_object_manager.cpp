@@ -4,10 +4,9 @@
 
 #include "spdlog/spdlog.h"
 
-
-HorusRadeon& radeon_ImpM = HorusRadeon::get_instance();
-HorusMaterialEditorBrowser& material_editor_browser_ImpM = HorusMaterialEditorBrowser::get_instance();
-HorusMaterialEditorCreateMenu& material_editor_create_menu_ImpM = HorusMaterialEditorCreateMenu::get_instance();
+//HorusRadeon& radeon_ImpM = HorusRadeon::get_instance();
+//HorusMaterialEditorBrowser& material_editor_browser_ImpM = HorusMaterialEditorBrowser::get_instance();
+//HorusMaterialEditorCreateMenu& material_editor_create_menu_ImpM = HorusMaterialEditorCreateMenu::get_instance();
 
 // Camera management ------------------------------------------------------------------------------
 
@@ -885,12 +884,16 @@ void HorusObjectManager::close_material_editor(int id)
 
 void HorusObjectManager::open_material_editor_browser()
 {
-	material_editor_browser_ImpM.update();
+    HorusMaterialEditorBrowser& MaterialEditor = HorusMaterialEditorBrowser::get_instance();
+
+	MaterialEditor.update();
 }
 
 void HorusObjectManager::close_material_editor_browser()
 {
-	material_editor_browser_ImpM.quit();
+	HorusMaterialEditorBrowser& MaterialEditor = HorusMaterialEditorBrowser::get_instance();
+
+	MaterialEditor.quit();
 }
 
 int HorusObjectManager::set_material_editor_to_show(int id)

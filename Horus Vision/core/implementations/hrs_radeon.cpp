@@ -21,11 +21,7 @@
 #include "ImGuizmo.h"
 #include "objects/hrs_object_manager.h"
 
-// call engine
-HorusEngine& m_engineR_ = HorusEngine::get_instance(); // each call requires a new name but get instance is the same
-HorusObjectManager& g_object_manager = HorusObjectManager::get_instance();
-
-std::mutex renderMutex; // oublie pas ton putain de mutex de merde theo !!!!!!!!! <----------------------------------LA ICIICICICI TA LE MUTEX !!!!!!! FAUT LE LAISSER !!!!
+std::mutex renderMutex; 
 
 class Render_Progress_Callback
 {
@@ -148,6 +144,8 @@ bool HorusRadeon::init(int width, int height, HorusWindowConfig* window)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_window_width_, m_window_height_, 0, GL_RGBA, GL_FLOAT, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	m_program_ = m_shader_manager_.get_program("core/shaders/shader");
+
 	spdlog::info("Radeon initialized.");
 
 	set_window_size(m_window_width_, m_window_height_);
@@ -160,9 +158,7 @@ void HorusRadeon::init_render()
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id_);
 
-	m_program_ = m_shader_manager_.get_program("core/shaders/shader");
 	auto [texture_location, position_location, texcoord_location] = get_shader_variables(m_program_, "g_Texture", "inPosition", "inTexcoord");
-
 
 	glUseProgram(m_program_);
 	glUniform1i(texture_location, 0);
@@ -184,19 +180,28 @@ void HorusRadeon::init_render()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glUseProgram(0);
+
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		spdlog::error("OpenGL error : {}", error);
+	}
+
 }
 
 void HorusRadeon::post_render() {}
 
 void HorusRadeon::quit_render()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	spdlog::info("Unload Radeon..");
 	spdlog::info("Release memory..");
 
-	g_object_manager.destroy_all_meshes();
-	g_object_manager.destroy_all_material();
-	g_object_manager.destroy_all_material_editors();
-	g_object_manager.destroy_all_lights();
+	ObjectManager.destroy_all_meshes();
+	ObjectManager.destroy_all_material();
+	ObjectManager.destroy_all_material_editors();
+	ObjectManager.destroy_all_lights();
 
 	spdlog::info("All Radeon objects deleted..");
 
@@ -206,11 +211,11 @@ void HorusRadeon::quit_render()
 	CHECK(rprObjectDelete(m_frame_buffer_)); m_frame_buffer_ = nullptr;
 	CHECK(rprObjectDelete(m_frame_buffer_2_)); m_frame_buffer_2_ = nullptr;
 	
-	g_object_manager.destroy_all_scenes();
+	ObjectManager.destroy_all_scenes();
 
 	m_gc_.GCClean();
 
-	g_object_manager.destroy_all_cameras();
+	ObjectManager.destroy_all_cameras();
 
 	rprContextClearMemory(m_context_);
 	CheckNoLeak(m_context_);
@@ -221,6 +226,8 @@ void HorusRadeon::quit_render()
 
 bool HorusRadeon::init_graphics()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	spdlog::info("Init Radeon graphics..");
 
 	rpr_int status = RPR_SUCCESS;
@@ -247,19 +254,19 @@ bool HorusRadeon::init_graphics()
 	spdlog::info("Rpr context successfully set active plugin..");
 	spdlog::info("Rpr context successfully created..");
 
-	g_object_manager.create_scene(0, "render_scene");
+	ObjectManager.create_scene(0, "render_scene");
 
 	m_sample_count_ = 1;
 
-	g_object_manager.create_camera_with_id(0, "rendercam");
+	ObjectManager.create_camera_with_id(0, "rendercam");
 
 	// Create Scene --------------------------------------------------------------------------------------------------------
 	
-	g_object_manager.create_light(0, "Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
+	ObjectManager.create_light(0, "Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
 
 
-	g_object_manager.show_dummy_dragon();
-	g_object_manager.show_dummy_plane();
+	ObjectManager.show_dummy_dragon();
+	ObjectManager.show_dummy_plane();
 
 	// ---------------------------------------------------------------------------------------------------------------------
 
@@ -401,6 +408,8 @@ void HorusRadeon::render_engine()
 
 	benchmark_number_of_render_iteration += m_batch_size_;
 }
+
+void HorusRadeon::render_engine_tiled() {}
 
 float HorusRadeon::get_render_progress()
 {

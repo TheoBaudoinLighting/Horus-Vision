@@ -15,6 +15,9 @@ public:
 		return instance;
 	}
 
+	HorusOpenGL(const HorusOpenGL&) = delete;
+	void operator=(const HorusOpenGL&) = delete;
+
 	bool init(int width, int height, HorusWindowConfig* window) override;
 
 	void init_render() override;
@@ -23,9 +26,7 @@ public:
 
 private:
 
-	HorusOpenGL() = default;
-	HorusOpenGL(const HorusOpenGL&) = delete;
-	void operator=(const HorusOpenGL&) = delete;
+	HorusOpenGL() {}
 
 	HorusLogger m_logger_;
 

@@ -5,30 +5,36 @@
 #include "hrs_importer.h"
 #include "hrs_material.h"
 #include "hrs_radeon.h"
-#include "objects/hrs_object_manager.h"
+#include "hrs_object_manager.h"
 
-HorusRadeon& radeon_mesh = HorusRadeon::get_instance();
-HorusObjectManager& object_manager = HorusObjectManager::get_instance();
-HorusMeshImporter& mesh_importer = HorusMeshImporter::get_instance();
+//HorusRadeon& Radeon = HorusRadeon::get_instance();
+//HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+//HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
 
 void HorusMesh::init(const char* path, const char* name)
 {
-	m_shape_ = mesh_importer.load_mesh(path);
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
+
+	m_shape_ = MeshImporter.load_mesh(path);
 
 	rpr_scene g_scene = nullptr;
-	g_scene = object_manager.get_scene();
+	g_scene = ObjectManager.get_scene();
 
 	rprSceneAttachShape(g_scene, m_shape_);
 
-	RPRGarbageCollector m_gc_ = radeon_mesh.get_gc();
+	RPRGarbageCollector m_gc_ = Radeon.get_gc();
 
 	m_gc_.GCAdd(m_shape_);
 }
 
 void HorusMesh::destroy_mesh()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	rpr_scene g_scene = nullptr;
-	g_scene = object_manager.get_scene();
+	g_scene = ObjectManager.get_scene();
 
 	rprSceneDetachShape(g_scene, m_shape_);
 
@@ -88,8 +94,10 @@ void HorusMesh::set_shape_scale(RadeonProRender::float3 scale)
 
 void HorusMesh::set_object_to_scene(rpr_scene& scene)
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	rpr_scene g_scene = nullptr;
-	g_scene = object_manager.get_scene();
+	g_scene = ObjectManager.get_scene();
 
 	rprSceneAttachShape(g_scene, m_shape_);
 }

@@ -1,5 +1,6 @@
 // Main file for Horus Vision
 
+// Project includes
 #include "hrs_window.h"
 
 class Horus_Core

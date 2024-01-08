@@ -1,30 +1,34 @@
 #include "hrs_window.h"
 
-HorusEngine& m_engine_ = HorusEngine::get_instance();
-HorusRadeon& m_radeon_context_ = HorusRadeon::get_instance();
-HorusOpenGL& m_opengl_context_ = HorusOpenGL::get_instance();
-HorusImGui& m_imgui_context_ = HorusImGui::get_instance();
+#include "imgui_notify.h"
 
 void HorusWindow::init_contexts(int width, int height, HorusWindow* window)
 {
-	m_opengl_context_.init(width, height, window);
-	m_imgui_context_.init(width, height, window);
-	m_radeon_context_.init(width, height, window);
+	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+	HorusImGui& ImGui = HorusImGui::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
+	OpenGL.init(width, height, window);
+	ImGui.init(width, height, window);
+	Radeon.init(width, height, window);
 
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
 }
 
 bool HorusWindow::init_window(int width, int height, const std::string& title)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	m_window_width_ = width;
 	m_window_height_ = height;
 	m_window_title_ = title;
 
 	init_contexts(m_window_width_, m_window_height_, this);
 
-	m_radeon_context_.init_graphics();
-	m_radeon_context_.init_render();
+	Radeon.init_graphics();
+	//m_radeon_context_.init_render();
 
+	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");
 
 	return m_IsRunning_;
@@ -32,19 +36,23 @@ bool HorusWindow::init_window(int width, int height, const std::string& title)
 
 void HorusWindow::render()
 {
+	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+	HorusImGui& ImGui = HorusImGui::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	m_IsClosing_ = m_engine_.get_is_closing();
 
-	m_opengl_context_.init_render();
-	m_imgui_context_.init_render();
-	m_radeon_context_.init_render();
+	OpenGL.init_render();
+	ImGui.init_render();
+	Radeon.init_render();
 
-	m_radeon_context_.render_engine();
+	Radeon.render_engine();
 
-	m_engine_.ui_init();
+	m_engine_.ui_init(); // TODO : 11,39% of the time spent in this function -> optimize it
 
-	m_imgui_context_.post_render();
-	m_opengl_context_.post_render();
-	m_radeon_context_.post_render();
+	ImGui.post_render();
+	OpenGL.post_render();
+	Radeon.post_render();
 
 	process_input();
 
@@ -64,6 +72,9 @@ void HorusWindow::key_callback(int key, int scancode, int action, int mods)
 
 void HorusWindow::process_input()
 {
+	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	if (glfwGetKey(m_window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		close();
@@ -137,9 +148,9 @@ void HorusWindow::process_input()
 
 	if (glfwGetWindowAttrib(m_window_, GLFW_RESIZABLE) == GLFW_TRUE)
 	{
-		ImVec2 img_size = m_engine_.get_image_size();
+		ImVec2 img_size = Engine.get_image_size();
 
-		float img_aspect_ratio = m_engine_.get_image_aspect_ratio();
+		float img_aspect_ratio = Engine.get_image_aspect_ratio();
 		float current_aspect_ratio = img_size.x / img_size.y;
 
 		const float epsilon = 0.01f;
@@ -155,16 +166,20 @@ void HorusWindow::process_input()
 				img_size.y = img_size.x / img_aspect_ratio;
 			}
 
-			m_radeon_context_.resize_render(img_size.x, img_size.y);
+			Radeon.resize_render(img_size.x, img_size.y);
 		}
 	}
 }
 
 void HorusWindow::close()
 {
-	m_radeon_context_.quit_render();
-	m_imgui_context_.quit_render();
-	m_opengl_context_.quit_render();
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusImGui& ImGui = HorusImGui::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+
+	Radeon.quit_render();
+	ImGui.quit_render();
+	OpenGL.quit_render();
 
 	m_IsRunning_ = false;
 }

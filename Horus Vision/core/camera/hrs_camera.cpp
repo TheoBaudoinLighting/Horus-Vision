@@ -10,15 +10,11 @@
 using namespace std;
 using namespace RadeonProRender;
 
-HorusRadeon& radeon_ImpCam = HorusRadeon::get_instance();
-HorusObjectManager& g_object_impco = HorusObjectManager::get_instance();
-
 // Basic funtionality
-
 bool are_orthogonal(const RadeonProRender::float3& a, const RadeonProRender::float3& b)
 {
 	float dotProduct = a.x * b.x + a.y * b.y + a.z * b.z;
-	return abs(dotProduct) < 1e-6;  // tolérance numérique
+	return abs(dotProduct) < 1e-6;
 }
 
 float degrees(float radians)
@@ -69,7 +65,7 @@ void frustrum(float left, float right, float bottom, float top, float znear, flo
 	m16[15] = 0.0f;
 }
 
-void perspective(float fovy, float aspect, float znear, float zfar, float* m16)
+void perspective(double fovy, float aspect, float znear, float zfar, float* m16)
 {
 	float ymax, xmax;
 	ymax = znear * tanf(fovy * PI / 180.0);
@@ -145,6 +141,9 @@ void lookatF(const float* eye, const float* at, const float* up, float* m16)
 
 void HorusCamera::init()
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	this->m_fov_ = radians(m_fov_);
 
 	m_position_ = float3(0.0f, 5.0f, 20.0f);
@@ -153,31 +152,37 @@ void HorusCamera::init()
 	m_forward_ = normalize(m_lookat_ - m_position_);
 	m_pivot_ = m_lookat_;
 
-	CHECK(rprContextCreateCamera(radeon_ImpCam.get_context(), &m_camera_));
+	m_mode_ = CameraMode::Free;
+	m_calculation_ = CameraCalculation::Euler;
+	m_type_ = CameraType::Perspective;
 
-	CHECK(rprCameraLookAt(m_camera_, m_position_.x, m_position_.y, m_position_.z, m_lookat_.x, m_lookat_.y, m_lookat_.z, m_up_.x, m_up_.y, m_up_.z));
+	CHECK(rprContextCreateCamera(Radeon.get_context(), &m_camera_))
 
-	//CHECK(rprCameraSetFocalLength(m_camera_, 75.0f));
-	CHECK(rprSceneSetCamera(g_object_impco.get_scene(), m_camera_));
+	CHECK(rprCameraLookAt(m_camera_, m_position_.x, m_position_.y, m_position_.z, m_lookat_.x, m_lookat_.y, m_lookat_.z, m_up_.x, m_up_.y, m_up_.z))
+
+	CHECK(rprCameraSetFocalLength(m_camera_, 45.0f));
+	CHECK(rprSceneSetCamera(ObjectManager.get_scene(), m_camera_))
 }
 
 void HorusCamera::destroy()
 {
 	if (m_camera_)
 	{
-		CHECK(rprObjectDelete(m_camera_));
+		CHECK(rprObjectDelete(m_camera_))
 		m_camera_ = nullptr;
 	}
 }
 
 void HorusCamera::bind()
 {
-	CHECK(rprSceneSetCamera(g_object_impco.get_scene(), m_camera_));
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
+	CHECK(rprSceneSetCamera(ObjectManager.get_scene(), m_camera_))
 }
 
 void HorusCamera::unbind()
 {
-	CHECK(rprSceneSetCamera(nullptr, m_camera_));
+	CHECK(rprSceneSetCamera(nullptr, m_camera_))
 }
 
 void HorusCamera::set_lookat(const float3& pivot)
@@ -298,28 +303,60 @@ void HorusCamera::tumbling(float dx, float dy)
 {
 	get_info();
 
-	float angle_x = dx * 1.0f;
-	float angle_y = dy * 1.0f;
+	if (m_calculation_ == CameraCalculation::Euler)
+	{
+		float angle_x = dx * 1.0f;
+		float angle_y = dy * 1.0f;
+
+
+		RadeonProRender::float3 camera_to_pivot = m_position_ - m_lookat_;
+
+		float radius = length(camera_to_pivot);
+		float current_yaw = atan2f(camera_to_pivot.z, camera_to_pivot.x);
+		float current_pitch = asinf(camera_to_pivot.y / radius);
+
+		current_yaw += angle_x;
+		current_pitch += angle_y;
+
+
+		const float min_pitch = radians(90.0f);
+		current_pitch = std::max(-min_pitch, std::min(min_pitch, current_pitch));
+
+		camera_to_pivot.x = radius * cosf(current_pitch) * cosf(current_yaw);
+		camera_to_pivot.y = radius * sinf(current_pitch);
+		camera_to_pivot.z = radius * cosf(current_pitch) * sinf(current_yaw);
+
+		m_position_ = m_lookat_ + camera_to_pivot;
+	}
+	else if (m_calculation_ == CameraCalculation::Quaternion)
+	{
+		float angle_x = dx * 1.0f;
+		float angle_y = dy * 1.0f;
+
+		RadeonProRender::float3 camera_to_pivot = m_position_ - m_lookat_;
+		float radius = length(camera_to_pivot);
+		float yaw = atan2f(camera_to_pivot.z, camera_to_pivot.x);
+		float pitch = asinf(camera_to_pivot.y / radius);
+
+		yaw += angle_x;
+		pitch += angle_y;
+
+		// Create matrices
+		RadeonProRender::matrix rotation_matrix;
+
+		RadeonProRender::quaternion rotation_quaternion = RadeonProRender::quaternion::quaternion(rotation_matrix);
+
+
+
+
+
+	}
+
+
 
 	
-	RadeonProRender::float3 camera_to_pivot = m_position_ - m_lookat_;
 
-	float radius = length(camera_to_pivot);
-	float current_yaw = atan2f(camera_to_pivot.z, camera_to_pivot.x);
-	float current_pitch = asinf(camera_to_pivot.y / radius);
-
-	current_yaw += angle_x;
-	current_pitch += angle_y;
-
-
-	const float min_pitch = radians(90.0f);
-	current_pitch = std::max(-min_pitch, std::min(min_pitch, current_pitch));
-
-	camera_to_pivot.x = radius * cosf(current_pitch) * cosf(current_yaw);
-	camera_to_pivot.y = radius * sinf(current_pitch);
-	camera_to_pivot.z = radius * cosf(current_pitch) * sinf(current_yaw);
-
-	m_position_ = m_lookat_ + camera_to_pivot;
+	
 
 	update_camera();
 }
@@ -369,57 +406,57 @@ void HorusCamera::compute_view_projection_matrix(float* view, float* projection,
 
 void HorusCamera::set_focal_length(float focal_length)
 {
-	CHECK(rprCameraSetFocalLength(m_camera_, focal_length));
+	CHECK(rprCameraSetFocalLength(m_camera_, focal_length))
 }
 
 void HorusCamera::set_aperture_blades(int num_blades)
 {
-	CHECK(rprCameraSetApertureBlades(m_camera_, num_blades));
+	CHECK(rprCameraSetApertureBlades(m_camera_, num_blades))
 }
 
 void HorusCamera::set_exposure(float exposure)
 {
-	CHECK(rprCameraSetExposure(m_camera_, exposure));
+	CHECK(rprCameraSetExposure(m_camera_, exposure))
 }
 
 void HorusCamera::set_focal_distance(float focal_distance)
 {
-	CHECK(rprCameraSetFocusDistance(m_camera_, focal_distance));
+	CHECK(rprCameraSetFocusDistance(m_camera_, focal_distance))
 }
 
 void HorusCamera::set_sensor_size(float sensor_size)
 {
-	CHECK(rprCameraSetSensorSize(m_camera_, sensor_size, sensor_size));
+	CHECK(rprCameraSetSensorSize(m_camera_, sensor_size, sensor_size))
 }
 
 void HorusCamera::set_lens_shift(float lens_shift_x, float lens_shift_y)
 {
-	CHECK(rprCameraSetLensShift(m_camera_, lens_shift_x, lens_shift_y));
+	CHECK(rprCameraSetLensShift(m_camera_, lens_shift_x, lens_shift_y))
 }
 
 void HorusCamera::set_tilt(float tilt_x, float tilt_y)
 {
-	CHECK(rprCameraSetTiltCorrection(m_camera_, tilt_x, tilt_y));
+	CHECK(rprCameraSetTiltCorrection(m_camera_, tilt_x, tilt_y))
 }
 
 void HorusCamera::set_focal_tilt(float focal_tilt)
 {
-	CHECK(rprCameraSetFocalTilt(m_camera_, focal_tilt));
+	CHECK(rprCameraSetFocalTilt(m_camera_, focal_tilt))
 }
 
 void HorusCamera::set_FStop(float FStop)
 {
-	CHECK(rprCameraSetFStop(m_camera_, FStop));
+	CHECK(rprCameraSetFStop(m_camera_, FStop))
 }
 
 void HorusCamera::set_near_clip(float near_clip)
 {
-	CHECK(rprCameraSetNearPlane(m_camera_, near_clip));
+	CHECK(rprCameraSetNearPlane(m_camera_, near_clip))
 }
 
 void HorusCamera::set_far_clip(float far_clip)
 {
-	CHECK(rprCameraSetFarPlane(m_camera_, far_clip));
+	CHECK(rprCameraSetFarPlane(m_camera_, far_clip))
 }
 
 void HorusCamera::set_camera_speed(float speed)

@@ -7,21 +7,15 @@
 #include <filesystem>
 #include <regex>
 #include <vector>
+#include <chrono>
 
 #include "ImGuizmo.h"
 #include "objects/hrs_object_manager.h"
 
 #include "L2DFileDialog.h"
 
-HorusRadeon& radeonE = HorusRadeon::get_instance();
-HorusObjectManager& g_eobject_manager = HorusObjectManager::get_instance();
-
-
-HorusEngine& HorusEngine::get_instance()
-{
-	static HorusEngine instance;
-	return instance;
-}
+static long long duration = 0;
+bool options_changed = false;
 
 int HorusEngine::context_info(rpr_context& context)
 {
@@ -52,7 +46,7 @@ int HorusEngine::context_info(rpr_context& context)
 		size_t count = 0;
 		status = rprContextGetInfo(context, context_info_list[i], 0, nullptr, &count);
 
-		unsigned int size = count / sizeof(void*);
+		int size = count / sizeof(void*);
 
 		if (size > 0)
 		{
@@ -164,33 +158,35 @@ int HorusEngine::context_info(rpr_context& context)
 
 void reset_buffer()
 {
-	radeonE.set_is_dirty(true);
-	radeonE.set_sample_count(1);
-	CHECK(rprFrameBufferClear(radeonE.get_frame_buffer()));
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
+	options_changed = true;
+	Radeon.set_is_dirty(true);
+	Radeon.set_sample_count(1);
+	CHECK(rprFrameBufferClear(Radeon.get_frame_buffer()));
 }
 
 void process_move()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	bool isCameraMove = false;
-	bool isPreviewMode = false;
 
 	bool isLeftAltPressed = io.KeyAlt;
 
-	rpr_float delta_x = static_cast<int>(ImGui::GetMousePos().x);
-	rpr_float delta_y = static_cast<int>(ImGui::GetMousePos().y);
-
 	const float cameraSpeed = 0.1f;
 
-	std::vector<std::pair<int, std::function<void()>>> key_actions =
+	// Just boring for now, to put it back later, but all is good here
+	/*std::vector<std::pair<int, std::function<void()>>> key_actions =
 	{
-			{ImGuiKey_Z, [&]() { g_eobject_manager.move_camera_forward(0); }},
-			{ImGuiKey_S, [&]() { g_eobject_manager.move_camera_backward(0); }},
-			{ImGuiKey_Q, [&]() { g_eobject_manager.move_camera_left(0); }},
-			{ImGuiKey_D, [&]() { g_eobject_manager.move_camera_right(0); }},
-			{ImGuiKey_A, [&]() { g_eobject_manager.move_camera_up(0); }},
-			{ImGuiKey_E, [&]() { g_eobject_manager.move_camera_down(0); }}
+			{ImGuiKey_Z, [&]() { ObjectManager.move_camera_forward(0); }},
+			{ImGuiKey_S, [&]() { ObjectManager.move_camera_backward(0); }},
+			{ImGuiKey_Q, [&]() { ObjectManager.move_camera_left(0); }},
+			{ImGuiKey_D, [&]() { ObjectManager.move_camera_right(0); }},
+			{ImGuiKey_A, [&]() { ObjectManager.move_camera_up(0); }},
+			{ImGuiKey_E, [&]() { ObjectManager.move_camera_down(0); }}
 	};
 
 	for (const auto& key_action : key_actions)
@@ -200,14 +196,14 @@ void process_move()
 			isCameraMove = true;
 			key_action.second();
 		}
-	}
+	}*/
 
 	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F)))
 	{
 		isCameraMove = true;
-		RadeonProRender::float3 pivot = (0, 0, 0);
+		RadeonProRender::float3 pivot = (0.f, 0.f, 0.f);
 
-		g_eobject_manager.set_camera_lookat(0, pivot);
+		ObjectManager.set_camera_lookat(0, pivot);
 	}
 
 	if (isLeftAltPressed)
@@ -226,7 +222,7 @@ void process_move()
 				mouse_delta.x /= windowSize.x;
 				mouse_delta.y /= windowSize.y;
 
-				g_eobject_manager.tumble_camera(0, mouse_delta.x, mouse_delta.y);
+				ObjectManager.tumble_camera(0, mouse_delta.x, mouse_delta.y);
 				ImGui::ResetMouseDragDelta(0);
 			}
 
@@ -234,7 +230,7 @@ void process_move()
 			{
 				isCameraMove = true;
 				ImVec2 mouse_delta = ImGui::GetMouseDragDelta(1, 0);
-				g_eobject_manager.dolly_camera(0, cameraSpeed * mouse_delta.y);
+				ObjectManager.dolly_camera(0, cameraSpeed * mouse_delta.y);
 				ImGui::ResetMouseDragDelta(1);
 			}
 
@@ -247,7 +243,7 @@ void process_move()
 				mouse_delta.x /= windowSize.x;
 				mouse_delta.y /= windowSize.y;
 
-				g_eobject_manager.track_camera(0, mouse_delta.x, mouse_delta.y);
+				ObjectManager.track_camera(0, mouse_delta.x, mouse_delta.y);
 				ImGui::ResetMouseDragDelta(2);
 			}
 
@@ -255,7 +251,7 @@ void process_move()
 			{
 				isCameraMove = true;
 				float scroll_delta = io.MouseWheel;
-				g_eobject_manager.scroll_camera(0, scroll_delta);
+				ObjectManager.scroll_camera(0, scroll_delta);
 			}
 		}
 	}
@@ -349,6 +345,7 @@ void HorusEngine::ui_init()
 	if (show_winui_property_editor)  ui_property_editor(&show_winui_property_editor);
 	if (show_winui_outliner)         ui_outliner(&show_winui_outliner);
 	if (show_winui_material_editor)  ui_material_editor(&show_winui_material_editor);
+	if (show_winui_viewer_rt)        ui_viewer_rt(&show_winui_viewer_rt);
 	//if (show_winui_main_menu_bar)    ui_main_menu_bar(&show_winui_main_menu_bar);
 
 	//ImGui::ShowDemoWindow();
@@ -359,27 +356,27 @@ void HorusEngine::ui_init()
 		{
 			if (ImGui::MenuItem("New"))
 			{
-				/* Action pour 'Nouveau' */
+
 			}
 
 			if (ImGui::MenuItem("Open"))
 			{
-				/* Action pour 'Ouvrir' */
+
 			}
 
 			if (ImGui::MenuItem("Save scene"))
 			{
-				/* Action pour 'Enregistrer' */
+
 			}
 
 			if (ImGui::MenuItem("Save scene as.."))
 			{
-				/* Action pour 'Enregistrer' */
+
 			}
 
 			if (ImGui::MenuItem("Quit"))
 			{
-				m_IsClosing_ = true;
+				m_is_closing_ = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -388,12 +385,12 @@ void HorusEngine::ui_init()
 		{
 			if (ImGui::MenuItem("Cancel"))
 			{
-				/* Action pour 'Annuler' */
+
 			}
 
 			if (ImGui::MenuItem("Revert back"))
 			{
-				/* Action pour 'Rétablir' */
+
 			}
 
 			ImGui::EndMenu();
@@ -403,12 +400,12 @@ void HorusEngine::ui_init()
 		{
 			if (ImGui::MenuItem("Zoom +"))
 			{
-				/* Action pour 'Zoom +' */
+
 			}
 
 			if (ImGui::MenuItem("Zoom -"))
 			{
-				/* Action pour 'Zoom -' */
+
 			}
 
 			ImGui::EndMenu();
@@ -422,6 +419,7 @@ void HorusEngine::ui_init()
 			ImGui::MenuItem("Property Editor", NULL, &show_winui_property_editor);
 			ImGui::MenuItem("Outliner", NULL, &show_winui_outliner);
 			ImGui::MenuItem("Material Editor", NULL, &show_winui_material_editor);
+			ImGui::MenuItem("RT parameters", NULL, &show_winui_viewer_rt);
 			//ImGui::MenuItem("Main Menu Bar", NULL, &show_winui_main_menu_bar);
 
 
@@ -432,7 +430,7 @@ void HorusEngine::ui_init()
 		{
 			if (ImGui::MenuItem("About"))
 			{
-				/* Action pour 'À propos' */
+
 			}
 
 			ImGui::EndMenu();
@@ -446,6 +444,8 @@ void HorusEngine::ui_init()
 
 void HorusEngine::ui_viewer(bool* p_open)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
 	static bool isResizable = false;
 	static ImVec2 lastSize = ImVec2(0, 0);
 	static int customX = 800;
@@ -454,6 +454,13 @@ void HorusEngine::ui_viewer(bool* p_open)
 	static int lastCustomY = customY;
 	static float offsetX_adjust = 0.0f;
 	static float offsetY_adjust = 0.0f;
+
+	ImVec2 available = ImGui::GetContentRegionAvail();
+	float windowWidth = available.x;
+	float windowHeight = available.y - ImGui::GetFrameHeightWithSpacing();
+
+	static ImVec2 viewer_window_pos;
+	static ImVec2 viewer_window_size;
 
 	ImGuiIO& io = ImGui::GetIO();
 	bool isLeftAltPressed = io.KeyAlt;
@@ -467,25 +474,25 @@ void HorusEngine::ui_viewer(bool* p_open)
 	const char* items[] = { "800x600", "1024x768", "1280x536", "1280x720", "1920x1080", "1920x803", "2048x858" };
 	static int item_current = 0;
 
-
-
-
-	if (ImGui::Begin("Viewer", NULL, ImGuiWindowFlags_MenuBar | window_flags))
+	if (ImGui::Begin("Viewer", p_open, ImGuiWindowFlags_MenuBar | window_flags))
 	{
 		if (ImGui::BeginMenuBar())
 		{
+
+			ImGui::SetNextItemWidth(120);
 			ImGui::Text("Size : ");
 			ImGui::SameLine();
 
 			ImGui::SetNextItemWidth(120);
-			ImGui::DragInt("X", &customX);
+			ImGui::DragInt("", &customX);
 			ImGui::SameLine();
 
+			ImGui::SetNextItemWidth(10);
 			ImGui::Text(" x ");
 			ImGui::SameLine();
 
 			ImGui::SetNextItemWidth(120);
-			ImGui::DragInt("Y", &customY);
+			ImGui::DragInt("", &customY);
 			ImGui::SameLine();
 
 			ImGui::SetNextItemWidth(150);
@@ -500,10 +507,37 @@ void HorusEngine::ui_viewer(bool* p_open)
 
 			ImGui::SameLine();
 
+			if (ImGui::Button("Render Region"))
+			{
+				if (enable_render_region_)
+				{
+					enable_render_region_ = false;
+				}
+				else
+				{
+					enable_render_region_ = true;
+				}
+			}
+
 			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(20);
+			if (ImGui::BeginCombo("##Options de Zone de Rendu", NULL, ImGuiComboFlags_NoArrowButton))
+			{
+				static float opacity = 0.5f;
+
+				ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f, "%.1f");
+
+				ImGui::EndCombo();
+			}
+
+
+
+			ImGui::SameLine();
+
 			// progress bar
-			float progress = radeonE.get_render_progress();
-			int max_samples = radeonE.get_max_samples();
+			float progress = Radeon.get_render_progress();
+			int max_samples = Radeon.get_max_samples();
 			int current_samples = static_cast<int>(progress / 100.0f * max_samples);
 			ImGui::SetNextItemWidth(100);
 			ImGui::Text("Progress : ");
@@ -511,25 +545,77 @@ void HorusEngine::ui_viewer(bool* p_open)
 			char overlayText[32];
 			sprintf_s(overlayText, "%d sur %d", current_samples, max_samples);
 			ImGui::ProgressBar(progress / 100.0f, ImVec2(0.0f, 0.0f), overlayText);
-
+			bool isRenderComplete = (progress >= 100.0f);
 			ImGui::EndMenuBar();
+
+			if (progress <= m_min_samples_ && !has_started)
+			{
+				start_time = std::chrono::high_resolution_clock::now();
+				has_started = true;
+				options_changed = false;
+			}
+
+			if (progress >= 99.f && has_started)
+			{
+				auto end_time = std::chrono::high_resolution_clock::now();
+				auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+				total_seconds = duration_ms / 1000;
+				hours = total_seconds / 3600;
+				minutes = (total_seconds % 3600) / 60;
+				seconds = total_seconds % 60;
+				milliseconds = duration_ms % 1000;
+
+				m_chrono_time_ = duration;
+				has_started = false;
+			}
+
+			if (isRenderComplete)
+			{
+				char timeString[100];
+				snprintf(timeString, sizeof(timeString), "Rendering finish in : %lldh %lldm %llds %lldms", hours, minutes, seconds, milliseconds);
+
+
+
+
+				ImVec2 overlay_pos = ImVec2(
+					viewer_window_pos.x + viewer_window_size.x / 2.0f,
+					viewer_window_pos.y + viewer_window_size.y - 30.0f
+				);
+
+				ImGuiWindowFlags overlay_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+				ImGui::SetNextWindowPos(overlay_pos, ImGuiCond_Always, ImVec2(0.5f, 1.0f));
+
+				ImGui::SetNextWindowBgAlpha(0.35f);
+				if (ImGui::Begin("finish_render", NULL, overlay_flags))
+				{
+					ImGui::Separator();
+					ImGui::Text("%s", timeString);
+					ImGui::Separator();
+				}
+				ImGui::End();
+
+
+			}
+			last_progress = progress;
 		}
 
 		if (customX != lastCustomX || customY != lastCustomY)
 		{
-			radeonE.resize_render(customX, customY);
+			Radeon.resize_render(customX, customY);
 			lastCustomX = customX;
 			lastCustomY = customY;
 		}
 
-		GLuint TextureID = radeonE.get_texture_buffer();
+		GLuint TextureID = Radeon.get_texture_buffer();
 		ImVec2 m_viewer_size = ImGui::GetContentRegionAvail();
 
 		if (isResizable)
 		{
 			if (m_viewer_size.x != lastSize.x || m_viewer_size.y != lastSize.y)
 			{
-				radeonE.resize_render(static_cast<int>(m_viewer_size.x), static_cast<int>(m_viewer_size.y));
+				Radeon.resize_render(static_cast<int>(m_viewer_size.x), static_cast<int>(m_viewer_size.y));
 				lastSize = m_viewer_size;
 			}
 
@@ -540,7 +626,6 @@ void HorusEngine::ui_viewer(bool* p_open)
 			float aspect_ratio_image = static_cast<float>(customX) / static_cast<float>(customY);
 			aspect_ratio_viewer = aspect_ratio_image;
 
-			// Conserve le ratio d'aspect
 			if (m_viewer_size.x / m_viewer_size.y > aspect_ratio_image)
 			{
 				img_size.y = m_viewer_size.y;
@@ -553,24 +638,20 @@ void HorusEngine::ui_viewer(bool* p_open)
 			}
 
 			float offsetX = (m_viewer_size.x - img_size.x - 60) * 0.5f;
-			float offsetY = (m_viewer_size.y - img_size.y) * 0.5f; // 60 en haut et 60 en bas
+			float offsetY = (m_viewer_size.y - img_size.y) * 0.5f;
 
-			ImGui::SetCursorPos(ImVec2(offsetX + 30, offsetY + 60)); // sert a centrer l'image
+			ImGui::SetCursorPos(ImVec2(offsetX + 30, offsetY + 60));
+
 			ImGui::Image((void*)(intptr_t)TextureID, img_size);
 
-			// test gizmo
+			float middleX = offsetX + 30 + img_size.x / 2.0f;
+			float middleY = offsetY + 60 + img_size.y / 2.0f;
 
-			/*float viewMatrix[16];
-			float projMatrix[16];
-
-			auto io = ImGui::GetIO();
-
-			g_eobject_manager.compute_view_projection_matrix(0, viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
-
-			float zero[16] = { 0.0f };
-
-			edit_transform_with_gizmo(viewMatrix, projMatrix, zero);*/
+			stored_image_position_ = ImVec2(middleX, middleY);
 		}
+
+		viewer_window_pos = ImGui::GetWindowPos();
+		viewer_window_size = ImGui::GetWindowSize();
 	}
 
 	ImGui::End();
@@ -578,8 +659,43 @@ void HorusEngine::ui_viewer(bool* p_open)
 	process_move();
 }
 
+void HorusEngine::ui_end_rendering_overlay(bool* p_open)
+{
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+	const float DISTANCE_PAD = 10.0f;
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImVec2 window_pos = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - DISTANCE_PAD, viewport->WorkPos.y + viewport->WorkSize.y - DISTANCE_PAD);
+	ImVec2 window_pos_pivot = ImVec2(1.0f, 1.0f);
+	window_pos = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - DISTANCE_PAD, viewport->WorkPos.y + viewport->WorkSize.y - DISTANCE_PAD);
+	window_pos_pivot = ImVec2(1.0f, 1.0f);
+
+	ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+	ImGui::SetNextWindowViewport(viewport->ID);
+	window_flags |= ImGuiWindowFlags_NoMove;
+
+
+
+
+	if (ImGui::Begin("render_overlay", p_open, window_flags))
+	{
+		ImGui::Text("Render finish in : (wip)");
+		ImGui::Separator();
+		if (ImGui::BeginPopupContextWindow())
+		{
+			if (ImGui::MenuItem("Fermer", NULL, p_open))
+				*p_open = false;
+			ImGui::EndPopup();
+		}
+	}
+	ImGui::End();
+}
+
 void HorusEngine::ui_property_editor(bool* p_open)
 {
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	m_ResetBuffer_ = false;
 
 	static char* file_dialog_buffer = nullptr;
@@ -591,17 +707,17 @@ void HorusEngine::ui_property_editor(bool* p_open)
 	GPU00N[0] = '\0';
 	GPU00N[1] = '\0';
 
-	rprContextGetInfo(radeonE.get_context(), RPR_CONTEXT_GPU0_NAME, sizeof(GPU00N), GPU00N, nullptr);
-	rprContextGetInfo(radeonE.get_context(), RPR_CONTEXT_GPU1_NAME, sizeof(GPU01N), GPU01N, nullptr);
-	rprContextGetInfo(radeonE.get_context(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(render_statistics_), &render_statistics_, 0);
+	rprContextGetInfo(Radeon.get_context(), RPR_CONTEXT_GPU0_NAME, sizeof(GPU00N), GPU00N, nullptr);
+	rprContextGetInfo(Radeon.get_context(), RPR_CONTEXT_GPU1_NAME, sizeof(GPU01N), GPU01N, nullptr);
+	rprContextGetInfo(Radeon.get_context(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(render_statistics_), &render_statistics_, 0);
 
-	ImGui::Begin("Property Panel");
+	ImGui::Begin("Property Panel", p_open);
 
 	// gpu name
-	int memory_usage = render_statistics_.gpumem_usage / 1024 / 1024;
-	int system_memory_usage = render_statistics_.sysmem_usage / 1024 / 1024;
-	int gpu_max_allocation = render_statistics_.gpumem_max_allocation / 1024 / 1024;
-	int gpu_total = render_statistics_.gpumem_total / 1024 / 1024; // 
+	rpr_longlong memory_usage = render_statistics_.gpumem_usage / 1024 / 1024;
+	rpr_longlong system_memory_usage = render_statistics_.sysmem_usage / 1024 / 1024;
+	rpr_longlong gpu_max_allocation = render_statistics_.gpumem_max_allocation / 1024 / 1024;
+	rpr_longlong gpu_total = render_statistics_.gpumem_total / 1024 / 1024; // 
 
 	ImGui::Separator();
 
@@ -610,7 +726,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 		ImGui::Text("GPU name: %s", GPU00N); // %s is a placeholder for a string
 		ImGui::Text("GPU name: %s", GPU01N);
 		ImGui::Separator();
-		ImGui::Text("Samples: %d", radeonE.get_sample_count()); // %d is a placeholder for an integer
+		ImGui::Text("Samples: %d", Radeon.get_sample_count()); // %d is a placeholder for an integer
 		ImGui::Separator();
 		ImGui::Text("System memory usage : %d MB", system_memory_usage);
 		ImGui::Text("GPU Memory usage : %d MB", memory_usage);
@@ -640,34 +756,34 @@ void HorusEngine::ui_property_editor(bool* p_open)
 		switch (selectedRenderMode)
 		{
 		case 0:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
 			break;
 		case 1:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
 			break;
 		case 2:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
 			break;
 		case 3:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
 			break;
 		case 4:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
 			break;
 		case 5:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
 			break;
 		case 6:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
 			break;
 		case 7:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
 			break;
 		case 8:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
 			break;
 		case 9:
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
 			break;
 		}
 		reset_buffer();
@@ -703,7 +819,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 	{
 		if (path != last_used_path || just_disabled_backdrop)
 		{
-			g_eobject_manager.set_background_image(path);
+			ObjectManager.set_background_image(path);
 			last_used_path = path;
 			just_disabled_backdrop = false;
 			reset_buffer();
@@ -712,7 +828,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 	}
 	else if (was_backdrop_image_enabled)
 	{
-		g_eobject_manager.unset_background_image();
+		ObjectManager.unset_background_image();
 		was_backdrop_image_enabled = false;
 		just_disabled_backdrop = true;
 		reset_buffer();
@@ -735,14 +851,14 @@ void HorusEngine::ui_property_editor(bool* p_open)
 	{
 		if (enable_transparent_background && !was_transparent_background_enabled)
 		{
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 1);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 1);
 			spdlog::info("Transparent background enabled");
 			was_transparent_background_enabled = true;
 			m_ResetBuffer_ = true;
 		}
 		else if (!enable_transparent_background && was_transparent_background_enabled)
 		{
-			rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 0);
+			rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 0);
 			spdlog::info("Transparent background disabled");
 			was_transparent_background_enabled = false;
 			m_ResetBuffer_ = true;
@@ -762,7 +878,6 @@ void HorusEngine::ui_property_editor(bool* p_open)
 
 	if (ImGui::CollapsingHeader("Render settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		// Début de la création des onglets
 		if (ImGui::BeginTabBar("rnds_settings"))
 		{
 			if (ImGui::BeginTabItem("Sampling"))
@@ -770,7 +885,6 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				// Sampling parameters
 
 				// Interactive render ?
-
 				// Progressive passes ?
 
 				// min and max samples set with slider and text input
@@ -787,7 +901,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 							m_min_samples_ = m_max_samples_;
 						}
 
-						radeonE.set_min_samples(m_min_samples_);
+						Radeon.set_min_samples(m_min_samples_);
 						reset_buffer();
 					}
 
@@ -800,16 +914,13 @@ void HorusEngine::ui_property_editor(bool* p_open)
 							m_max_samples_ = m_min_samples_;
 						}
 
-						radeonE.set_max_samples(m_max_samples_);
+						Radeon.set_max_samples(m_max_samples_);
 						reset_buffer();
 					}
 
 					ImGui::Separator();
 
 					// Russian roulette
-
-					// Russian roulette
-
 					static bool rrParametersChanged = false;
 
 					bool checkboxRRChanged = ImGui::Checkbox("Russian Roulette", &enable_russian_roulette_);
@@ -829,7 +940,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 
 						if (ImGui::SliderFloat("Depth", &russianRouletteDepth, 1.0f, 20.0f))  // Min 1.0, Max 20.0
 						{
-							rprContextSetParameterByKey1f(radeonE.get_context(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, russianRouletteDepth);
+							rprContextSetParameterByKey1f(Radeon.get_context(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, russianRouletteDepth);
 							rrParametersChanged = true;
 						}
 
@@ -871,18 +982,18 @@ void HorusEngine::ui_property_editor(bool* p_open)
 					{
 						if (enable_adaptive_sampling_ == true)
 						{
-							rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 16);
-							rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, m_min_samples_);
-							rprContextSetParameterByKey1f(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, m_adaptive_threshold_);
+							rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 16);
+							rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, m_min_samples_);
+							rprContextSetParameterByKey1f(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, m_adaptive_threshold_);
 						}
 						else
 						{
-							rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 0);
-							rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, 0);
-							rprContextSetParameterByKey1f(radeonE.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, 0.0f);
+							rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 0);
+							rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, 0);
+							rprContextSetParameterByKey1f(Radeon.get_context(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, 0.0f);
 						}
 
-						parametersChanged = false;  // Réinitialisation de la variable
+						parametersChanged = false; 
 					}
 
 					ImGui::Text("Threshold: %.2f", m_adaptive_threshold_);
@@ -899,7 +1010,6 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				ImGui::Separator();
 
 				// checkbox for enable preview mode
-
 				static bool previewParametersChanged = false;
 
 				bool checkboxChanged = ImGui::Checkbox("Enable preview", &enable_preview_mode_);
@@ -924,11 +1034,11 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				{
 					if (enable_preview_mode_ == true)
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_PREVIEW, 1);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_PREVIEW, 1);
 					}
 					else
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_PREVIEW, 0);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_PREVIEW, 0);
 					}
 
 					previewParametersChanged = false;
@@ -963,11 +1073,11 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				{
 					if (enable_AA_)
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_AA_ENABLED, 1);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_AA_ENABLED, 1);
 					}
 					else
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_AA_ENABLED, 0);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_AA_ENABLED, 0);
 					}
 
 					aaParametersChanged = false;
@@ -982,25 +1092,25 @@ void HorusEngine::ui_property_editor(bool* p_open)
 					switch (selectedFilter)
 					{
 					case 0:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BOX);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BOX);
 						break;
 					case 1:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_TRIANGLE);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_TRIANGLE);
 						break;
 					case 2:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_GAUSSIAN);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_GAUSSIAN);
 						break;
 					case 3:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_MITCHELL);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_MITCHELL);
 						break;
 					case 4:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_LANCZOS);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_LANCZOS);
 						break;
 					case 5:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BLACKMANHARRIS);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BLACKMANHARRIS);
 						break;
 					case 6:
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_NONE);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_NONE);
 						break;
 					}
 					reset_buffer();
@@ -1041,35 +1151,35 @@ void HorusEngine::ui_property_editor(bool* p_open)
 					static int maxDepthDiffuse = 1;
 					if (ImGui::SliderInt("Diffuse Ray Depth", &maxDepthDiffuse, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_DEPTH_DIFFUSE, maxDepthDiffuse);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_DEPTH_DIFFUSE, maxDepthDiffuse);
 						reset_buffer();
 					}
 
 					static int maxDepthGlossy = 1;
 					if (ImGui::SliderInt("Reflection Ray Depth", &maxDepthGlossy, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_DEPTH_GLOSSY, maxDepthGlossy);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_DEPTH_GLOSSY, maxDepthGlossy);
 						reset_buffer();
 					}
 
 					static int maxDepthRefraction = 1;
 					if (ImGui::SliderInt("Refraction Ray Depth", &maxDepthRefraction, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_DEPTH_REFRACTION, maxDepthRefraction);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_DEPTH_REFRACTION, maxDepthRefraction);
 						reset_buffer();
 					}
 
 					static int maxDepthGlossyRefraction = 1;
 					if (ImGui::SliderInt("Glossy Refraction Ray Depth", &maxDepthGlossyRefraction, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_DEPTH_GLOSSY_REFRACTION, maxDepthGlossyRefraction);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_DEPTH_GLOSSY_REFRACTION, maxDepthGlossyRefraction);
 						reset_buffer();
 					}
 
 					static int maxDepthShadow = 1;
 					if (ImGui::SliderInt("Shadow Ray Depth", &maxDepthShadow, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_DEPTH_SHADOW, maxDepthShadow);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_DEPTH_SHADOW, maxDepthShadow);
 						reset_buffer();
 					}
 
@@ -1140,7 +1250,7 @@ void HorusEngine::ui_property_editor(bool* p_open)
 
 					if (ImGui::SliderInt("Trace Depth", &maxRecursion, 1, 64))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_MAX_RECURSION, maxRecursion);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_MAX_RECURSION, maxRecursion);
 						reset_buffer();
 					}
 				}
@@ -1262,14 +1372,14 @@ void HorusEngine::ui_property_editor(bool* p_open)
 					static int cpuThreadLimit = 4;
 					if (ImGui::SliderInt("CPU Thread limit", &cpuThreadLimit, 1, 16))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_CPU_THREAD_LIMIT, cpuThreadLimit);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_CPU_THREAD_LIMIT, cpuThreadLimit);
 						reset_buffer();
 					}
 
 					static int gpuMemoryLimitMB = 1024;
 					if (ImGui::SliderInt("GPU Thread limit (MB)", &gpuMemoryLimitMB, 256, 16384))
 					{
-						rprContextSetParameterByKey1u(radeonE.get_context(), RPR_CONTEXT_GPU_MEMORY_LIMIT, gpuMemoryLimitMB * 1024 * 1024);
+						rprContextSetParameterByKey1u(Radeon.get_context(), RPR_CONTEXT_GPU_MEMORY_LIMIT, gpuMemoryLimitMB * 1024 * 1024);
 						reset_buffer();
 					}
 				}
@@ -1330,13 +1440,13 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				if (std::filesystem::exists(userInput + std::string(formats[export_format])))
 				{
 					suffix++;
-					filename = userInput + ("_" + std::to_string(suffix) + "_" + std::to_string(radeonE.get_sample_count()) + std::string(formats[export_format]));
+					filename = userInput + ("_" + std::to_string(suffix) + "_" + std::to_string(Radeon.get_sample_count()) + std::string(formats[export_format]));
 					spdlog::warn("File already exists, renaming to: {}", filename);
 				}
 				else
 				{
 					suffix = 0;
-					filename = userInput + ("_" + std::to_string(radeonE.get_sample_count()) + std::string(formats[export_format]));
+					filename = userInput + ("_" + std::to_string(Radeon.get_sample_count()) + std::string(formats[export_format]));
 					spdlog::info("Render exported with success: {}", filename);
 				}
 			}
@@ -1345,18 +1455,18 @@ void HorusEngine::ui_property_editor(bool* p_open)
 				if (std::filesystem::exists(baseFilename + std::string(formats[export_format])))
 				{
 					suffix++;
-					filename = baseFilename + ("_" + std::to_string(suffix) + std::to_string(radeonE.get_sample_count()) + std::string(formats[export_format]));
+					filename = baseFilename + ("_" + std::to_string(suffix) + std::to_string(Radeon.get_sample_count()) + std::string(formats[export_format]));
 					spdlog::warn("File already exists, renaming to: {}", filename);
 				}
 				else
 				{
 					suffix = 0;
-					filename = baseFilename + ("_" + std::to_string(radeonE.get_sample_count()) + std::string(formats[export_format]));
+					filename = baseFilename + ("_" + std::to_string(Radeon.get_sample_count()) + std::string(formats[export_format]));
 					spdlog::info("Render exported with success: {}", filename);
 				}
 			}
 
-			rpr_int status = rprFrameBufferSaveToFile(radeonE.get_frame_buffer_resolved(), filename.c_str());
+			rpr_int status = rprFrameBufferSaveToFile(Radeon.get_frame_buffer_resolved(), filename.c_str());
 
 			if (status != RPR_SUCCESS)
 			{
@@ -1411,21 +1521,23 @@ void HorusEngine::ui_property_editor(bool* p_open)
 
 void HorusEngine::ui_outliner(bool* p_open)
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	ImGuizmo::BeginFrame();
 	{
-		ImGui::Begin("Outliner");
+		ImGui::Begin("Outliner", p_open);
 		ImGui::Text("Outliner");
 
 		// toggle button
 
 		std::vector<std::string> meshes;
-		g_eobject_manager.get_outliner_meshes(meshes);
+		ObjectManager.get_outliner_meshes(meshes);
 
 		std::vector<std::string> materials;
-		g_eobject_manager.get_outliner_materials(materials);
+		ObjectManager.get_outliner_materials(materials);
 
 		std::vector<std::string> cameras;
-		g_eobject_manager.get_outliner_cameras(cameras);
+		ObjectManager.get_outliner_cameras(cameras);
 
 		ImGui::Separator();
 
@@ -1451,7 +1563,7 @@ void HorusEngine::ui_outliner(bool* p_open)
 		//{
 		//    for (const auto& mesh : meshes)
 		//    {
-		//        bool isSelected = (mesh == selectedMesh); // Vérifie si l'élément est sélectionné
+		//        bool isSelected = (mesh == selectedMesh);
 		//        if (ImGui::Selectable(mesh.c_str(), isSelected))
 		//        {
 		//            selectedMesh = mesh;
@@ -1504,9 +1616,9 @@ void HorusEngine::ui_outliner(bool* p_open)
 
 			auto io = ImGui::GetIO();
 
-			g_eobject_manager.compute_view_projection_matrix(0, viewMatrix, projectionMatrix, io.DisplaySize.x / io.DisplaySize.y);
+			ObjectManager.compute_view_projection_matrix(0, viewMatrix, projectionMatrix, io.DisplaySize.x / io.DisplaySize.y);
 
-			RadeonProRender::matrix viewMatrixRPR = g_eobject_manager.get_mesh_transform(0);
+			RadeonProRender::matrix viewMatrixRPR = ObjectManager.get_mesh_transform(0);
 
 			edit_transform_with_gizmo(viewMatrix, projectionMatrix, (float*)&viewMatrix);
 
@@ -1517,8 +1629,7 @@ void HorusEngine::ui_outliner(bool* p_open)
 
 			if (memcmp(&viewMatrix, &viewMatrixRPR, sizeof(float) * 16) != 0)
 			{
-				// Mise à jour de la transformation de l'objet
-				//g_eobject_manager.set_mesh_transform(0, viewMatrixRPR);
+				//ObjectManager.set_mesh_transform(0, viewMatrixRPR);
 			}
 
 
@@ -1536,13 +1647,15 @@ void HorusEngine::ui_outliner(bool* p_open)
 
 void HorusEngine::ui_material_editor(bool* p_open)
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	//----------------------------------------------------------------------------------------------------------------------
 
 
 
-	g_eobject_manager.show_material_editor(g_eobject_manager.get_material_editor_to_show());
+	ObjectManager.show_material_editor(ObjectManager.get_material_editor_to_show());
 
-	g_eobject_manager.open_material_editor_browser();
+	ObjectManager.open_material_editor_browser();
 
 	//----------------------------------------------------------------------------------------------------------------------
 
@@ -1559,8 +1672,8 @@ void HorusEngine::ui_material_editor(bool* p_open)
 	//{
 	//	if (ImGui::BeginMenu("File"))
 	//	{
-	//		if (ImGui::MenuItem("Ouvrir...")) { /* Fonctionnalité d'ouverture */ }
-	//		if (ImGui::MenuItem("Save")) { /* Fonctionnalité d'enregistrement */ }
+	//		if (ImGui::MenuItem("Ouvrir...")) { /* Fonctionnalit d'ouverture */ }
+	//		if (ImGui::MenuItem("Save")) { /* Fonctionnalit d'enregistrement */ }
 	//		if (ImGui::MenuItem("Quit")) { *p_open = false; }
 	//		ImGui::EndMenu();
 	//	}
@@ -1609,7 +1722,7 @@ void HorusEngine::ui_material_editor(bool* p_open)
 	//if (ImGui::Begin("Browser", p_open, ImGuiWindowFlags_NoCollapse))
 	//{
 
-	//	ImGui::Text("Navigateur de matériaux ici.");
+	//	ImGui::Text("Navigateur de matriaux ici.");
 	//	ImGui::End();
 	//}
 
@@ -1623,11 +1736,62 @@ void HorusEngine::ui_material_editor(bool* p_open)
 	//ImGui::End();
 }
 
+void HorusEngine::ui_viewer_rt(bool* p_open)
+{
+	HorusRadeon& Radeon = HorusRadeon::get_instance();
+
+	//ImGui::ShowDemoWindow(p_open);
+
+	int fps = ImGui::GetIO().Framerate;
+
+	ImGui::Begin("Realtime parameters view", p_open);
+
+	ImGui::Text("Samples: %d", Radeon.get_sample_count());
+
+	if (samples_mkr.size() > 100)
+	{
+		for (int i = 1; i < samples_mkr.size(); i++)
+		{
+			samples_mkr[i - 1] = samples_mkr[i];
+		}
+		samples_mkr[samples_mkr.size() - 1] = Radeon.get_sample_count();
+	}
+	else
+	{
+		samples_mkr.push_back(Radeon.get_sample_count());
+	}
+
+	ImGui::PlotLines("Samples", samples_mkr.data(), samples_mkr.size(), 0, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
+
+
+	// fps plot line
+	ImGui::Text("FPS: %d", fps);
+
+	// get frames
+	if (frame.size() > 100)
+	{
+		for (int i = 1; i < frame.size(); i++)
+		{
+			frame[i - 1] = frame[i];
+		}
+		frame[frame.size() - 1] = fps;
+	}
+	else
+	{
+		frame.push_back(fps);
+	}
+
+	ImGui::PlotLines("FPS", frame.data(), frame.size(), 0, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
+
+
+
+	ImGui::End();
+}
+
 void HorusEngine::call_reset_buffer()
 {
 	reset_buffer();
 }
-
 
 
 

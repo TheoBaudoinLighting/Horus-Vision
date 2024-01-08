@@ -5,6 +5,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imnodes.h"
+#include "imgui_notify.h"
 
 #include "spdlog/spdlog.h"
 
@@ -109,7 +110,12 @@ bool HorusImGui::init(int width, int height, HorusWindowConfig* window)
 		//style->WindowRounding = 0.0f;
 	}
 
-	io.Fonts->AddFontFromFileTTF(m_font_path_.c_str(), 16.0f);
+	ImFontConfig font_cfg;
+	font_cfg.FontDataOwnedByAtlas = false;
+
+	io.Fonts->AddFontFromFileTTF(m_font_path_.c_str(), 16.0f, &font_cfg);
+
+	ImGui::MergeIconsWithLatestFont(16.0f, false);
 
 	ImGui_ImplGlfw_InitForOpenGL(m_window_->get_window(), true);
 	ImGui_ImplOpenGL3_Init(m_glsl_version_);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GLAD/glad.h"
+//#include "GLAD/glad.h"
 
 #include "hrs_radeon.h"
 
@@ -13,17 +13,33 @@ class HorusEngine
 {
 public:
 
-	static HorusEngine& get_instance();
+	static HorusEngine& get_instance()
+	{
+		static HorusEngine instance;
+		return instance;
+	}
+
+	HorusEngine(HorusEngine const&) = delete;
+	void operator=(HorusEngine const&) = delete;
 
 	int context_info(rpr_context& context);
 
 	void ui_init();
 	void ui_viewer(bool* p_open);
+	void ui_end_rendering_overlay(bool* p_open);
 	void ui_property_editor(bool* p_open);
 	void ui_outliner(bool* p_open);
 	void ui_material_editor(bool* p_open);
+	void ui_viewer_rt(bool* p_open);
 
-	bool get_is_closing() { return m_IsClosing_; }
+	void update_performance_data(float currentFPS, float currentSampling)
+	{
+		fps_data_[current_frame_ % data_points_count] = currentFPS;
+		sampling_data_[current_frame_ % data_points_count] = currentSampling;
+		current_frame_++;
+	}
+
+	bool get_is_closing() { return m_is_closing_; }
 
 	ImVec2 get_image_size() { return img_size; }
 	float get_image_aspect_ratio() { return aspect_ratio_viewer; }
@@ -32,6 +48,9 @@ public:
 
 private:
 
+	HorusEngine() {}
+
+	const float desired_width_ = 800.0f;
 	char userInput[256] = "";
 	int suffix = 001;
 
@@ -63,13 +82,18 @@ private:
 	char GPU00N[1024];
 	char GPU01N[1024];
 
-	bool m_IsClosing_ = false;
+	std::vector<float> frame;
+	std::vector<float> samples_mkr;
+
+	bool m_is_closing_ = false;
 
 	glm::vec2 size_{};
 
 	ImVec2 img_size;
 	float aspect_ratio_viewer;
+	ImVec2 stored_image_position_;
 
+	bool enable_render_region_ = false;
 	bool previous_enable_adaptive_sampling_ = false;
 	bool previous_enable_AA_ = false;
 	bool previous_reset_mode_ = false;
@@ -81,13 +105,33 @@ private:
 	bool previous_enable_russian_roulette_ = false;
 	bool previous_enable_transparent_background = false;
 	bool enable_transparent_background = false;
+	long long m_chrono_time_;
+
+	inline static float last_progress = -1.0f;
+	inline static bool has_started = false;
+	inline static bool is_options_changed = false;
+	inline static std::chrono::high_resolution_clock::time_point start_time;
+	inline static std::chrono::high_resolution_clock::time_point end_time;
+	long long total_seconds;
+	long long hours;
+	long long minutes;
+	long long seconds;
+	long long milliseconds;
+
+	static const int data_points_count = 100;
+
+
+	float fps_data_[data_points_count] = {};
+	float sampling_data_[data_points_count] = {};
+	int current_frame_ = 0;
 
 	inline static bool show_winui_viewer = true;
 	inline static bool show_winui_property_editor = true;
 	inline static bool show_winui_outliner = false;
-	inline static bool show_winui_material_editor = true;
+	inline static bool show_winui_material_editor = false;
 	inline static bool show_winui_main_menu_bar = false;
 	inline static bool show_winui_material_browser = true;
+	inline static bool show_winui_viewer_rt = true;
 
 	std::string selectedMesh;
 	std::string selectedMaterial;

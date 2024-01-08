@@ -14,6 +14,9 @@ public:
 		return instance;
 	}
 
+	HorusImGui(const HorusImGui&) = delete;
+	void operator=(const HorusImGui&) = delete;
+
 	bool init(int width, int height, HorusWindowConfig* window) override;
 
 	void init_render() override;
@@ -22,9 +25,7 @@ public:
 
 private:
 
-	HorusImGui() = default;
-	HorusImGui(const HorusImGui&) = delete;
-	void operator=(const HorusImGui&) = delete;
+	HorusImGui() {}
 
 	std::string m_current_path_ = std::filesystem::current_path().string();
 	std::string m_font_path_ = "fonts/Montserrat-Bold.ttf";

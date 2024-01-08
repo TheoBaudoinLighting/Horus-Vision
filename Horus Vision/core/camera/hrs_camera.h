@@ -1,12 +1,26 @@
 #pragma once
 
-#include "hrs_radeon.h"
 #include <RadeonProRender_v2.h>
 #include <Math/float3.h>
 #include <Math/matrix.h>
 
+enum class CameraType
+{
+	Perspective,
+	Orthographic
+};
 
-using namespace std;
+enum class CameraMode
+{
+	Free,
+	Target
+};
+
+enum class CameraCalculation
+{
+	Euler,
+	Quaternion
+};
 
 class HorusCamera
 {
@@ -58,6 +72,10 @@ private:
 
 	void update_camera();
 
+	CameraType m_type_;
+	CameraMode m_mode_;
+	CameraCalculation m_calculation_;
+
 	RadeonProRender::float3 m_position_;
 	RadeonProRender::float3 m_lookat_ = RadeonProRender::float3(0.0f, 0.0f, 0.0f); // define center of the scene
 	RadeonProRender::float3 m_up_;
@@ -74,21 +92,7 @@ private:
 
 	float m_camera_speed_ = 1.5f;
 
-	float m_straffe_speed_x_ = 1.5f;
-	float m_straffe_speed_y_ = 1.5f;
-
-	float m_fov_;
-	float m_focal_dist_;
-	float m_aperture_;
-	float m_width_length_;
-	float m_height_length_;
-	float m_diagonal_length_;
-
-	float m_pitch_;
-	float m_yaw_;
-	float m_radius_;
-
-	bool m_IsMoving;
+	float m_fov_ = 0;
 
 	rpr_camera m_camera_ = nullptr;
 };

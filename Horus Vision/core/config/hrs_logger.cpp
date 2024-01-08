@@ -17,7 +17,3 @@ void HorusLogger::init()
 
 	set_default_logger(m_logger_);
 }
-
-void HorusLogger::quit()
-{
-}

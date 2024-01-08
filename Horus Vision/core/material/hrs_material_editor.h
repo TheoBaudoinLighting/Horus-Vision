@@ -36,19 +36,12 @@ public:
 
 	void quit();
 
-
-
-
-
 private:
 
 	HorusMaterialEditorBrowser()
 	{}
 
-	std::string selectedMaterial;
-
-
-
+	std::string selectedMaterial = "";
 };
 
 class HorusMaterialEditorCreateMenu
@@ -127,32 +120,138 @@ enum class HorusNodeType
 	Value,
 };
 
-class HorusNodeMeta
+enum class HorusConnectionType
+{
+	DIFFUSE_COLOR,
+	DIFFUSE_WEIGHT,
+	DIFFUSE_ROUGHNESS,
+	BACKSCATTERING_WEIGHT,
+	BACKSCATTERING_COLOR,
+	REFLECTION_COLOR,
+	RELECTION_WEIGHT,
+	RELECTION_ROUGHNESS,
+	RELECTION_BRDF,
+	RELECTION_ANISOTROPY,
+	RELECTION_ROTATION,
+	RELECTION_MODE,
+	RELECTION_IOR,
+	SHEEN_COLOR,
+	SHEEN_WEIGHT,
+	SHEEN_TINT,
+	CLEARCOAT_COLOR,
+	CLEARCOAT_WEIGHT,
+	CLEARCOAT_ROUGHNESS,
+	CLEARCOAT_IOR,
+	TRASMISSION_COLOR,
+	TRASMISSION_WEIGHT,
+	NORMAL,
+	BUMP,
+	DISPLACEMENT,
+	ESSION_COLOR,
+	ESSION_WEIGHT,
+	OACITY,
+};
+
+enum class HorusDataType
+{
+	IMAGE,
+	VALUE,
+	ARITHMETIC,
+	LOOKUP,
+	PRINT,
+	OUTPUT,
+};
+
+
+
+class HorusNodeMeta // All the data needed to create a node and its connections
 {
 public:
 
-	HorusNodeMeta() : m_node_(nullptr), m_node_type_(HorusNodeType::Horus_PBR_Material)
+	HorusNodeMeta() : m_node_(nullptr), m_image_(nullptr), m_node_type_(), id_(-1)	
 	{
 	}
 
+	HorusNodeMeta& operator=(const HorusNodeMeta& other) {
+		if (this != &other) {
+			m_node_ = other.m_node_;
+			m_image_ = other.m_image_;
+			m_node_type_ = other.m_node_type_;
+		}
+		return *this;
+	}
+
+	void set_type(HorusNodeType horus_node) { m_node_type_ = horus_node; }
+
+
+	HorusNodeMeta(const HorusNodeMeta& other) {
+		m_node_ = other.m_node_;
+		m_image_ = other.m_image_;
+		m_node_type_ = other.m_node_type_;
+	}
+
+	void set_id(int id) { id_ = id; }
+	int get_id() const { return id_; }
+
+
 	rpr_material_node get_node() const { return m_node_; }
-
 	rpr_image get_image() const { return m_image_; }
-
 	HorusNodeType get_node_type() const { return m_node_type_; }
 
 	void set_node(const rpr_material_node node) { m_node_ = node; }
-
 	void set_node_type(const HorusNodeType type) { m_node_type_ = type; }
-
 	void set_image(const rpr_image image) { m_image_ = image; }
+
+	// Input / Output
+
+	std::vector<HorusNodeMeta*> output_connections;
+	std::vector<HorusNodeMeta*> input_connections;
+
+	void connect_output(HorusNodeMeta* target_node)
+	{
+		output_connections.push_back(target_node);
+	}
+
+	void connect_input(HorusNodeMeta* source_node)
+	{
+		input_connections.push_back(source_node);
+	}
+
 
 private:
 
-	rpr_material_node m_node_;
-	rpr_image m_image_;
-	HorusNodeType m_node_type_;
+	HorusNodeType m_node_type_; // type of the node
 
+	// Data of the node
+	rpr_material_node m_node_; // data can contain a node
+	rpr_image m_image_; // data can contain an image
+
+	int id_;
+};
+
+class HorusNodeInfo
+{
+public:
+
+	HorusNodeInfo() : name_(""), inputTypes_(), outputTypes_()
+	{
+
+	}
+
+	HorusNodeInfo(const std::string& name, const std::vector<std::string>& inputTypes, const std::vector<std::string>& outputTypes)
+		: name_(name), inputTypes_(inputTypes), outputTypes_(outputTypes)
+	{
+
+	}
+
+	const std::string& getName() const { return name_; }
+	const std::vector<std::string>& getInputTypes() const { return inputTypes_; }
+	const std::vector<std::string>& getOutputTypes() const { return outputTypes_; }
+
+private:
+	std::string name_;
+	std::vector<std::string> inputTypes_;
+	std::vector<std::string> outputTypes_;
 };
 
 
@@ -169,11 +268,8 @@ public:
 	HorusMaterialEditor(HorusMaterialEditor const&) = delete;
 	void operator=(HorusMaterialEditor const&) = delete;*/
 
-
 	HorusMaterialEditor() : m_graph_(), m_nodes_(), m_root_node_ID_(-1), m_mini_map_location_(ImNodesMiniMapLocation_BottomRight), m_out_node_(nullptr), m_out_modified_(nullptr)
 	{}
-
-	
 
 	enum class HorusLookupValue
 	{
@@ -240,6 +336,18 @@ public:
 
 	struct HorusNode
 	{
+	public:
+
+		struct HorusNodeConnection
+		{
+			int start_node;
+			int end_node;
+			std::string start_output_type;
+			std::string end_input_type;
+		};
+
+		
+
 		HorusNodeType m_type_;
 		//rpr_material_node m_value_;
 		HorusNodeMeta m_value_;
@@ -257,7 +365,7 @@ public:
 
 		// Reflection parameters
 		ImVec4 m_color_reflection_ = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-		ImVec4 m_weight_reflection_ =  ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImVec4 m_weight_reflection_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		ImVec4 m_roughness_reflection_ = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 		ImVec4 m_BRDF_reflection_ = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -298,7 +406,6 @@ public:
 		ImVec4 m_weight_sss_ = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 		int m_multi_scatter_ = 0;
 
-
 		// Normal, bump and displacement parameters
 		ImVec4 m_normal_ = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 		ImVec4 m_bump_ = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -319,8 +426,6 @@ public:
 		ImVec4 m_backscattering_weight_ = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 		ImVec4 m_backscattering_color_ = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-
-
 		rpr_char const* m_image_;
 		bool m_texture_loaded_;
 
@@ -332,17 +437,40 @@ public:
 
 		float m_blend_value_ = 0.5f;
 
-		explicit HorusNode(const HorusNodeType type) : m_type_(type), m_value_(), m_image_(nullptr), m_texture_loaded_(false)
-		{}
+		// Used inputs
+		const bool is_diffuse_used = false;
 
-		HorusNode(const HorusNodeType type, const float value) : m_type_(type), m_value_(), m_image_(nullptr), m_texture_loaded_(false)
+		std::vector<HorusNodeConnection> connections;
+
+
+		explicit HorusNode(const HorusNodeType type) : m_type_(type), m_value_(), m_arithmetic_op_(), m_image_(nullptr),
+			m_texture_loaded_(false)
 		{
-			spdlog::info("Node instance");
+		}
+
+		HorusNode& operator=(const HorusNode& other)
+		{
+			if (this != &other)
+			{
+
+
+			}
+			return *this;
+		}
+
+
+		HorusNode(const HorusNodeType type, const float value) : m_type_(type), m_value_(), m_arithmetic_op_(),
+			m_image_(nullptr), m_texture_loaded_(false)
+		{
+
+		}
+
+		// Destructor
+		~HorusNode()
+		{
 		}
 
 	};
-
-	
 
 	rpr_material_node evaluate_rpr_material_node(const HorusGraph<HorusNode>& graph, const int root_node);
 
@@ -370,6 +498,7 @@ public:
 
 
 
+	
 
 private:
 
@@ -427,14 +556,7 @@ private:
 	{
 		HorusUiNodeType type_;
 
-
-		// L'identifiant du nœud de l'interface utilisateur. Pour les opérations d'addition, de multiplication, de sinus et de temps,
-		// il s'agit de l'identifiant du nœud "opération". Les nœuds d'entrée supplémentaires sont
-		// stockés dans les structures.
 		int id_;
-
-
-		// Ne mettre que les inputs ici
 
 		struct
 		{
@@ -456,32 +578,6 @@ private:
 			int input0, input1;
 		} add;
 
-		struct
-		{
-			int input0;
-		} ao_map;
-
-		struct
-		{
-			int input0, input1, input2, input3;
-			int output0;
-		} arithmetic;
-
-		struct
-		{
-			int input0, input1, input2;
-		} blend;
-
-		struct
-		{
-			int input0;
-		} buffer_sampler;
-
-		struct
-		{
-			int input0;
-			float value;
-		} bump_map;
 
 		struct
 		{
@@ -517,35 +613,6 @@ private:
 			int input;
 		} Debug_color01;
 
-		struct
-		{
-			int output;
-		} Debug_color02;
-
-		struct
-		{
-			int output;
-		} Debug_color03;
-
-		struct
-		{
-			int input0;
-		} Print;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 		struct
@@ -579,6 +646,7 @@ private:
 	bool output_connected_last_frame = false;
 	bool change_detected = false;
 	bool need_reevaluate = false;
+
 
 };
 

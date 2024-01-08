@@ -15,7 +15,6 @@ public:
 	}
 
 	void init();
-	void quit();
 
 	std::shared_ptr<spdlog::logger> get_logger() { return m_logger_; }
 
