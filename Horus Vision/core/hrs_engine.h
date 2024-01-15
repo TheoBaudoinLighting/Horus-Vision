@@ -1,13 +1,21 @@
 #pragma once
+#pragma warning (disable: 4127)  
+#pragma warning (disable: 4996)  
+#pragma warning (disable: 26451) 
 
-//#include "GLAD/glad.h"
+// External includes
+#include "imgui.h"
 
-#include "hrs_radeon.h"
+// Project includes
+#include "hrs_window.h" // glad.h
+#include "hrs_material_editor.h" // nothing
+#include "hrs_radeon.h" // glfw3.h
 
+// Basic includes
+#include <string>
 #include <memory>
 
-#include "hrs_material_editor.h"
-#include "imgui.h"
+
 
 class HorusEngine
 {
@@ -24,13 +32,13 @@ public:
 
 	int context_info(rpr_context& context);
 
-	void ui_init();
-	void ui_viewer(bool* p_open);
-	void ui_end_rendering_overlay(bool* p_open);
-	void ui_property_editor(bool* p_open);
-	void ui_outliner(bool* p_open);
-	void ui_material_editor(bool* p_open);
-	void ui_viewer_rt(bool* p_open);
+	void Init(int width, int height, const std::string& title, const std::string& SaveFilename);
+	void InitContexts(int width, int height, HorusWindow* window);
+	void PreRender();
+	void Render();
+	void PostRender();
+	bool IsRunning() const { return m_IsRunning_; }
+	void Close();
 
 	void update_performance_data(float currentFPS, float currentSampling)
 	{
@@ -40,6 +48,7 @@ public:
 	}
 
 	bool get_is_closing() { return m_is_closing_; }
+	void set_is_closing(bool closing) { m_is_closing_ = closing; }
 
 	ImVec2 get_image_size() { return img_size; }
 	float get_image_aspect_ratio() { return aspect_ratio_viewer; }
@@ -49,6 +58,12 @@ public:
 private:
 
 	HorusEngine() {}
+
+	std::unique_ptr<HorusWindow> m_window_;
+	std::string m_save_filename_;
+
+	bool m_IsRunning_ = true;
+	bool m_IsClosing_ = false;
 
 	const float desired_width_ = 800.0f;
 	char userInput[256] = "";
@@ -125,13 +140,15 @@ private:
 	float sampling_data_[data_points_count] = {};
 	int current_frame_ = 0;
 
-	inline static bool show_winui_viewer = true;
+	inline static bool show_winui_viewer = false;
+	inline static bool show_winui_render = true;
 	inline static bool show_winui_property_editor = true;
 	inline static bool show_winui_outliner = false;
 	inline static bool show_winui_material_editor = false;
 	inline static bool show_winui_main_menu_bar = false;
 	inline static bool show_winui_material_browser = true;
 	inline static bool show_winui_viewer_rt = true;
+	inline static bool show_winui_console = true;
 
 	std::string selectedMesh;
 	std::string selectedMaterial;

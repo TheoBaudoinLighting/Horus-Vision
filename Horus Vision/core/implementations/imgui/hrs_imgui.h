@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "hrs_context.h"
+#include "hrs_context.h" // glfw3.h
 
 class HorusImGui : public HorusContext
 {
@@ -28,7 +28,11 @@ private:
 	HorusImGui() {}
 
 	std::string m_current_path_ = std::filesystem::current_path().string();
-	std::string m_font_path_ = "fonts/Montserrat-Bold.ttf";
+
+	//OverpassMono - VariableFont_wght.ttf
+
+	//std::string m_font_path_ = "fonts/Montserrat-Bold.ttf";
+	std::string m_font_path_ = "fonts/UbuntuMono-Bold.ttf";
 
 	const char* m_glsl_version_ = "#version 460";
 };

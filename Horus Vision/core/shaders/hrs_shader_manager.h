@@ -1,7 +1,6 @@
 #pragma once
 
 #define NOMINMAX
-#include <glad/glad.h>
 
 #include <string>
 #include <map>
@@ -10,14 +9,23 @@ class HorusShaderManager
 {
 public:
 
+	static HorusShaderManager& get_instance()
+	{
+		static HorusShaderManager instance; // Instance unique
+		return instance;
+	}
+
+	HorusShaderManager(HorusShaderManager const&) = delete;
+	void operator=(HorusShaderManager const&) = delete;
+
 	HorusShaderManager() {}
 
 	~HorusShaderManager()
 	{
-		for (auto shader = programs_.cbegin(); shader != programs_.cend(); ++shader)
+		/*for (auto shader = programs_.cbegin(); shader != programs_.cend(); ++shader)
 		{
 			glDeleteProgram(shader->second);
-		}
+		}*/
 	}
 
 	GLuint get_program(std::string const& prog_name);
@@ -25,9 +33,6 @@ public:
 private:
 
 	GLuint compile_program(std::string const& prog_name);
-
-	HorusShaderManager(HorusShaderManager const&);
-	HorusShaderManager& operator=(HorusShaderManager const&);
 
 	std::map<std::string, GLuint> programs_;
 };

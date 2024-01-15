@@ -1,17 +1,56 @@
 #pragma once
 
-#include "hrs_radeon.h"
-#include "hrs_scene.h"
-#include "hrs_camera.h"
-#include "hrs_material.h"
-#include "hrs_importer.h"
-#include "hrs_mesh.h"
-#include "hrs_light.h"
+
+#include "hrs_scene.h" // nothing
+#include "hrs_camera.h" // nothing
+#include "hrs_importer.h" // nothing
+#include "hrs_mesh.h" // nothing
+#include "hrs_light.h" // nothing
+#include "hrs_material.h" // nothing
+#include "hrs_material_editor.h" // nothing
+#include "hrs_radeon.h" // glfw3.h
 
 #include <string>
 #include <variant>
+#include <queue>
+#include <map>
 
-#include "hrs_material_editor.h"
+class IDManager 
+{
+public:
+	static IDManager& getInstance() 
+	{
+		static IDManager instance;
+		return instance;
+	}
+
+	IDManager(const IDManager&) = delete;
+	IDManager& operator=(const IDManager&) = delete;
+
+	int getNewID() 
+	{
+		if (!availableIDs.empty()) 
+		{
+			int id = availableIDs.front();
+			availableIDs.pop();
+			return id;
+		}
+		return nextID++;
+	}
+
+	void releaseID(int id) 
+	{
+		availableIDs.push(id);
+	}
+
+private:
+	IDManager() : nextID(0) {}
+
+	int nextID;
+	std::queue<int> availableIDs;
+};
+
+
 
 class HorusObjectManager
 {
@@ -25,6 +64,17 @@ public:
 
 	HorusObjectManager(HorusObjectManager const&) = delete;
 	void operator=(HorusObjectManager const&) = delete;
+
+	int GetIdByName(const std::string& name)
+	{
+		auto it = objectNameToIdMap.find(name);
+		if (it != objectNameToIdMap.end())
+		{
+			return it->second;
+		}
+
+		return -1;
+	}
 
 	// Other -----------------------------------------
 
@@ -65,40 +115,28 @@ public:
 		}
 	}
 
+	void get_outliner_lights(std::vector<std::string>& lights)
+	{
+		for (auto& light : m_lights_)
+		{
+			int id = light.first;
+			std::string name = m_light_names_[id];
+			lights.push_back(name);
+		}
+	}
+
 	// ----------------------------------------------
 	// Camera object ----------------------------------
 
-	bool create_camera_with_id(int id, const std::string name)
-	{
-		if (m_cameras_.find(id) != m_cameras_.end())
-		{
-			return false;
-		}
+	int create_camera(int SceneID, const std::string name);
 
-		HorusCamera new_camera;
-		new_camera.init();
-		m_cameras_[id] = new_camera;
-		m_camera_names_[id] = name;
-
-		return true;
-	}
-
-	void destroy_camera(int id)
-	{
-		auto it = m_cameras_.find(id);
-
-		if (it != m_cameras_.end())
-		{
-			it->second.destroy();
-			m_cameras_.erase(it);
-		}
-	}
+	void destroy_camera(int id);
 
 	void destroy_all_cameras()
 	{
 		for (auto& camera : m_cameras_)
 		{
-			camera.second.destroy();
+			camera.second.Destroy();
 		}
 
 		m_cameras_.clear();
@@ -111,6 +149,14 @@ public:
 
 	void bind_camera(int id);
 	void unbind_camera(int id);
+
+	void UpdateCamera(int id);
+	void GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
+
+	void PrintCameraInfo(int id);
+	void ResetCamera(int id);
+
+	void SetViewport(int id, int x, int y, int width, int height);
 
 	int get_active_camera_id();
 	void set_active_camera(int id);
@@ -126,18 +172,39 @@ public:
 	void move_camera_down(int id);
 	void scroll_camera(int id, float delta);
 
+	void SetPitch(int id, float pitch);
+	void SetHeading(int id, float heading);
+
 	void set_camera_lookat(int id, RadeonProRender::float3& pivot);
 
-	void tumble_camera(int id, float x, float y);
-	void track_camera(int id, float x, float y);
-	void dolly_camera(int id, float distance);
+	void TumbleCamera(int id, float x, float y);
+	void PanCamera(int id, float x, float y);
+	void ZoomCamera(int id, float distance);
 
 	void compute_view_projection_matrix(int id, float* view, float* projection, float ratio);
+
+	// Info for inspector
+	glm::vec3 GetCameraLookAt(int id);
+	glm::vec3 GetCameraPosition(int id);
+	glm::vec3 GetCameraRotation(int id);
+	glm::vec3 GetCameraScale(int id);
+
+	void CameraSetPos(int id,int button, int state, int x, int y);
+
+	void set_camera_fov(int id, float fov);
+	void set_camera_aspect_ratio(int id, float aspect_ratio);
+	void set_camera_near_plane(int id, float near_plane);
+	void set_camera_far_plane(int id, float far_plane);
+
+	void set_enable_dof(int id, bool enable);
+	void set_dof_aperture(int id, float aperture);
+	void set_dof_focal_distance(int id, float focal_distance);
+
 
 	// ----------------------------------------------
 	// Mesh object ----------------------------------
 
-	bool create_mesh(const char* path, const char* name, int id);
+	int create_mesh(const char* path,const std::string& name);
 	void destroy_mesh(int id);
 
 	HorusMesh& get_mesh(int id /*, HorusMesh* mesh*/);
@@ -164,38 +231,57 @@ public:
 	// ----------------------------------------------
 	// Material object ------------------------------
 
-	HorusMaterial& create_material(int id, std::string name)
+	int create_material(std::string name)
 	{
-		if (m_materials_.find(id) != m_materials_.end())
-		{
-			spdlog::error("Material with id {} already exists", id);
+		std::string material_name = name;
 
-			return m_materials_[id];
+		int suffix = 0;
+
+		while (objectNameToIdMap.find(material_name) != objectNameToIdMap.end())
+		{
+			material_name = name + "_" + std::to_string(suffix);
+			suffix++;
+
+			spdlog::info("Material with name {} already exists", name);
 		}
 
-		spdlog::info("Creating material with id {}", id);
+		int id = IDManager::getInstance().getNewID();
 
 		HorusMaterial new_material;
 		new_material.init();
 		m_materials_[id] = new_material;
-		m_material_names_[id] = name;
+		m_material_names_[id] = material_name;
+		objectNameToIdMap[material_name] = id;
 
-		m_active_camera_id = id;
+		spdlog::info("Creating {} material with id {}", material_name, id);
 
-		return m_materials_[id];
+		return id;
 	}
-
-	
 
 	void destroy_material(int id)
 	{
 		auto it = m_materials_.find(id);
-
 		if (it != m_materials_.end())
 		{
 			it->second.destroy_material();
 			m_materials_.erase(it);
+			m_material_names_.erase(id);
 		}
+		else
+		{
+			spdlog::error("Material with id {} does not exist", id);
+		}
+
+		for (auto it = objectNameToIdMap.begin(); it != objectNameToIdMap.end(); ++it)
+		{
+			if (it->second == id)
+			{
+				objectNameToIdMap.erase(it);
+				break;
+			}
+		}
+
+		IDManager::getInstance().releaseID(id);
 	}
 
 	void destroy_all_material();
@@ -275,6 +361,9 @@ public:
 
 	void set_sss_scatter_distance(int id, const std::array<float, 3>& color);
 	void set_sss_scatter_distance(int id, const std::string& texturePath);
+
+	void set_reflection_mode(int id, int mode);
+	void set_coating_mode(int id, int mode);
 
 	// ----------------------------------------------
 	// Material Editor object --------------------------
@@ -367,7 +456,7 @@ public:
 	// ----------------------------------------------
 	// Light object ---------------------------------
 
-	HorusLight& create_light(int id, const std::string& name, const std::string& light_type, const std::string& hdri_image = "");
+	int create_light(const std::string& name, const std::string& light_type, const std::string& hdri_image = "");
 
 	void destroy_light(int id);
 
@@ -382,20 +471,30 @@ public:
 	// ----------------------------------------------
 	// Scene object ----------------------------------
 
-	void create_scene(int id, const std::string& name);
+	int create_scene(const std::string& name);
+	void set_scene(int id);
 	rpr_scene get_scene();
+	int get_scene_id_by_name(const char* name);
+	int GetActiveSceneId();
+	std::string& get_scene_name_by_id(int id);
 
 	void destroy_scene(int id);
 	void destroy_all_scenes();
 
+	int CreateDefaultScene();
+
 	void show_dummy_dragon();
 	void show_dummy_plane();
+	void show_LookdevScene();
 
 	// ----------------------------------------------
 
 private:
 
 	HorusObjectManager() : m_background_material_() {}
+
+	std::map<std::string, int> objectNameToIdMap;
+	std::string name;
 
 	// Camera object ----------------
 

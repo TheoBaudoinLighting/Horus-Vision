@@ -12,12 +12,15 @@
 
 #include "hrs_radeon.h"
 #include "glm/glm.hpp"
+#include <hrs_console.h>
 
 rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 {
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusConsole& Console = HorusConsole::get_instance();
 
 	spdlog::info("Loading mesh: {}", pFile);
+	Console.AddLog(" [info] Loading mesh : %s", pFile.c_str());
 
 	Assimp::Importer importer;
 
@@ -29,6 +32,7 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		spdlog::error("Error with Assimp : {}", importer.GetErrorString());
+		Console.AddLog(" [error] Error with Assimp : %s", importer.GetErrorString());
 		std::exit(EXIT_FAILURE);
 	}
 
@@ -55,6 +59,7 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 		else
 		{
 			spdlog::info("Number of UDIMs: {}", number_of_udims);
+			Console.AddLog(" [info] Number of UDIMs : %d", number_of_udims);
 			break;
 		}
 	}
@@ -69,6 +74,7 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 	}
 
 	spdlog::info("Valid UDIMs: {}", validUdims.size());
+	Console.AddLog(" [info] Valid UDIMs : %d", validUdims.size());
 
 #pragma omp parallel for
 	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
@@ -150,9 +156,9 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 
 	rpr_shape t_shape;
 
-	CHECK(rprContextCreateMesh(context, vertices.data()  
+	CHECK(rprContextCreateMesh(context, vertices.data()
 		, vertices.size() / 3                                    // num_vertices
-		,3 * sizeof(rpr_float),                                  // vertex_stride
+		, 3 * sizeof(rpr_float),                                  // vertex_stride
 		isValidNorm ? normals.data() : nullptr,                  // normals
 		isValidNorm ? normals.size() / 3 : 0,                    // num_normals
 		isValidNorm ? 3 * sizeof(rpr_float) : 0,                 // normal_stride
@@ -169,8 +175,8 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 		faceVert.size(),                                         // num_faces
 		&t_shape));                                              // out_mesh
 
-	std::cout << std::endl;
 	spdlog::info("Mesh loaded: {}", pFile);
+	Console.AddLog(" [success] Mesh loaded : %s", pFile.c_str());
 
 	return t_shape;
 }

@@ -1,5 +1,5 @@
-#include "glad/glad.h"
 
+#include <glad/glad.h> 
 #include "hrs_shader_manager.h"
 
 #include <vector>
@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "spdlog/spdlog.h"
+#include <hrs_console.h>
 
 static void load_file(std::string const& name, std::vector<char>& contents, bool binary = false)
 {
@@ -18,7 +19,7 @@ static void load_file(std::string const& name, std::vector<char>& contents, bool
 	}
 
 	std::ifstream file(name, open_mode);
-	if (!file.is_open()) 
+	if (!file.is_open())
 	{
 
 		exit(-1);
@@ -29,6 +30,8 @@ static void load_file(std::string const& name, std::vector<char>& contents, bool
 
 static GLuint compile_shader(GLenum type, std::vector<GLchar> const& source)
 {
+	HorusConsole& Console = HorusConsole::get_instance();
+
 	GLuint shader = glCreateShader(type);
 
 	GLint len = static_cast<GLint>(source.size());
@@ -51,18 +54,24 @@ static GLuint compile_shader(GLenum type, std::vector<GLchar> const& source)
 	spdlog::info("shader compiled with success");
 	spdlog::info("shader type: {}", shader);
 
+	Console.AddLog(" [success] Shader compiled with success");
+	Console.AddLog(" [success] Shader type: %d ", shader);
+
 	return shader;
 }
 
 GLuint HorusShaderManager::compile_program(std::string const& prog_name)
 {
+	HorusConsole& Console = HorusConsole::get_instance();
+
 	std::string vsName = prog_name + ".vert";
 	std::string fsName = prog_name + ".frag";
 
-	auto load_and_compile_shader = [](const std::string& filename, GLenum shader_type) {
-		std::vector<GLchar> source_code;
-		load_file(filename, source_code);
-		return compile_shader(shader_type, source_code);
+	auto load_and_compile_shader = [](const std::string& filename, GLenum shader_type)
+		{
+			std::vector<GLchar> source_code;
+			load_file(filename, source_code);
+			return compile_shader(shader_type, source_code);
 		};
 
 	GLuint vertex_shader = load_and_compile_shader(vsName, GL_VERTEX_SHADER);
@@ -99,6 +108,9 @@ GLuint HorusShaderManager::compile_program(std::string const& prog_name)
 
 	spdlog::info("program compiled with success");
 	spdlog::info("program name: {}", program);
+
+	Console.AddLog(" [success] Program compiled with success");
+	Console.AddLog(" [success] Program name: %d ", program);
 
 	return program;
 }

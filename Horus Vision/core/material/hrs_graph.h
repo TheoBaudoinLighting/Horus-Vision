@@ -10,10 +10,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "hrs_material_editor.h"
-#include "hrs_material_editor.h"
-#include "hrs_material_editor.h"
-#include "hrs_material_editor.h"
+#include "hrs_material_editor.h" // nothing
 
 
 template<typename HorusElementType>

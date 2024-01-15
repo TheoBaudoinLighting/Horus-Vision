@@ -1,13 +1,18 @@
 #pragma once
+
 #include <map>
+#include <string>
+
 #include <RadeonProRender_v2.h>
 #include <Math/quaternion.h>
+
+#include "hrs_garbage_collector.h"
 
 class HorusMesh
 {
 public:
 
-	void init(const char* path, const char* name);
+	void init(const char* path);
 	void destroy_mesh();
 
 	void assign_material(rpr_material_node material);

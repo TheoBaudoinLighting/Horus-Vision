@@ -51,13 +51,13 @@
     <ClCompile Include="core\hrs_horus.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\hrs_opengl.cpp">
+    <ClCompile Include="core\implementations\opengl\hrs_opengl.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\hrs_imgui.cpp">
+    <ClCompile Include="core\implementations\imgui\hrs_imgui.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\hrs_radeon.cpp">
+    <ClCompile Include="core\implementations\radeon\hrs_radeon.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\hrs_engine.cpp">
@@ -97,6 +97,27 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\scene\hrs_scene.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\inputs\hrs_input.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\implementations\opengl\hrs_opengl_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_ui.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_inspector.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_console.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_viewport.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_outliner.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1013,13 +1034,13 @@
     <ClInclude Include="core\shaders\hrs_shader_manager.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\hrs_opengl.h">
+    <ClInclude Include="core\implementations\opengl\hrs_opengl.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\hrs_imgui.h">
+    <ClInclude Include="core\implementations\imgui\hrs_imgui.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\hrs_radeon.h">
+    <ClInclude Include="core\implementations\radeon\hrs_radeon.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\hrs_engine.h">
@@ -1395,6 +1416,42 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\nlohmann\json.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\inputs\hrs_input.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_garbage_collector.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\opengl\hrs_vao.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\opengl\hrs_vbo.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\opengl\hrs_ebo.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\opengl\hrs_opengl_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_ui.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_inspector.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_console.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_viewport.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_reset_buffers.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_outliner.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

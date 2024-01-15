@@ -1,6 +1,7 @@
 #include "hrs_mesh.h"
 
 #include <Math/mathutils.h>
+#include <Math/matrix.h>
 
 #include "hrs_importer.h"
 #include "hrs_material.h"
@@ -11,11 +12,12 @@
 //HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
 //HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
 
-void HorusMesh::init(const char* path, const char* name)
+void HorusMesh::init(const char* path)
 {
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
 	HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
 	m_shape_ = MeshImporter.load_mesh(path);
 
@@ -24,9 +26,7 @@ void HorusMesh::init(const char* path, const char* name)
 
 	rprSceneAttachShape(g_scene, m_shape_);
 
-	RPRGarbageCollector m_gc_ = Radeon.get_gc();
-
-	m_gc_.GCAdd(m_shape_);
+	gc.add(m_shape_);
 }
 
 void HorusMesh::destroy_mesh()
@@ -39,8 +39,6 @@ void HorusMesh::destroy_mesh()
 	rprSceneDetachShape(g_scene, m_shape_);
 
 	rprObjectDelete(m_shape_);
-
-	spdlog::info("Mesh destroyed");
 }
 
 void HorusMesh::assign_material(rpr_material_node material)
@@ -59,10 +57,6 @@ void HorusMesh::set_shape_position(RadeonProRender::float3 pos)
 	get_info();
 
 	m_position_ = pos;
-
-	m_transform_.m03 = m_position_.x;
-	m_transform_.m13 = m_position_.y;
-	m_transform_.m23 = m_position_.z;
 
 	update_transform();
 }
@@ -104,9 +98,14 @@ void HorusMesh::set_object_to_scene(rpr_scene& scene)
 
 void HorusMesh::update_transform()
 {
-	m_transform_ = RadeonProRender::translation(m_position_) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::scale(m_scale_);
+	//m_transform_ = RadeonProRender::scale(m_scale_) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::translation(m_position_);
 
-	CHECK(rprShapeSetTransform(m_shape_, false, &m_transform_.m00));
+	//RadeonProRender::matrix mat = RadeonProRender::translation(RadeonProRender::float3(translationX, translationY, translationZ)) * RadeonProRender::scale(RadeonProRender::float3(scaleX, 1.0f, scaleY));
+	//rprShapeSetTransform(plane, RPR_TRUE, &mat.m00);
+
+	m_transform_ = RadeonProRender::translation(RadeonProRender::float3(m_position_.x, m_position_.y, m_position_.z)) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::scale(RadeonProRender::float3(m_scale_.x, m_scale_.y, m_scale_.z));
+
+	CHECK(rprShapeSetTransform(m_shape_, RPR_TRUE, &m_transform_.m00));
 }
 
 

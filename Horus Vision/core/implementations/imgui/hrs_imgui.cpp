@@ -21,6 +21,8 @@ bool HorusImGui::init(int width, int height, HorusWindowConfig* window)
 	ImGui::CreateContext();
 	ImNodes::CreateContext();
 
+	ImGui::SetCurrentContext(ImGui::GetCurrentContext());
+
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;

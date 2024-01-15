@@ -1,9 +1,11 @@
 #pragma once
 
-#include "hrs_shader_manager.h"
-#include "hrs_context.h"
-#include "common.h"
+// Project includes
+#include "common.h" // nothing
+#include "hrs_garbage_collector.h" // nothing
+#include "hrs_context.h" // glfw3.h
 
+// External includes
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
@@ -23,8 +25,8 @@ public:
 	void create_frame_buffers(int width, int height);
 	bool init(int width, int height, HorusWindowConfig* window) override;
 
-	void init_render() override;
-	void post_render() override;
+	void init_render() override { }
+	void post_render() override { }
 	void quit_render() override;
 
 	bool init_graphics();
@@ -39,7 +41,6 @@ public:
 
 	rpr_context get_context() { return m_context_; }
 	rpr_material_system get_matsys() { return m_matsys_; }
-	RPRGarbageCollector& get_gc() { return m_gc_; }
 
 	GLuint get_texture_buffer() { return m_texture_buffer_; } // Buffer to render in ImGui for Radeon
 
@@ -68,7 +69,7 @@ private:
 	HorusWindowConfig* m_window_config_;
 
 	int m_min_samples_ = 4;
-	int m_max_samples_ = 128;
+	int m_max_samples_ = 32;
 	int m_sample_count_ = 0;
 	int m_batch_size_ = 0;
 
@@ -94,12 +95,5 @@ private:
 	rpr_material_system m_matsys_ = nullptr;
 	rpr_camera m_camera_ = nullptr;
 
-	RPRGarbageCollector m_gc_;
-
 	std::shared_ptr<float> m_fb_data_ = nullptr;
-
-	// Shader stuff
-
-	HorusShaderManager m_shader_manager_;
-
 };

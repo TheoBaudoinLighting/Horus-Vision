@@ -28,6 +28,7 @@ T clamp(T x, T a, T b)
 rpr_image load_texture(std::string path)
 {
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
 	rpr_image image = nullptr;
 
@@ -37,7 +38,7 @@ rpr_image load_texture(std::string path)
 		return nullptr;
 	}
 
-	Radeon.get_gc().GCAdd(image);
+	gc.add(image);
 
 	spdlog::info("Texture -> {} loaded.", path);
 
@@ -246,11 +247,10 @@ void HorusMaterialEditor::init()
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
 	HorusEngine& Engine = HorusEngine::get_instance();
-
-	RPRGarbageCollector m_gco = Radeon.get_gc();
+	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
 	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
-	m_gco.GCAdd(m_out_node_);
+	gc.add(m_out_node_);
 
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 1.f, 0.5f, 0.5f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
@@ -305,7 +305,7 @@ void HorusMaterialEditor::init()
 
 
 	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_modified_));
-	m_gco.GCAdd(m_out_modified_);
+	gc.add(m_out_modified_);
 
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));

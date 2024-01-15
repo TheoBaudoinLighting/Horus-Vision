@@ -1,4 +1,8 @@
 #pragma once
+
+#include "hrs_graph.h" // nothing
+#include "hrs_material.h" // nothing
+
 #include <map>
 #include <memory>
 #include <string>
@@ -7,8 +11,7 @@
 
 #include "imgui.h"
 #include "imnodes.h"
-#include "hrs_graph.h"
-#include "hrs_material.h"
+
 #include "spdlog/spdlog.h"
 #include "common.h"
 

@@ -1,4 +1,8 @@
 
+#include "hrs_engine.h"
+#include "hrs_object_manager.h"
+#include "hrs_importer.h"
+#include "hrs_scene.h"
 #include "hrs_radeon.h"
 
 #include <cassert>
@@ -15,13 +19,10 @@
 #include <tbb/task_group.h>
 
 #include "spdlog/spdlog.h"
-#include "hrs_engine.h"
-#include "hrs_importer.h"
-#include "hrs_scene.h"
 #include "ImGuizmo.h"
-#include "objects/hrs_object_manager.h"
+#include <hrs_console.h>
 
-std::mutex renderMutex; 
+std::mutex renderMutex;
 
 class Render_Progress_Callback
 {
@@ -75,21 +76,17 @@ glm::vec2 HorusRadeon::set_window_size(int width, int height)
 	return glm::vec2(m_window_width_, m_window_height_);
 }
 
-std::tuple<GLuint, GLuint, GLuint> get_shader_variables(GLuint program, const char* texture_name, const char* position_name, const char* texcoord_name)
-{
-	GLuint texture_loc = glGetUniformLocation(program, texture_name);
-	GLuint position_attr_id = glGetAttribLocation(program, position_name);
-	GLuint texcoord_attr_id = glGetAttribLocation(program, texcoord_name);
-
-	return std::make_tuple(texture_loc, position_attr_id, texcoord_attr_id);
-}
-
 void HorusRadeon::create_frame_buffers(int width, int height)
 {
+	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::get_instance();
+
 	m_window_width_ = width;
 	m_window_height_ = height;
 
 	glDeleteTextures(1, &m_texture_buffer_);
+	OpenGLManager.DeleteAllVAOs();
+	OpenGLManager.DeleteAllVBOs();
+	OpenGLManager.DeleteAllEBOs();
 
 	CHECK(rprObjectDelete(m_frame_buffer_));
 	CHECK(rprObjectDelete(m_frame_buffer_2_));
@@ -103,97 +100,28 @@ void HorusRadeon::create_frame_buffers(int width, int height)
 
 bool HorusRadeon::init(int width, int height, HorusWindowConfig* window)
 {
+	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+	HorusConsole& Console = HorusConsole::get_instance();
+
 	m_window_width_ = width;
 	m_window_height_ = height;
 	m_window_config_ = window;
 	m_is_dirty_ = true;
 
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glCullFace(GL_NONE);
-	glDisable(GL_DEPTH_TEST);
-
-	glViewport(0, 0, m_window_width_, m_window_height_);
-
-	glEnable(GL_TEXTURE_2D);
-
-	glGenBuffers(1, &m_vertex_buffer_id_);
-	glGenBuffers(1, &m_index_buffer_id_);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id_);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id_);
-
-
-	constexpr std::array<float, 20> quadVertexData = { -1, -1, 0.5, 0, 0, 1, -1, 0.5, 1, 0, 1, 1, 0.5, 1, 1, -1, 1, 0.5, 0, 1 };
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexData), quadVertexData.data(), GL_STATIC_DRAW);
-
-	constexpr std::array<GLshort, 6> quadIndexData = { 0, 1, 3, 3, 1, 2 };
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndexData), quadIndexData.data(), GL_STATIC_DRAW);
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glGenTextures(1, &m_texture_buffer_);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texture_buffer_);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_window_width_, m_window_height_, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	m_program_ = m_shader_manager_.get_program("core/shaders/shader");
+	m_texture_buffer_ = OpenGL.GetTextureBuffer();
 
 	spdlog::info("Radeon initialized.");
+	Console.AddLog(" [info] Radeon initialized.");
 
 	set_window_size(m_window_width_, m_window_height_);
 
 	return true;
 }
 
-void HorusRadeon::init_render()
-{
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id_);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id_);
-
-	auto [texture_location, position_location, texcoord_location] = get_shader_variables(m_program_, "g_Texture", "inPosition", "inTexcoord");
-
-	glUseProgram(m_program_);
-	glUniform1i(texture_location, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texture_buffer_);
-
-	glVertexAttribPointer(position_location, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, nullptr);
-	glVertexAttribPointer(texcoord_location, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
-
-	glEnableVertexAttribArray(position_location);
-	glEnableVertexAttribArray(texcoord_location);
-
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
-
-	glDisableVertexAttribArray(position_location);
-	glDisableVertexAttribArray(texcoord_location);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glUseProgram(0);
-
-	GLuint error = glGetError();
-	if (error != GL_NO_ERROR)
-	{
-		spdlog::error("OpenGL error : {}", error);
-	}
-
-}
-
-void HorusRadeon::post_render() {}
-
 void HorusRadeon::quit_render()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
 	spdlog::info("Unload Radeon..");
 	spdlog::info("Release memory..");
@@ -210,10 +138,10 @@ void HorusRadeon::quit_render()
 	CHECK(rprObjectDelete(m_matsys_)); m_matsys_ = nullptr;
 	CHECK(rprObjectDelete(m_frame_buffer_)); m_frame_buffer_ = nullptr;
 	CHECK(rprObjectDelete(m_frame_buffer_2_)); m_frame_buffer_2_ = nullptr;
-	
+
 	ObjectManager.destroy_all_scenes();
 
-	m_gc_.GCClean();
+	gc.clean();
 
 	ObjectManager.destroy_all_cameras();
 
@@ -227,8 +155,10 @@ void HorusRadeon::quit_render()
 bool HorusRadeon::init_graphics()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusConsole& Console = HorusConsole::get_instance();
 
 	spdlog::info("Init Radeon graphics..");
+	Console.AddLog(" [info] Init Radeon graphics..");
 
 	rpr_int status = RPR_SUCCESS;
 
@@ -240,6 +170,7 @@ bool HorusRadeon::init_graphics()
 	rpr_int plugins[] = { pluginID };
 	size_t numPlugins = sizeof(plugins) / sizeof(plugins[0]);
 	spdlog::info("Number of plugins : {}", numPlugins);
+	Console.AddLog(" [info] Number of plugins : %d ", numPlugins);
 
 	status = rprCreateContext(RPR_API_VERSION, plugins, numPlugins,
 		RPR_CREATION_FLAGS_ENABLE_GL_INTEROP | RPR_CREATION_FLAGS_ENABLE_GPU0 |
@@ -254,19 +185,27 @@ bool HorusRadeon::init_graphics()
 	spdlog::info("Rpr context successfully set active plugin..");
 	spdlog::info("Rpr context successfully created..");
 
-	ObjectManager.create_scene(0, "render_scene");
+	Console.AddLog(" [info] Rpr context successfully set active plugin");
+	Console.AddLog(" [info] Rpr context successfully created");
+
+
+	ObjectManager.CreateDefaultScene(); // Create Default Engine Scene
+	/*ObjectManager.create_scene("DefaultScene");
+	ObjectManager.create_camera("DefaultCamera");
+	ObjectManager.create_light("Default_HDRI", "hdri", "resources/Textures/resting_place_2_2k.exr");*/
 
 	m_sample_count_ = 1;
 
-	ObjectManager.create_camera_with_id(0, "rendercam");
-
 	// Create Scene --------------------------------------------------------------------------------------------------------
+
 	
-	ObjectManager.create_light(0, "Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
+
+	/*ObjectManager.show_dummy_dragon();
+	//ObjectManager.show_dummy_plane();*/
+	ObjectManager.show_LookdevScene();
 
 
-	ObjectManager.show_dummy_dragon();
-	ObjectManager.show_dummy_plane();
+
 
 	// ---------------------------------------------------------------------------------------------------------------------
 
@@ -295,12 +234,17 @@ bool HorusRadeon::init_graphics()
 	m_fb_data_ = std::shared_ptr<float>(new float[m_window_width_ * m_window_height_ * 4], std::default_delete<float[]>());
 
 	spdlog::info("Radeon graphics successfully initialized..");
+	Console.AddLog(" [info] Radeon graphics successfully initialized");
 
 	return true;
 }
 
 void HorusRadeon::resize_render(int width, int height)
 {
+	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+	HorusConsole& Console = HorusConsole::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+
 	m_window_width_ = width;
 	m_window_height_ = height;
 
@@ -314,16 +258,25 @@ void HorusRadeon::resize_render(int width, int height)
 
 	m_fb_data_ = std::shared_ptr<float>(new float[m_window_width_ * m_window_height_ * 4], std::default_delete<float[]>());
 
+
+	spdlog::info("Before init buffers 01 and 02");
+	OpenGL.InitBuffers(m_window_width_, m_window_height_);
+
+	spdlog::info("after init buffers 01");
 	init(m_window_width_, m_window_height_, m_window_config_);
+
+	spdlog::info("after init buffers 02");
 
 	CHECK(rprContextResolveFrameBuffer(m_context_, m_frame_buffer_, m_frame_buffer_2_, false));
 	size_t fb_size = 0;
 	CHECK(rprFrameBufferGetInfo(m_frame_buffer_2_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &fb_size));
 
 	set_window_size(m_window_width_, m_window_height_);
+	ObjectManager.SetViewport(ObjectManager.get_active_camera_id(), 0, 0, m_window_width_, m_window_height_);
 	m_sample_count_ = 1;
 
 	spdlog::info("Radeon successfully resized in : Width : {}, Height : {}", m_window_width_, m_window_height_);
+	Console.AddLog(" [info] Radeon successfully resized in : Width : %d, Height : %d ", m_window_width_, m_window_height_);
 }
 
 void HorusRadeon::render_engine()

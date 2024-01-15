@@ -1,11 +1,17 @@
 #pragma once
+
+// Basic includes
 #include <map>
 #include <optional>
-#include <RadeonProRender_v2.h>
 #include <string>
 #include <variant>
 #include <array>
 
+// External includes
+#include <RadeonProRender_v2.h>
+
+// Project includes
+#include "hrs_garbage_collector.h"
 
 struct HorusMaterialParameters
 {
@@ -120,6 +126,9 @@ public:
 	void set_sheen_weight(const std::string& texturePath);
 
 	void set_ior(float ior);
+
+	void set_reflection_mode(int mode);
+	void set_coating_mode(int mode);
 
 	// Other ----------------------------------------
 

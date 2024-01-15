@@ -1,3 +1,4 @@
+#include "hrs_reset_buffers.h"
 #include "hrs_object_manager.h"
 
 #include <Math/matrix.h>
@@ -20,14 +21,102 @@ void HorusObjectManager::unset_background_image()
 	m_background_material_.unset_background_image();
 }
 
+int HorusObjectManager::create_camera(int SceneID, const std::string name)
+{
+	std::string camera_name = name;
+
+	int suffix = 001;
+
+	while (objectNameToIdMap.find(camera_name) != objectNameToIdMap.end())
+	{
+		camera_name = name + std::to_string(suffix);
+		suffix++;
+
+		spdlog::info("Camera name already exists, trying {} instead", camera_name);
+	}
+
+	int id = IDManager::getInstance().getNewID();
+
+	auto& new_camera = m_cameras_[id];
+	new_camera.Init();
+	//m_cameras_[id] = new_camera;
+	m_camera_names_[id] = camera_name;
+	objectNameToIdMap[camera_name] = id;
+	m_active_camera_id = id;
+
+
+	spdlog::info("Camera {} created with id: {}", camera_name, id);
+
+	return id;
+}
+
+void HorusObjectManager::destroy_camera(int id)
+{
+	if (id == m_active_camera_id)
+	{
+		if (!m_cameras_.empty())
+		{
+			m_active_camera_id = m_cameras_.begin()->first;
+		}
+		else
+		{
+			create_camera(GetActiveSceneId(), "DefaultCamera");
+		}
+	}
+
+	auto it = m_cameras_.find(id);
+	if (it != m_cameras_.end())
+	{
+		it->second.Destroy();
+		m_cameras_.erase(it);
+		m_camera_names_.erase(id);
+	}
+	else
+	{
+		spdlog::error("no camera with this id exists. ");
+	}
+
+	IDManager::getInstance().releaseID(id);
+
+	if (m_cameras_.empty())
+	{
+		create_camera(GetActiveSceneId(), "DefaultCamera");
+	}
+}
+
 void HorusObjectManager::bind_camera(int id)
 {
-	m_cameras_[id].bind();
+	m_cameras_[id].Bind();
 }
 
 void HorusObjectManager::unbind_camera(int id)
 {
-	m_cameras_[id].unbind();
+	m_cameras_[id].Unbind();
+}
+
+void HorusObjectManager::UpdateCamera(int id)
+{
+	m_cameras_[id].UpdateCamera();
+}
+
+void HorusObjectManager::GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model)
+{
+	m_cameras_[id].GetMatrices(projection, view, model);
+}
+
+void HorusObjectManager::PrintCameraInfo(int id)
+{
+	m_cameras_[id].VariableCheckers("Manual Check");
+}
+
+void HorusObjectManager::ResetCamera(int id)
+{
+	m_cameras_[id].Reset();
+}
+
+void HorusObjectManager::SetViewport(int id, int x, int y, int width, int height)
+{
+	m_cameras_[id].SetViewport(x, y, width, height);
 }
 
 int HorusObjectManager::get_active_camera_id()
@@ -40,7 +129,6 @@ void HorusObjectManager::set_active_camera(int id)
 	if (m_cameras_.find(id) == m_cameras_.end())
 	{
 		spdlog::error("no camera with this id exists. ");
-		throw std::runtime_error("no camera with this id exists. ");
 	}
 
 	m_active_camera_id = id;
@@ -59,93 +147,143 @@ void HorusObjectManager::get_camera_name_by_id(int id)
 
 void HorusObjectManager::move_camera_forward(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_forward();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Forward);
 }
 
 void HorusObjectManager::move_camera_backward(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_backward();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Backward);
 }
 
 void HorusObjectManager::move_camera_left(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_left();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Left);
 }
 
 void HorusObjectManager::move_camera_right(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_right();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Right);
 }
 
 void HorusObjectManager::move_camera_up(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_up();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Up);
 }
 
 void HorusObjectManager::move_camera_down(int id)
 {
-	HorusCamera camera = get_camera(id);
-	camera.move_down();
+	HorusCamera& camera = get_camera(id);
+
+	camera.MoveCamera(Down);
 }
 
 void HorusObjectManager::scroll_camera(int id, float delta)
 {
-	HorusCamera camera = get_camera(id);
-	camera.scrolling(delta);
+	HorusCamera& camera = get_camera(id);
+
+
 }
 
-void HorusObjectManager::tumble_camera(int id, float x, float y)
+void HorusObjectManager::SetPitch(int id, float pitch)
 {
-	HorusCamera camera = get_camera(id);
-	camera.tumbling(x, y);
+	HorusCamera& camera = get_camera(id);
+
+	spdlog::info("Camera ID: {} Pitch: {}", id, pitch);
+
+	camera.ChangePitch(pitch);
+
 }
 
-void HorusObjectManager::track_camera(int id, float x, float y)
+void HorusObjectManager::SetHeading(int id, float heading)
 {
-	HorusCamera camera = get_camera(id);
-	camera.track(x, y);
+	HorusCamera& camera = get_camera(id);
+
+	spdlog::info("Camera ID: {} Heading: {}", id, heading);
+
+	camera.ChangeHeading(heading);
 }
 
-void HorusObjectManager::dolly_camera(int id, float distance)
+void HorusObjectManager::TumbleCamera(int id, float x, float y)
 {
-	HorusCamera camera = get_camera(id);
-	camera.dolly(distance);
+	HorusCamera& camera = get_camera(id);
+
+	camera.Tumbling(x, y);
+}
+
+void HorusObjectManager::PanCamera(int id, float x, float y)
+{
+	HorusCamera& camera = get_camera(id);
+
+	camera.Pan(x, y);
+}
+
+void HorusObjectManager::ZoomCamera(int id, float distance)
+{
+	HorusCamera& camera = get_camera(id);
+
+	camera.Zoom(distance);
 }
 
 void HorusObjectManager::compute_view_projection_matrix(int id, float* view, float* projection, float ratio)
 {
-	HorusCamera camera = get_camera(id);
-	camera.compute_view_projection_matrix(view, projection, ratio);
+	HorusCamera& camera = get_camera(id);
+
+
 }
+
 
 void HorusObjectManager::set_camera_lookat(int id, RadeonProRender::float3& pivot)
 {
-	HorusCamera camera = get_camera(id);
-	camera.set_lookat(pivot);
+	HorusCamera& camera = get_camera(id);
+
+
 }
+
+void HorusObjectManager::CameraSetPos(int id, int button, int state, int x, int y)
+{
+	HorusCamera& camera = get_camera(id);
+	camera.SetPos(button, state, x, y);
+}
+
 
 // -----------------------------------------------------------------------------------------------
 // Mesh management -------------------------------------------------------------------------------
 
-bool HorusObjectManager::create_mesh(const char* path, const char* name, int id)
+int HorusObjectManager::create_mesh(const char* path, const std::string& name)
 {
-	if (m_meshes_.find(id) != m_meshes_.end())
+	std::string mesh_name = name;
+
+	int suffix = 001;
+
+	while (objectNameToIdMap.find(mesh_name) != objectNameToIdMap.end())
 	{
-		return false;
+		mesh_name = name + std::to_string(suffix);
+		suffix++;
+
+		spdlog::info("Mesh name already exists, trying {} instead", mesh_name);
 	}
 
+	int id = IDManager::getInstance().getNewID();
+
 	HorusMesh new_mesh;
-	new_mesh.init(path, name);
+	new_mesh.init(path);
 	m_meshes_[id] = new_mesh;
-	m_mesh_names_[id] = name;
+	m_mesh_names_[id] = mesh_name;
+	objectNameToIdMap[mesh_name] = id;
 
+	spdlog::info("Mesh {} created with id: {}", mesh_name, id);
 
-	return true;
+	return id;
 }
 
 void HorusObjectManager::destroy_mesh(int id)
@@ -155,7 +293,22 @@ void HorusObjectManager::destroy_mesh(int id)
 	if (it != m_meshes_.end())
 	{
 		m_meshes_[id].destroy_mesh();
+		m_meshes_.erase(it);
+		m_mesh_names_.erase(id);
 	}
+	else
+	{
+		spdlog::error("no mesh with this id exists. ");
+	}
+
+	for (auto it = objectNameToIdMap.begin(); it != objectNameToIdMap.end(); ++it) {
+		if (it->second == id) {
+			objectNameToIdMap.erase(it);
+			break;
+		}
+	}
+
+	IDManager::getInstance().releaseID(id);
 }
 
 HorusMesh& HorusObjectManager::get_mesh(int id)
@@ -835,6 +988,28 @@ void HorusObjectManager::set_sss_scatter_distance(int id, const std::string& tex
 	m_materials_[id].set_sss_scatter_distance(texturePath);
 }
 
+void HorusObjectManager::set_reflection_mode(int id, int mode)
+{
+	if (m_materials_.find(id) == m_materials_.end())
+	{
+		spdlog::error("no material with this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_materials_[id].set_reflection_mode(mode);
+}
+
+void HorusObjectManager::set_coating_mode(int id, int mode)
+{
+	if (m_materials_.find(id) == m_materials_.end())
+	{
+		spdlog::error("no material with this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_materials_[id].set_coating_mode(mode);
+}
+
 // -----------------------------------------------------------------------------------------------
 // Material editor management --------------------------------------------------------------------
 
@@ -848,7 +1023,7 @@ void HorusObjectManager::assign_material_editor_node(int mesh_id, int mat_id)
 
 	rpr_material_node newmat = nullptr;
 
-	set_material_editor_mesh_to_set_material(mesh_id);	
+	set_material_editor_mesh_to_set_material(mesh_id);
 
 	newmat = m_material_editors_[mat_id].get_final_material_for_export();
 
@@ -884,7 +1059,7 @@ void HorusObjectManager::close_material_editor(int id)
 
 void HorusObjectManager::open_material_editor_browser()
 {
-    HorusMaterialEditorBrowser& MaterialEditor = HorusMaterialEditorBrowser::get_instance();
+	HorusMaterialEditorBrowser& MaterialEditor = HorusMaterialEditorBrowser::get_instance();
 
 	MaterialEditor.update();
 }
@@ -937,21 +1112,31 @@ void HorusObjectManager::destroy_all_material_editors()
 // -----------------------------------------------------------------------------------------------
 // Light management ------------------------------------------------------------------------------
 
-HorusLight& HorusObjectManager::create_light(int id, const std::string& name, const std::string& light_type, const std::string& hdri_image)
+int HorusObjectManager::create_light(const std::string& name, const std::string& light_type, const std::string& hdri_image)
 {
-	if (m_lights_.find(id) != m_lights_.end())
-	{
-		spdlog::error("light with this id already exists. ");
+	std::string light_name = name;
 
-		return m_lights_[id];
+	int suffix = 001;
+
+	while (objectNameToIdMap.find(light_name) != objectNameToIdMap.end())
+	{
+		light_name = name + std::to_string(suffix);
+		suffix++;
+
+		spdlog::info("Light name already exists, trying {} instead", light_name);
 	}
+
+	int id = IDManager::getInstance().getNewID();
 
 	HorusLight new_light;
 	new_light.init(light_type, hdri_image);
 	m_lights_[id] = new_light;
-	m_light_names_[id] = name;
+	m_light_names_[id] = light_name;
+	objectNameToIdMap[light_name] = id;
 
-	return m_lights_[id];
+	spdlog::info("Light {} created with id: {}", light_name, id);
+
+	return id;
 }
 
 void HorusObjectManager::destroy_light(int id)
@@ -961,7 +1146,22 @@ void HorusObjectManager::destroy_light(int id)
 	if (it != m_lights_.end())
 	{
 		m_lights_[id].destroy_light();
+		m_lights_.erase(it);
+		m_light_names_.erase(id);
 	}
+	else
+	{
+		spdlog::error("no light with this id exists. ");
+	}
+
+	for (auto it = objectNameToIdMap.begin(); it != objectNameToIdMap.end(); ++it) {
+		if (it->second == id) {
+			objectNameToIdMap.erase(it);
+			break;
+		}
+	}
+
+	IDManager::getInstance().releaseID(id);
 }
 
 void HorusObjectManager::destroy_all_lights()
@@ -980,19 +1180,41 @@ void HorusObjectManager::set_light_scale(int id, RadeonProRender::float3& scale)
 
 void HorusObjectManager::set_light_intensity(int id, RadeonProRender::float3& intensity) {}
 
-void HorusObjectManager::create_scene(int id, const std::string& name)
+int HorusObjectManager::create_scene(const std::string& name)
 {
-	if (m_scenes_.find(id) != m_scenes_.end())
-	{
-		spdlog::error("scene with this id already exists. ");
-		throw std::runtime_error("scene with this id already exists. ");
-	}
+	std::string scene_name = name;
+
+	int suffix = 001;
+
+	int id = IDManager::getInstance().getNewID();
 
 	HorusScene new_scene;
 	new_scene.init();
 	m_scenes_[id] = new_scene;
 	m_active_scene_id_ = id;
-	m_scene_names_[id] = name;
+	m_scene_names_[id] = scene_name;
+	objectNameToIdMap[scene_name] = id;
+
+	spdlog::info("Scene {} created with id: {}", scene_name, id);
+
+	return id;
+}
+
+void HorusObjectManager::set_scene(int id)
+{
+	if (m_scenes_.find(id) == m_scenes_.end())
+	{
+		spdlog::error("no scene with this id exists. ");
+	}
+
+	m_active_scene_id_ = id;
+
+	auto scene = m_scenes_[id].get_scene();
+
+	m_scenes_[id].SetScene(scene);
+
+	spdlog::info("Scene {} set as active scene", id);
+
 }
 
 rpr_scene HorusObjectManager::get_scene()
@@ -1000,14 +1222,60 @@ rpr_scene HorusObjectManager::get_scene()
 	return  m_scenes_[m_active_scene_id_].get_scene();
 }
 
+int HorusObjectManager::get_scene_id_by_name(const char* name)
+{
+	while (objectNameToIdMap.find(name) == objectNameToIdMap.end())
+	{
+		spdlog::info("Scene name does not exist, trying again");
+	}
+
+	return objectNameToIdMap[name];
+}
+
+int HorusObjectManager::GetActiveSceneId()
+{
+	return m_active_scene_id_;
+}
+
+std::string& HorusObjectManager::get_scene_name_by_id(int id)
+{
+	return m_scene_names_[id];
+}
+
 void HorusObjectManager::destroy_scene(int id)
 {
 	auto it = m_scenes_.find(id);
-
 	if (it != m_scenes_.end())
 	{
-		m_scenes_[id].destroy_scene();
+		it->second.destroy_scene();
+		m_scenes_.erase(it);
+		m_scene_names_.erase(id);
 	}
+	else
+	{
+		spdlog::error("no scene with this id exists. ");
+	}
+
+	/*if (id == m_active_scene_id_)
+	{
+		if (!m_scenes_.empty())
+		{
+			m_active_scene_id_ = m_scenes_.begin()->first;
+		}
+		else
+		{
+			create_scene("DefaultScene");
+		}
+	}*/
+
+	IDManager::getInstance().releaseID(id);
+
+	if (m_scenes_.empty())
+	{
+		create_scene("DefaultScene");
+	}
+
+	//HorusResetBuffers::get_instance().CallResetBuffers();
 }
 
 void HorusObjectManager::destroy_all_scenes()
@@ -1018,6 +1286,23 @@ void HorusObjectManager::destroy_all_scenes()
 	}
 }
 
+int HorusObjectManager::CreateDefaultScene()
+{
+	int id = create_scene("DefaultScene");
+
+	create_camera(GetActiveSceneId(), "DefaultCamera");
+
+	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
+	create_light("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
+	//create_light("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
+
+
+
+	set_scene(id);
+
+	return id;
+}
+
 void HorusObjectManager::show_dummy_dragon()
 {
 	m_scenes_[m_active_scene_id_].show_dummy_dragon();
@@ -1026,6 +1311,11 @@ void HorusObjectManager::show_dummy_dragon()
 void HorusObjectManager::show_dummy_plane()
 {
 	m_scenes_[m_active_scene_id_].show_dummy_plane();
+}
+
+void HorusObjectManager::show_LookdevScene()
+{
+	m_scenes_[m_active_scene_id_].show_LookdevScene();
 }
 
 // -----------------------------------------------------------------------------------------------

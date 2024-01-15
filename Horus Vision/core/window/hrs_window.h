@@ -1,24 +1,20 @@
 #pragma once
 
-#include "hrs_opengl.h"
+// Project includes
+#include "hrs_opengl.h" // glad.h
+#include "hrs_radeon.h" // glfw3.h
+#include "hrs_config.h" // glfw3.h
+#include "hrs_imgui.h" // glfw3.h
 
-#include "hrs_config.h"
-#include "hrs_radeon.h"
-#include "hrs_imgui.h"
-
+// External includes
 #include <RadeonProRender_v2.h>
 #include <glm/glm.hpp>
-
-#include "hrs_engine.h"
-#include "GLFW/glfw3.h"
 
 class HorusWindow : public HorusWindowConfig
 {
 public:
 
-	HorusWindow() : m_window_(nullptr), m_radeon_context_(HorusRadeon::get_instance()),
-	                m_opengl_context_(HorusOpenGL::get_instance()), m_imgui_context_(HorusImGui::get_instance()),
-	                m_engine_(HorusEngine::get_instance()),
+	HorusWindow() : m_window_(nullptr),
 	                m_IsRunning_(true),
 	                m_IsFullscreen_(false),
 	                m_IsVSync_(true), m_IsResizable_(true), m_IsDecorated_(true), m_IsFocused_(false),
@@ -40,6 +36,13 @@ public:
 	void set_window(GLFWwindow* window) override { m_window_ = window; }
 
 	static HorusWindow* from_native_window(GLFWwindow& window);
+
+	void OnScroll(GLFWwindow* window, double xoffset, double yoffset) override {}
+	void OnKey(GLFWwindow* window, int key, int scancode, int action, int mods) override {}
+	void OnMouse(GLFWwindow* window, int button, int action, int mods) override {}
+	void OnMouseMove(GLFWwindow* window, double xpos, double ypos) override {}
+	void OnResize(GLFWwindow* window, int width, int height) override {}
+	void OnClose() override {}
 
 	void scroll_callback(double xoffset, double yoffset) override { m_mouse_wheel_ = yoffset; }
 	void mouse_button_callback(int button, int action, int mods) override;
@@ -67,12 +70,6 @@ public:
 private:
 
 	GLFWwindow* m_window_;
-
-	HorusRadeon& m_radeon_context_;
-	HorusOpenGL& m_opengl_context_;
-	HorusImGui& m_imgui_context_;
-
-	HorusEngine& m_engine_;
 
 	bool m_IsRunning_;
 	bool m_IsFullscreen_;

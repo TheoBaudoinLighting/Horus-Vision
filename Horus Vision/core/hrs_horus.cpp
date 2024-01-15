@@ -1,33 +1,22 @@
-// Main file for Horus Vision
 
-// Project includes
-#include "hrs_window.h"
+// Projects Include
+#include "hrs_engine.h" 
 
-class Horus_Core
+void main()
 {
-public:
+	HorusEngine& engine = HorusEngine::get_instance();
 
-	Horus_Core(int window_width, int window_height, const std::string& window_title)
+	engine.Init(800, 600, "Horus Vision", "DefaultUserSave.json");
+
+	while (engine.IsRunning())
 	{
-		m_window_ = std::make_unique<HorusWindow>();
-		m_window_->init_window(window_width, window_height, window_title);
+		engine.PreRender();
+		engine.Render();
+		engine.PostRender();
 	}
 
-	void run()
-	{
-		while (m_window_->is_running())
-		{
-			m_window_->render();
-		}
-	}
-
-private:
-
-	std::unique_ptr<HorusWindow> m_window_;
-};
-
-int main()
-{
-	std::unique_ptr<Horus_Core> horus_core = std::make_unique<Horus_Core>(800, 600, "Horus Vision");
-	horus_core->run();
+	spdlog::info("Exiting...");
+	return exit(0);
 }
+
+

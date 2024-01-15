@@ -8,6 +8,8 @@ public:
 	void init();
 	void destroy_scene();
 
+	void CreateDefaultScene();
+	void SetScene(rpr_scene scene);
 	void load_scene(const char* path);
 	void unload_scene();
 
@@ -21,9 +23,9 @@ public:
 	// Debug
 	void show_dummy_dragon();
 	void show_dummy_plane();
+	void show_LookdevScene();
 
 	rpr_scene get_scene() { return m_scene_; }
-	void set_scene(rpr_scene scene) { m_scene_ = scene; }
 
 private:
 

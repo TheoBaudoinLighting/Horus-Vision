@@ -1,6 +1,10 @@
-#include "hrs_window.h"
+
+#include "hrs_window.h" // glad.h
+#include "hrs_engine.h" // glfw.3
 
 #include "imgui_notify.h"
+
+#include "GLFW/glfw3.h"
 
 void HorusWindow::init_contexts(int width, int height, HorusWindow* window)
 {
@@ -18,15 +22,14 @@ void HorusWindow::init_contexts(int width, int height, HorusWindow* window)
 bool HorusWindow::init_window(int width, int height, const std::string& title)
 {
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
 
 	m_window_width_ = width;
 	m_window_height_ = height;
 	m_window_title_ = title;
 
-	init_contexts(m_window_width_, m_window_height_, this);
-
+	Engine.InitContexts(m_window_width_, m_window_height_, this);
 	Radeon.init_graphics();
-	//m_radeon_context_.init_render();
 
 	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");
@@ -39,20 +42,18 @@ void HorusWindow::render()
 	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
 	HorusImGui& ImGui = HorusImGui::get_instance();
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusEngine& Engine = HorusEngine::get_instance();
 
-	m_IsClosing_ = m_engine_.get_is_closing();
+	m_IsClosing_ = Engine.get_is_closing();
 
 	OpenGL.init_render();
 	ImGui.init_render();
-	Radeon.init_render();
 
 	Radeon.render_engine();
-
-	m_engine_.ui_init(); // TODO : 11,39% of the time spent in this function -> optimize it
+	// TODO Render UI Here
 
 	ImGui.post_render();
 	OpenGL.post_render();
-	Radeon.post_render();
 
 	process_input();
 
@@ -75,10 +76,6 @@ void HorusWindow::process_input()
 	HorusEngine& Engine = HorusEngine::get_instance();
 	HorusRadeon& Radeon = HorusRadeon::get_instance();
 
-	if (glfwGetKey(m_window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		close();
-	}
 
 	// close callback
 	if (glfwWindowShouldClose(m_window_))

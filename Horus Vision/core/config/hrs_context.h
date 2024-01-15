@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "hrs_config.h"
+#include "hrs_config.h" // glfw3.h
 
 #include <RadeonProRender_v2.h>
 #include <string>

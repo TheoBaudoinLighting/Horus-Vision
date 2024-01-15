@@ -1,98 +1,109 @@
 #pragma once
 
+//  Quaternion camera code adapted from: https://hamelot.io/visualization/moderngl-camera/
+
 #include <RadeonProRender_v2.h>
 #include <Math/float3.h>
 #include <Math/matrix.h>
 
-enum class CameraType
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+enum CameraType
 {
-	Perspective,
+	Free,
 	Orthographic
 };
 
-enum class CameraMode
+enum CameraDirection
 {
-	Free,
-	Target
-};
-
-enum class CameraCalculation
-{
-	Euler,
-	Quaternion
+	Forward,
+	Backward,
+	Left,
+	Right,
+	Up,
+	Down
 };
 
 class HorusCamera
 {
 public:
 
-	void init();
-	void destroy();
+	HorusCamera() {}
+	~HorusCamera() {}
 
-	void bind();
-	void unbind();
+	HorusCamera(const HorusCamera&) = delete;
+	HorusCamera& operator=(const HorusCamera&) = delete;
 
-	void get_info();
+	void Init();
+	void Reset();
+	void Destroy();
 
-	// Move camera
-	void move_forward();
-	void move_backward();
-	void move_left();
-	void move_right();
-	void move_up();
-	void move_down();
+	void VariableCheckers(std::string name);
 
-	void set_lookat(const RadeonProRender::float3& pivot);
+	void Bind();
+	void Unbind();
 
-	void scrolling(float dy);
-	void tumbling(float dx, float dy);
-	void track(float dx, float dy);
-	void dolly(float distance);
+	void GetCameraInfo();
+	void UpdateCamera();
 
-	void compute_view_projection_matrix(float* view, float* projection, float ratio);
+	void MoveCamera(CameraDirection dir);
+	void ChangePitch(float degrees);
+	void ChangeHeading(float degrees);
 
+	void Move2D(int x, int y);
 
-	void set_focal_length(float focal_length);
-	void set_aperture_blades(int num_blades);
-	void set_exposure(float exposure);
-	void set_focal_distance(float focal_distance);
-	void set_sensor_size(float sensor_size);
-	void set_lens_shift(float lens_shift_x, float lens_shift_y);
-	void set_tilt(float tilt_x, float tilt_y);
-	void set_focal_tilt(float focal_tilt);
-	void set_FStop(float FStop);
-	void set_near_clip(float near_clip);
-	void set_far_clip(float far_clip);
+	void SetMode(CameraType cam_mode);
+	void SetPosition(glm::vec3 pos);
+	void SetLookAt(glm::vec3 pos);
+	void SetFOV(double fov);
+	void SetViewport(int loc_x, int loc_y, int width, int height);
+	void SetClipping(double near_clip_distance, double far_clip_distance);
 
-	void set_camera_speed(float speed);
+	void Tumbling(float x, float y);
+	void Zoom(float distance);
+	void Pan(float x, float y);
 
-	HorusCamera get_camera();
+	void SetPos(int button, int state, int x, int y);
+
+	// Getters
+	CameraType GetMode();
+	void GetViewport(int& loc_x, int& loc_y, int& width, int& height);
+	void GetMatrices(glm::mat4& P, glm::mat4& V, glm::mat4& M);
 
 private:
 
-	void update_camera();
-
-	CameraType m_type_;
-	CameraMode m_mode_;
-	CameraCalculation m_calculation_;
-
-	RadeonProRender::float3 m_position_;
-	RadeonProRender::float3 m_lookat_ = RadeonProRender::float3(0.0f, 0.0f, 0.0f); // define center of the scene
-	RadeonProRender::float3 m_up_;
-	RadeonProRender::float3 m_right_;
-	RadeonProRender::matrix m_transform_;
-	RadeonProRender::float3 m_pivot_;
 	
-	RadeonProRender::float3 m_lookat_norm_;
-	RadeonProRender::float3 m_direction_;
-	RadeonProRender::float3 m_forward_;
-	RadeonProRender::float3 m_motion_;
-	RadeonProRender::float3 m_world_up_ = RadeonProRender::float3(0.0f, 1.0f, 0.0f);
-	RadeonProRender::matrix m_matrix_;
 
-	float m_camera_speed_ = 1.5f;
+	std::string name;
 
-	float m_fov_ = 0;
+	CameraType m_CameraType_;
+
+	int m_Viewport_X_;
+	int m_Viewport_Y_;
+
+	int _Window_Width_;
+	int _Window_Height_;
+
+	double m_Aspect_;
+	double m_Fov_;
+	double m_Near_;
+	double m_Far_;
+	double m_FStop_;
+
+	glm::vec3 m_Transform_;
+	glm::vec3 m_LookAt_;
+	glm::vec3 m_Up_;
+	glm::vec3 m_Position_;
+	glm::vec3 m_CameraScale_;
+	glm::vec3 m_Direction_;
+	glm::vec3 m_Right_;
+	glm::vec3 m_PitchAxis_;
+	glm::vec3 m_HeadingAxis_;
 
 	rpr_camera m_camera_ = nullptr;
 };
