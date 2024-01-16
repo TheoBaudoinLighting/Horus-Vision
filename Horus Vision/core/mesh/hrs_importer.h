@@ -10,10 +10,10 @@ public:
 
 	// Singleton HorusMeshImporter
 
-	static HorusMeshImporter& get_instance()
+	static HorusMeshImporter& GetInstance()
 	{
-		static HorusMeshImporter instance;
-		return instance;
+		static HorusMeshImporter Instance;
+		return Instance;
 	}
 
 	HorusMeshImporter(HorusMeshImporter const&) = delete;
@@ -22,28 +22,28 @@ public:
 	//-------------------------------------------------------------
 
 	// Import mesh with assimp
-	rpr_shape load_mesh(const std::string& pFile);
+	rpr_shape LoadMesh(const std::string& pFile);
 
 private:
 
-	HorusMeshImporter(): m_num_faces(0), m_shape_(nullptr), m_imported_shape_(nullptr)
+	HorusMeshImporter(): m_NumFaces_(0), m_Shape_(nullptr), m_ImportedShape_(nullptr)
 	{
 	}
 
-	std::vector<aiMesh*> m_meshes_;
-	std::vector<float> m_vertices_;
-	std::vector<float> m_normals_;
-	std::vector<rpr_int> m_indices_;  
-	std::vector<float> m_texcoords_;  
-	std::vector<rpr_int> m_vertex_indices_;
-	std::vector<rpr_int> m_normal_indices_;
-	std::vector<rpr_int> m_texcoord_indices_;  
-	std::vector<rpr_int> m_num_face_vertices_; 
-	size_t m_num_faces; 
+	std::vector<aiMesh*> m_Meshes_;
+	std::vector<float> m_Vertices_;
+	std::vector<float> m_Normals_;
+	std::vector<rpr_int> m_Indices_;  
+	std::vector<float> m_Texcoords_;  
+	std::vector<rpr_int> m_VertexIndices_;
+	std::vector<rpr_int> m_NormalIndices_;
+	std::vector<rpr_int> m_TexcoordIndices_;  
+	std::vector<rpr_int> m_NumFaceVertices_; 
+	size_t m_NumFaces_; 
 
-	std::vector<std::vector<rpr_float>> all_tex_coords_;
-	std::vector<rpr_float> udim_tex_coords_;
+	std::vector<std::vector<rpr_float>> m_AllTexCoords_;
+	std::vector<rpr_float> m_UdimTexCoords_;
 
-	rpr_shape m_shape_;
-	rpr_shape m_imported_shape_;
+	rpr_shape m_Shape_;
+	rpr_shape m_ImportedShape_;
 };

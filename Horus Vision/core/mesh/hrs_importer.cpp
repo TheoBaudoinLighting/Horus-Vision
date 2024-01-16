@@ -3,10 +3,9 @@
 #include <RadeonProRender_v2.h>
 
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-#include <tbb/parallel_for.h>
+#include <assimp/scene.h>
+#include <assimp/DefaultLogger.hpp>
 
 #include <iostream>
 
@@ -14,122 +13,121 @@
 #include "glm/glm.hpp"
 #include <hrs_console.h>
 
-rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
+rpr_shape HorusMeshImporter::LoadMesh(const std::string& pFile)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
 	spdlog::info("Loading mesh: {}", pFile);
 	Console.AddLog(" [info] Loading mesh : %s", pFile.c_str());
 
-	Assimp::Importer importer;
+	Assimp::Importer Importer;
 
-	const aiScene* scene = importer.ReadFile(pFile, aiProcess_CalcTangentSpace |
+	/*const aiScene* scene = importer.ReadFile(pFile, aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType | aiProcess_ValidateDataStructure);
+		aiProcess_SortByPType | aiProcess_ValidateDataStructure);*/
 
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	const aiScene* Scene = Importer.ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+
+
+	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
 	{
-		spdlog::error("Error with Assimp : {}", importer.GetErrorString());
-		Console.AddLog(" [error] Error with Assimp : %s", importer.GetErrorString());
-		std::exit(EXIT_FAILURE);
+		spdlog::error("Error with Assimp : {}", Importer.GetErrorString());
+		Console.AddLog(" [error] Error with Assimp : %s", Importer.GetErrorString());
+		return nullptr;
 	}
 
-	aiMesh* mesh = scene->mMeshes[0];
+	aiMesh* Mesh = Scene->mMeshes[0];
 
-	std::vector<rpr_float> vertices;
-	std::vector<rpr_float> normals;
-	std::vector<rpr_float> texcoords;
-	std::vector<rpr_int> vIndices;
-	std::vector<rpr_int> nIndices;
-	std::vector<rpr_int> tIndices;
-	std::vector<rpr_int> faceVert;
+	std::vector<rpr_float> Vertices;
+	std::vector<rpr_float> Normals;
+	std::vector<rpr_float> Texcoords;
+	std::vector<rpr_int> VIndices;
+	std::vector<rpr_int> NIndices;
+	std::vector<rpr_int> TIndices;
+	std::vector<rpr_int> FaceVert;
 
-	unsigned int totalElements = mesh->mNumVertices + mesh->mNumFaces;
-	unsigned int processedElements = 0;
-
-	int number_of_udims = 0;
+	int NumberOfUdims = 0;
 	for (int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++i)
 	{
-		if (mesh->HasTextureCoords(i))
+		if (Mesh->HasTextureCoords(i))
 		{
-			++number_of_udims;
+			++NumberOfUdims;
 		}
 		else
 		{
-			spdlog::info("Number of UDIMs: {}", number_of_udims);
-			Console.AddLog(" [info] Number of UDIMs : %d", number_of_udims);
+			spdlog::info("Number of UDIMs: {}", NumberOfUdims);
+			Console.AddLog(" [info] Number of UDIMs : %d", NumberOfUdims);
 			break;
 		}
 	}
 
-	std::vector<int> validUdims;
-	for (int udim = 0; udim < number_of_udims; ++udim)
+	std::vector<int> ValidUdims;
+	for (int Udim = 0; Udim < NumberOfUdims; ++Udim)
 	{
-		if (mesh->HasTextureCoords(udim))
+		if (Mesh->HasTextureCoords(Udim))
 		{
-			validUdims.push_back(udim);
+			ValidUdims.push_back(Udim);
 		}
 	}
 
-	spdlog::info("Valid UDIMs: {}", validUdims.size());
-	Console.AddLog(" [info] Valid UDIMs : %d", validUdims.size());
+	spdlog::info("Valid UDIMs: {}", ValidUdims.size());
+	Console.AddLog(" [info] Valid UDIMs : %d", ValidUdims.size());
 
 #pragma omp parallel for
-	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+	for (unsigned int i = 0; i < Mesh->mNumVertices; ++i)
 	{
 
-		aiVector3D vertex = mesh->mVertices[i];
-		vertices.push_back(vertex.x);
-		vertices.push_back(vertex.y);
-		vertices.push_back(vertex.z);
+		aiVector3D Vertex = Mesh->mVertices[i];
+		Vertices.push_back(Vertex.x);
+		Vertices.push_back(Vertex.y);
+		Vertices.push_back(Vertex.z);
 
-		if (mesh->HasNormals())
+		if (Mesh->HasNormals())
 		{
 
-			aiVector3D normal = mesh->mNormals[i];
-			normals.push_back(normal.x);
-			normals.push_back(normal.y);
-			normals.push_back(normal.z);
+			aiVector3D Normal = Mesh->mNormals[i];
+			Normals.push_back(Normal.x);
+			Normals.push_back(Normal.y);
+			Normals.push_back(Normal.z);
 		}
 
-		if (mesh->HasTextureCoords(0))
+		if (Mesh->HasTextureCoords(0))
 		{
 
-			aiVector3D texcoord = mesh->mTextureCoords[0][i];
-			texcoords.push_back(texcoord.x);
-			texcoords.push_back(texcoord.y);
+			aiVector3D Texcoord = Mesh->mTextureCoords[0][i];
+			Texcoords.push_back(Texcoord.x);
+			Texcoords.push_back(Texcoord.y);
 		}
 	}
 
-	std::thread load_mesh_thread([&]()
+	std::thread LoadMeshThread([&]()
 		{
 
-			for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+			for (unsigned int i = 0; i < Mesh->mNumFaces; ++i)
 			{
-				aiFace face = mesh->mFaces[i];
+				aiFace Face = Mesh->mFaces[i];
 
-				faceVert.push_back(face.mNumIndices);
+				FaceVert.push_back(Face.mNumIndices);
 
-
-				for (unsigned int j = 0; j < face.mNumIndices; ++j)
+				for (unsigned int j = 0; j < Face.mNumIndices; ++j)
 				{
-					vIndices.push_back(face.mIndices[j]);
+					VIndices.push_back(Face.mIndices[j]);
 
-					if (mesh->HasNormals())
+					if (Mesh->HasNormals())
 					{
-						nIndices.push_back(face.mIndices[j]);
+						NIndices.push_back(Face.mIndices[j]);
 					}
 
-					if (mesh->HasTextureCoords(0))
+					if (Mesh->HasTextureCoords(0))
 					{
-						tIndices.push_back(face.mIndices[j]);
+						TIndices.push_back(Face.mIndices[j]);
 					}
 
-					if (mesh->HasTextureCoords(1))
+					if (Mesh->HasTextureCoords(1))
 					{
-						tIndices.push_back(face.mIndices[j]);
+						TIndices.push_back(Face.mIndices[j]);
 					}
 
 				}
@@ -145,38 +143,36 @@ rpr_shape HorusMeshImporter::load_mesh(const std::string& pFile)
 
 	}*/
 
+	LoadMeshThread.join();
 
+	rpr_context Context = Radeon.GetContext();
 
-	load_mesh_thread.join();
+	bool IsValidNorm = Mesh->HasNormals();
+	bool IsValidTex = Mesh->HasTextureCoords(0);
 
-	rpr_context context = Radeon.get_context();
+	rpr_shape TShape;
 
-	bool isValidNorm = mesh->HasNormals();
-	bool isValidTex = mesh->HasTextureCoords(0);
-
-	rpr_shape t_shape;
-
-	CHECK(rprContextCreateMesh(context, vertices.data()
-		, vertices.size() / 3                                    // num_vertices
+	CHECK(rprContextCreateMesh(Context, Vertices.data()
+		, Vertices.size() / 3                                    // num_vertices
 		, 3 * sizeof(rpr_float),                                  // vertex_stride
-		isValidNorm ? normals.data() : nullptr,                  // normals
-		isValidNorm ? normals.size() / 3 : 0,                    // num_normals
-		isValidNorm ? 3 * sizeof(rpr_float) : 0,                 // normal_stride
-		isValidTex ? texcoords.data() : nullptr,                 // texcoords
-		isValidTex ? texcoords.size() / 2 : 0,                   // num_texcoords
-		isValidTex ? 2 * sizeof(rpr_float) : 0,                  // texcoord_stride
-		vIndices.data(),                                         // vertex_indices
+		IsValidNorm ? Normals.data() : nullptr,                  // normals
+		IsValidNorm ? Normals.size() / 3 : 0,                    // num_normals
+		IsValidNorm ? 3 * sizeof(rpr_float) : 0,                 // normal_stride
+		IsValidTex ? Texcoords.data() : nullptr,                 // texcoords
+		IsValidTex ? Texcoords.size() / 2 : 0,                   // num_texcoords
+		IsValidTex ? 2 * sizeof(rpr_float) : 0,                  // texcoord_stride
+		VIndices.data(),                                         // vertex_indices
 		sizeof(rpr_int),                                         // vertex_index_stride
-		isValidNorm ? nIndices.data() : nullptr,                 // normal_indices
-		isValidNorm ? sizeof(rpr_int) : 0,                       // normal_index_stride
-		isValidTex ? tIndices.data() : nullptr,                  // texcoord_indices
-		isValidTex ? sizeof(rpr_int) : 0,                        // texcoord_index_stride
-		faceVert.data(),                                         // num_face_vertices
-		faceVert.size(),                                         // num_faces
-		&t_shape));                                              // out_mesh
+		IsValidNorm ? NIndices.data() : nullptr,                 // normal_indices
+		IsValidNorm ? sizeof(rpr_int) : 0,                       // normal_index_stride
+		IsValidTex ? TIndices.data() : nullptr,                  // texcoord_indices
+		IsValidTex ? sizeof(rpr_int) : 0,                        // texcoord_index_stride
+		FaceVert.data(),                                         // num_face_vertices
+		FaceVert.size(),                                         // num_faces
+		&TShape));                                              // out_mesh
 
 	spdlog::info("Mesh loaded: {}", pFile);
 	Console.AddLog(" [success] Mesh loaded : %s", pFile.c_str());
 
-	return t_shape;
+	return TShape;
 }

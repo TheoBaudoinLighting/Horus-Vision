@@ -2,7 +2,6 @@
 
 // External includes
 #include <glad/glad.h>
-#include <spdlog/spdlog.h>
 
 // Project includes
 #include "hrs_vao.h" // glad.h
@@ -16,10 +15,10 @@ class HorusOpenGLManager
 {
 public:
 
-	static HorusOpenGLManager& get_instance()
+	static HorusOpenGLManager& GetInstance()
 	{
-		static HorusOpenGLManager instance; 
-		return instance;
+		static HorusOpenGLManager Instance; 
+		return Instance;
 	}
 
 	HorusOpenGLManager(HorusOpenGLManager const&) = delete;
@@ -45,11 +44,11 @@ public:
 	void DeleteAllVBOs();
 	void DeleteAllEBOs();
 
-	void SetVAOAttrib(int ID, int index, int size, int stride, int offset);
+	void SetVaoAttrib(int ID, int index, int size, int stride, int offset);
 
 private:
 
-	HorusOpenGLManager() : m_VAOs_(), m_VBOs_(), m_EBOs_() {}
+	HorusOpenGLManager() {}
 
 	// Manager components
 	std::map<int, HorusVAO> m_VAOs_;

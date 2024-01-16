@@ -1,6 +1,10 @@
 #pragma once
+#pragma warning( disable : 4005)
+#pragma warning( disable : 4996)
 
 #include <filesystem>
+
+#include "imgui.h"
 
 #include "hrs_context.h" // glfw3.h
 
@@ -8,31 +12,43 @@ class HorusImGui : public HorusContext
 {
 public:
 
-	static HorusImGui& get_instance()
+	static HorusImGui& GetInstance()
 	{
-		static HorusImGui instance; // Instance unique
-		return instance;
+		static HorusImGui Instance; // Instance unique
+		return Instance;
 	}
 
 	HorusImGui(const HorusImGui&) = delete;
 	void operator=(const HorusImGui&) = delete;
 
-	bool init(int width, int height, HorusWindowConfig* window) override;
+	bool Init(int width, int height, HorusWindowConfig* window) override;
 
-	void init_render() override;
-	void post_render() override;
-	void quit_render() override;
+	void InitRender() override;
+	void PostRender() override;
+	void QuitRender() override;
+
+	ImFont* GetIconFont() { return m_IconFont_; }
 
 private:
 
 	HorusImGui() {}
 
-	std::string m_current_path_ = std::filesystem::current_path().string();
+	std::string m_CurrentPath_ = std::filesystem::current_path().string();
 
-	//OverpassMono - VariableFont_wght.ttf
+	// Fonts
+	/*ImFont* m_medium_;
+	ImFont* m_bold_;
+	ImFont* m_tab_icon_;
+	ImFont* m_logo_;
+	ImFont* m_tab_title_;
+	ImFont* m_tab_title_icon_;
+	ImFont* m_subtab_title_;
+	ImFont* m_combo_arrow_;*/
 
-	//std::string m_font_path_ = "fonts/Montserrat-Bold.ttf";
-	std::string m_font_path_ = "fonts/UbuntuMono-Bold.ttf";
+	std::string m_FontSemiBoldPath_ = "fonts/Montserrat/Montserrat-SemiBold.ttf";
+	std::string m_FontBoldPath_ = "fonts/Montserrat/Montserrat-Bold.ttf";
 
-	const char* m_glsl_version_ = "#version 460";
+	ImFont* m_IconFont_ = nullptr;
+
+	const char* m_GlslVersion_ = "#version 460";
 };

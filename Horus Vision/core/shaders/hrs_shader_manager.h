@@ -9,10 +9,10 @@ class HorusShaderManager
 {
 public:
 
-	static HorusShaderManager& get_instance()
+	static HorusShaderManager& GetInstance()
 	{
-		static HorusShaderManager instance; // Instance unique
-		return instance;
+		static HorusShaderManager Instance; // Instance unique
+		return Instance;
 	}
 
 	HorusShaderManager(HorusShaderManager const&) = delete;
@@ -28,12 +28,12 @@ public:
 		}*/
 	}
 
-	GLuint get_program(std::string const& prog_name);
+	GLuint GetProgram(std::string const& ProgName);
 
 private:
 
-	GLuint compile_program(std::string const& prog_name);
+	GLuint CompileProgram(std::string const& ProgName);
 
-	std::map<std::string, GLuint> programs_;
+	std::map<std::string, GLuint> m_Programs_;
 };
 

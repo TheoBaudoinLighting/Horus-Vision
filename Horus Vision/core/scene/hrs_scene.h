@@ -5,31 +5,31 @@ class HorusScene
 {
 public:
 
-	void init();
-	void destroy_scene();
+	void Init();
+	void DestroyScene();
 
 	void CreateDefaultScene();
-	void SetScene(rpr_scene scene);
-	void load_scene(const char* path);
-	void unload_scene();
+	void SetScene(rpr_scene Scene);
+	void LoadScene(const char* Path);
+	void UnloadScene();
 
-	void export_scene(const char* path);
-	void import_scene(const char* path);
+	void ExportScene(const char* path);
+	void ImportScene(const char* path);
 
-	void show_scene();
-	void clear_scene();
-	void update_scene();
+	void ShowScene();
+	void ClearScene();
+	void UpdateScene();
 
 	// Debug
-	void show_dummy_dragon();
-	void show_dummy_plane();
-	void show_LookdevScene();
+	void ShowDummyDragon();
+	void ShowDummyPlane();
+	void ShowLookdevScene();
 
-	rpr_scene get_scene() { return m_scene_; }
+	rpr_scene GetScene() { return m_Scene_; }
 
 private:
 
-	rpr_scene m_scene_ = nullptr;
+	rpr_scene m_Scene_ = nullptr;
 };
 
 

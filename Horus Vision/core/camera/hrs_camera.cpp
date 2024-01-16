@@ -4,6 +4,7 @@
 #include <Math/mathutils.h>
 
 #include "common.h"
+#include "hrs_radeon.h"
 #include "objects/hrs_object_manager.h"
 #include "spdlog/spdlog.h"
 
@@ -11,62 +12,50 @@ using namespace std;
 using namespace RadeonProRender;
 
 // Debug	
-void HorusCamera::VariableCheckers(std::string name)
+void HorusCamera::VariableCheckers(std::string Name)
 {
-	cout << "Start info --------------------------" << endl;
-	cout << "Camera : " << name << endl;
-	cout << "Camera type : " << m_CameraType_ << endl;
-	cout << "Camera transform : " << m_Transform_.x << " " << m_Transform_.y << " " << m_Transform_.z << endl;
-	cout << "Camera look at : " << m_LookAt_.x << " " << m_LookAt_.y << " " << m_LookAt_.z << endl;
-	cout << "Camera up : " << m_Up_.x << " " << m_Up_.y << " " << m_Up_.z << endl;
-	cout << "Camera position : " << m_Position_.x << " " << m_Position_.y << " " << m_Position_.z << endl;
-	cout << "Camera fstop : " << m_FStop_ << endl;
-	cout << "Camera near : " << m_Near_ << endl;
-	cout << "Camera far : " << m_Far_ << endl;
-	cout << "Camera aspect : " << m_Aspect_ << endl;
-	cout << "Camera fov : " << m_Fov_ << endl;
-	cout << "Camera viewport x : " << m_Viewport_X_ << endl;
-	cout << "Camera viewport y : " << m_Viewport_Y_ << endl;
-	cout << "Camera window width : " << _Window_Width_ << endl;
-	cout << "Camera window height : " << _Window_Height_ << endl;
-	cout << "Camera instance : " << m_camera_ << endl;
-	cout << "End info --------------------------" << endl;
+	cout << "Start info --------------------------" << '\n';
+	cout << "Camera : " << Name << '\n';
+	cout << "Camera type : " << m_CameraType_ << '\n';
+	cout << "Camera transform : " << m_Transform_.x << " " << m_Transform_.y << " " << m_Transform_.z << '\n';
+	cout << "Camera look at : " << m_LookAt_.x << " " << m_LookAt_.y << " " << m_LookAt_.z << '\n';
+	cout << "Camera up : " << m_Up_.x << " " << m_Up_.y << " " << m_Up_.z << '\n';
+	cout << "Camera position : " << m_Position_.x << " " << m_Position_.y << " " << m_Position_.z << '\n';
+	cout << "Camera fstop : " << m_FStop_ << '\n';
+	cout << "Camera near : " << m_Near_ << '\n';
+	cout << "Camera far : " << m_Far_ << '\n';
+	cout << "Camera aspect : " << m_Aspect_ << '\n';
+	cout << "Camera fov : " << m_Fov_ << '\n';
+	cout << "Camera viewport x : " << m_Viewport_X_ << '\n';
+	cout << "Camera viewport y : " << m_Viewport_Y_ << '\n';
+	cout << "Camera window width : " << _Window_Width_ << '\n';
+	cout << "Camera window height : " << _Window_Height_ << '\n';
+	cout << "Camera instance : " << m_camera_ << '\n';
+	cout << "End info --------------------------" << '\n';
 }
 
 void HorusCamera::GetCameraInfo()
 {
-	//rprCameraGetInfo(m_camera_, RPR_CAMERA_MODE, sizeof(m_CameraType_), &m_CameraType_, nullptr);
-	//rprCameraGetInfo(m_camera_, RPR_CAMERA_TRANSFORM, sizeof(m_Transform_), &m_Transform_, nullptr);
 	rprCameraGetInfo(m_camera_, RPR_CAMERA_LOOKAT, sizeof(m_LookAt_), &m_LookAt_, nullptr);
 	rprCameraGetInfo(m_camera_, RPR_CAMERA_UP, sizeof(m_Up_), &m_Up_, nullptr);
 	rprCameraGetInfo(m_camera_, RPR_CAMERA_POSITION, sizeof(m_Position_), &m_Position_, nullptr);
-	//rprCameraGetInfo(m_camera_, RPR_CAMERA_FSTOP, sizeof(m_FStop_), &m_FStop_, nullptr);
-	//rprCameraGetInfo(m_camera_, RPR_CAMERA_NEAR_PLANE, sizeof(m_Near_), &m_Near_, nullptr);
-	//rprCameraGetInfo(m_camera_, RPR_CAMERA_FAR_PLANE, sizeof(m_Far_), &m_Far_, nullptr);
 }
 
 void HorusCamera::Init()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	m_CameraType_ = CameraType::Free;
 
 	spdlog::info("Camera init");
-	std::cout << "Updating camera in instance: " << this << std::endl;
+	std::cout << "Updating camera in instance: " << this << '\n';
 
-	CHECK(rprContextCreateCamera(Radeon.get_context(), &m_camera_));
+	CHECK(rprContextCreateCamera(Radeon.GetContext(), &m_camera_))
 
 	GetCameraInfo();
 
 	rprCameraSetMode(m_camera_, RPR_CAMERA_MODE_PERSPECTIVE);
-	//rprCameraSetFStop(m_camera_, 1.0f);
-	//rprCameraSetSensorSize(m_camera_, 36.0f, 24.0f);
-	//rprCameraSetFocalLength(m_camera_, 45.0f);
-	//rprCameraSetFocusDistance(m_camera_, 1.0f);
-	//rprCameraSetApertureBlades(m_camera_, 7);
-	//rprCameraSetLensShift(m_camera_, 0.0f, 0.0f);
-	//rprCameraSetPostScale(m_camera_, 1.0f);
 
 	m_Up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_LookAt_ = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -82,9 +71,7 @@ void HorusCamera::Init()
 	CHECK(rprCameraLookAt(m_camera_, m_Position_.x, m_Position_.y, m_Position_.z, m_LookAt_.x, m_LookAt_.y, m_LookAt_.z, m_Up_.x, m_Up_.y, m_Up_.z));
 
 	CHECK(rprCameraSetFocalLength(m_camera_, 45.0f));
-	CHECK(rprSceneSetCamera(ObjectManager.get_scene(), m_camera_));
-
-	//VariableCheckers("End Init");
+	CHECK(rprSceneSetCamera(ObjectManager.GetScene(), m_camera_));
 }
 
 void HorusCamera::Reset()
@@ -94,6 +81,7 @@ void HorusCamera::Reset()
 	m_Up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_LookAt_ = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_Position_ = glm::vec3(0.0f, 9.0f, 40.0f);
+	SetFOV(45.0f);
 
 	VariableCheckers("Reset");
 	UpdateCamera();
@@ -103,21 +91,21 @@ void HorusCamera::Destroy()
 {
 	if (m_camera_)
 	{
-		CHECK(rprObjectDelete(m_camera_));
-		m_camera_ = nullptr;
+		CHECK(rprObjectDelete(m_camera_))
+			m_camera_ = nullptr;
 	}
 }
 
 void HorusCamera::Bind()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	CHECK(rprSceneSetCamera(ObjectManager.get_scene(), m_camera_));
+	CHECK(rprSceneSetCamera(ObjectManager.GetScene(), m_camera_))
 }
 
 void HorusCamera::Unbind()
 {
-	CHECK(rprSceneSetCamera(nullptr, m_camera_));
+	CHECK(rprSceneSetCamera(nullptr, m_camera_))
 }
 
 void HorusCamera::UpdateCamera()
@@ -129,41 +117,41 @@ void HorusCamera::UpdateCamera()
 	glLoadIdentity();*/
 	//glViewport(m_Viewport_X_, m_Viewport_Y_, _Window_Width_, _Window_Height_); // TODO : activate this for lighting
 
-	if (m_CameraType_ == Orthographic)
-	{
-		//spdlog::info("Orthographic camera");
-		//rprCameraSetMode(m_camera_, RPR_CAMERA_MODE_ORTHOGRAPHIC);
+	//if (m_CameraType_ == Orthographic)
+	//{
+	//	//spdlog::info("Orthographic camera");
+	//	//rprCameraSetMode(m_camera_, RPR_CAMERA_MODE_ORTHOGRAPHIC);
 
-		//m_ProjectionMatrix_ = glm::ortho(-1.5f * float(m_Aspect_), 1.5f * float(m_Aspect_), -1.5f, 1.5f, -10.f, 10.f);
-	}
-	else if (m_CameraType_ == Free)
-	{
-		//spdlog::info("Free camera");
+	//	//m_ProjectionMatrix_ = glm::ortho(-1.5f * float(m_Aspect_), 1.5f * float(m_Aspect_), -1.5f, 1.5f, -10.f, 10.f);
+	//}
+	//else if (m_CameraType_ == Free)
+	//{
+	//	//spdlog::info("Free camera");
 
-		//rprCameraSetMode(m_camera_, RPR_CAMERA_MODE_PERSPECTIVE);
+	//	//rprCameraSetMode(m_camera_, RPR_CAMERA_MODE_PERSPECTIVE);
 
-		/*m_ProjectionMatrix_ = glm::perspective(m_Fov_, m_Aspect_, m_Near_, m_Far_);
+	//	/*m_ProjectionMatrix_ = glm::perspective(m_Fov_, m_Aspect_, m_Near_, m_Far_);
 
-		glm::vec3 axis = glm::cross(m_Direction_, m_Up_);
+	//	glm::vec3 axis = glm::cross(m_Direction_, m_Up_);
 
-		glm::quat pith_quat = glm::angleAxis(m_CameraPitch_, axis);
-		glm::quat heading_quat = glm::angleAxis(m_CameraHeading_, m_Up_);
+	//	glm::quat pith_quat = glm::angleAxis(m_CameraPitch_, axis);
+	//	glm::quat heading_quat = glm::angleAxis(m_CameraHeading_, m_Up_);
 
-		glm::quat joined = glm::cross(pith_quat, heading_quat);
-		joined = glm::normalize(joined);
+	//	glm::quat joined = glm::cross(pith_quat, heading_quat);
+	//	joined = glm::normalize(joined);
 
-		m_Direction_ = glm::rotate(joined, m_Direction_);
+	//	m_Direction_ = glm::rotate(joined, m_Direction_);
 
-		m_Position_ += m_PositionDelta_;
-		m_LookAt_ = m_Position_ + m_Direction_ * 1.0f;
+	//	m_Position_ += m_PositionDelta_;
+	//	m_LookAt_ = m_Position_ + m_Direction_ * 1.0f;
 
-		m_CameraHeading_ *= 0.5f;
-		m_CameraPitch_ *= 0.5f;
-		m_PositionDelta_ = m_PositionDelta_ * 0.8f;*/
-	}
+	//	m_CameraHeading_ *= 0.5f;
+	//	m_CameraPitch_ *= 0.5f;
+	//	m_PositionDelta_ = m_PositionDelta_ * 0.8f;*/
+	//}
 
 	rprCameraLookAt(m_camera_, m_Position_.x, m_Position_.y, m_Position_.z, m_LookAt_.x, m_LookAt_.y, m_LookAt_.z, m_Up_.x, m_Up_.y, m_Up_.z);
-	
+
 	/*m_ViewMatrix_ = glm::lookAt(m_Position_, m_LookAt_, m_Up_);
 	m_ModelMatrix_ = glm::mat4(1.0f);
 	m_MVP_ = m_ProjectionMatrix_ * m_ViewMatrix_ * m_ModelMatrix_;*/
@@ -192,7 +180,7 @@ void HorusCamera::MoveCamera(CameraDirection dir)
 
 			m_Direction_ = glm::normalize(m_LookAt_ - m_Position_);
 
-			glm::vec3 TempLookAtBack =  glm::normalize(m_LookAt_ - m_Position_);
+			glm::vec3 TempLookAtBack = glm::normalize(m_LookAt_ - m_Position_);
 
 			m_Position_ -= TempLookAtBack * m_CameraScale_;
 
@@ -202,7 +190,7 @@ void HorusCamera::MoveCamera(CameraDirection dir)
 			glm::vec3 TempRightLeft = glm::normalize(glm::cross(m_LookAt_ - m_Position_, m_Up_));
 
 			m_Position_ += TempRightLeft * m_CameraScale_;
-			
+
 			break;
 		case Right:
 
@@ -291,8 +279,7 @@ void HorusCamera::SetLookAt(glm::vec3 pos)
 	GetCameraInfo();
 
 	m_LookAt_ = pos;
-	
-	//VariableCheckers("Set Look At");
+
 	UpdateCamera();
 }
 
@@ -301,9 +288,8 @@ void HorusCamera::SetFOV(double fov)
 	GetCameraInfo();
 
 	m_Fov_ = fov;
-
 	rprCameraSetFocalLength(m_camera_, m_Fov_);
-	//VariableCheckers("Set FOV");
+
 	UpdateCamera();
 }
 
@@ -334,8 +320,8 @@ void HorusCamera::Tumbling(float x, float y)
 {
 	GetCameraInfo();
 
-	float angle_x = x * 2.5f;
-	float angle_y = y * 2.5f;
+	float AngleX = x * 2.5f;
+	float AngleY = y * 2.5f;
 
 	glm::vec3 CamToPivot = m_Position_ - m_LookAt_;
 
@@ -343,8 +329,8 @@ void HorusCamera::Tumbling(float x, float y)
 	float CurrentYaw = atan2f(CamToPivot.z, CamToPivot.x);
 	float CurrentPitch = asinf(CamToPivot.y / Radius);
 
-	CurrentYaw += angle_x;
-	CurrentPitch += angle_y;
+	CurrentYaw += AngleX;
+	CurrentPitch += AngleY;
 
 	constexpr float MinPitch = glm::radians(89.f); // Important to avoid gimbal lock
 	CurrentPitch = glm::max(-MinPitch, glm::min(CurrentPitch, MinPitch));
@@ -377,19 +363,116 @@ void HorusCamera::Pan(float x, float y)
 {
 	GetCameraInfo();
 
-	glm::vec3 forward = glm::normalize(m_LookAt_ - m_Position_);
-	glm::vec3 right = glm::normalize(glm::cross(forward, m_Up_));
-	glm::vec3 up = glm::normalize(m_Up_);
+	glm::vec3 Forward = glm::normalize(m_LookAt_ - m_Position_);
+	glm::vec3 Right = glm::normalize(glm::cross(Forward, m_Up_));
+	glm::vec3 Up = glm::normalize(m_Up_);
 
-	float panSensitivity = 0.01f;
+	float PanSensitivity = 0.01f;
 
-	glm::vec3 displacement = (right * x + up * (-y)) * panSensitivity;
+	glm::vec3 Displacement = (Right * x + Up * (-y)) * PanSensitivity;
 
-	m_Position_ += displacement;
-	m_LookAt_ += displacement;
+	m_Position_ += Displacement;
+	m_LookAt_ += Displacement;
 
 	UpdateCamera();
 }
+
+// Getters
+
+CameraType HorusCamera::GetMode()
+{
+	VariableCheckers("Get Mode");
+	return m_CameraType_;
+}
+
+void HorusCamera::GetViewport(int& loc_x, int& loc_y, int& width, int& height)
+{
+	loc_x = m_Viewport_X_;
+	loc_y = m_Viewport_Y_;
+	width = _Window_Width_;
+	height = _Window_Height_;
+
+	VariableCheckers("Get Viewport");
+}
+
+void HorusCamera::GetMatrices(glm::mat4& P, glm::mat4& V, glm::mat4& M)
+{
+	/*P = m_ProjectionMatrix_;
+	V = m_ViewMatrix_;
+	M = m_ModelMatrix_;*/
+}
+
+glm::vec3 HorusCamera::GetLookAt()
+{
+	return m_LookAt_;
+}
+glm::vec3 HorusCamera::GetPosition()
+{
+	return m_Position_;
+}
+glm::vec3 HorusCamera::GetTranslation()
+{
+	return m_Position_;
+}
+glm::vec3 HorusCamera::GetRotation()
+{
+	glm::vec3 direction = glm::normalize(m_Direction_);
+	glm::vec3 up = glm::normalize(m_Up_);
+	glm::vec3 right = glm::normalize(glm::cross(direction, up));
+
+	glm::mat3 rotationMatrix = glm::mat3(right, up, -direction);
+
+	glm::vec3 rotation = glm::eulerAngles(glm::quat_cast(rotationMatrix));
+
+	return rotation;
+}
+glm::vec3 HorusCamera::GetUp()
+{
+	return m_Up_;
+}
+glm::vec3 HorusCamera::GetRight()
+{
+	return m_Right_;
+}
+glm::vec3 HorusCamera::GetDirection()
+{
+	return m_Direction_;
+}
+glm::vec3 HorusCamera::GetPitchAxis()
+{
+	return m_PitchAxis_;
+}
+glm::vec3 HorusCamera::GetHeadingAxis()
+{
+	return m_HeadingAxis_;
+}
+glm::vec3 HorusCamera::GetCameraScale()
+{
+	return m_CameraScale_;
+}
+
+double HorusCamera::GetFOV()
+{
+	return m_Fov_;
+}
+double HorusCamera::GetNear()
+{
+	return m_Near_;
+}
+double HorusCamera::GetFar()
+{
+	return m_Far_;
+}
+double HorusCamera::GetFStop()
+{
+	return m_FStop_;
+}
+double HorusCamera::GetAspect()
+{
+	return m_Aspect_;
+}
+
+// Setters
 
 void HorusCamera::SetPos(int button, int state, int x, int y)
 {
@@ -409,27 +492,41 @@ void HorusCamera::SetPos(int button, int state, int x, int y)
 	VariableCheckers("Set Pos");
 	UpdateCamera();
 }
-
-CameraType HorusCamera::GetMode()
+void HorusCamera::SetCameraRotation(float pitch, float yaw, float roll)
 {
-	VariableCheckers("Get Mode");
-	return m_CameraType_;
+	GetCameraInfo();
 
+	pitch = glm::radians(pitch);
+	yaw = glm::radians(yaw);
+	roll = glm::radians(roll);
+
+	glm::quat QuaternionRotation = glm::quat(glm::vec3(pitch, yaw, roll));
+
+	glm::mat3 RotationMatrix = glm::mat3_cast(QuaternionRotation);
+
+	m_Direction_ = RotationMatrix * glm::vec3(0.0f, 0.0f, -1.0f);
+
+	m_Up_ = RotationMatrix * glm::vec3(0.0f, 1.0f, 0.0f);
+
+	UpdateCamera();
+}
+void HorusCamera::SetAspect(double aspect)
+{
+	GetCameraInfo();
+
+	m_Aspect_ = aspect;
+
+	UpdateCamera();
+}
+void HorusCamera::SetCameraScale(glm::vec3 scale)
+{
+	GetCameraInfo();
+
+	m_CameraScale_ = scale;
+
+	UpdateCamera();
 }
 
-void HorusCamera::GetViewport(int& loc_x, int& loc_y, int& width, int& height)
-{
-	loc_x = m_Viewport_X_;
-	loc_y = m_Viewport_Y_;
-	width = _Window_Width_;
-	height = _Window_Height_;
 
-	VariableCheckers("Get Viewport");
-}
 
-void HorusCamera::GetMatrices(glm::mat4& P, glm::mat4& V, glm::mat4& M)
-{
-	/*P = m_ProjectionMatrix_;
-	V = m_ViewMatrix_;
-	M = m_ModelMatrix_;*/
-}
+

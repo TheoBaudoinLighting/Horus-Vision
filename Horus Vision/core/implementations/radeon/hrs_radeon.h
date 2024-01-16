@@ -13,87 +13,108 @@ class HorusRadeon : public HorusContext
 {
 public:
 
-	static HorusRadeon& get_instance()
+	struct HorusFrameBufferMetadata
 	{
-		static HorusRadeon instance; // Instance unique
-		return instance;
+		int RenderTargetSizeX, RenderTargetSizeY;
+		int TileSizeX, TileSizeY;
+		std::vector<rpr_uchar> FbData;
+	};
+
+	static HorusRadeon& GetInstance()
+	{
+		static HorusRadeon Instance; // Instance unique
+		return Instance;
 	}
 
 	HorusRadeon(const HorusRadeon&) = delete;
 	void operator=(const HorusRadeon&) = delete;
 
-	void create_frame_buffers(int width, int height);
-	bool init(int width, int height, HorusWindowConfig* window) override;
+	void CreateFrameBuffers(int width, int height);
+	bool Init(int width, int height, HorusWindowConfig* window) override;
 
-	void init_render() override { }
-	void post_render() override { }
-	void quit_render() override;
+	void InitRender() override { }
+	void PostRender() override { }
+	void QuitRender() override;
 
-	bool init_graphics();
-	void resize_render(int width, int height);
+	bool InitGraphics();
+	void ResizeRender(int width, int height);
 
-	void render_engine();
-	void render_engine_tiled();
+	void RenderEngine();
 
-	float get_render_progress();
+	void CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles);
+	void RenderMultiTiles(HorusFrameBufferMetadata& fb_metadata, rpr_scene, rpr_context context, rpr_uint MaxIterationRendering);
 
-	glm::vec2 set_window_size(int width, int height);
+	float GetRenderProgress();
 
-	rpr_context get_context() { return m_context_; }
-	rpr_material_system get_matsys() { return m_matsys_; }
+	glm::vec2 SetWindowSize(int width, int height);
 
-	GLuint get_texture_buffer() { return m_texture_buffer_; } // Buffer to render in ImGui for Radeon
+	rpr_context GetContext() { return m_Context_; }
+	rpr_material_system GetMatsys() { return m_Matsys_; }
 
-	rpr_framebuffer get_frame_buffer() { return m_frame_buffer_; }
-	rpr_framebuffer get_frame_buffer_resolved() { return m_frame_buffer_2_; }
+	GLuint GetTextureBuffer() { return m_TextureBuffer_; } // Buffer to render in ImGui for Radeon
 
-	void set_sample_count(int sample_count) { m_sample_count_ = sample_count; }
+	rpr_framebuffer GetFrameBuffer() { return m_FrameBuffer_; }
+	rpr_framebuffer GetFrameBufferResolved() { return m_FrameBuffer2_; }
 
-	bool get_is_dirty() { return m_is_dirty_; }
-	bool set_is_dirty(bool is_dirty) { m_is_dirty_ = is_dirty; return m_is_dirty_; }
+	void SetSampleCount(int sample_count) { m_SampleCount_ = sample_count; }
 
-	int get_sample_count() { return m_sample_count_; }
-	int get_min_samples() { return m_min_samples_; }
-	int get_max_samples() { return m_max_samples_; }
-	int set_min_samples(int min_samples) { m_min_samples_ = min_samples; return m_min_samples_; }
-	int set_max_samples(int max_samples) { 	m_max_samples_ = max_samples; return m_max_samples_; }
+	bool GetIsDirty() { return m_IsDirty_; }
+	bool SetIsDirty(bool is_dirty) { m_IsDirty_ = is_dirty; return m_IsDirty_; }
+
+	int GetSampleCount() { return m_SampleCount_; }
+	int GetMinSamples() { return m_MinSamples_; }
+	int GetMaxSamples() { return m_MaxSamples_; }
+	int SetMinSamples(int min_samples) { m_MinSamples_ = min_samples; return m_MinSamples_; }
+	int SetMaxSamples(int max_samples) { 	m_MaxSamples_ = max_samples; return m_MaxSamples_; }
 
 private:
 
-	HorusRadeon() {}
-	
+	HorusRadeon(): m_WindowConfig_(nullptr), m_IsDirty_(false), m_Program_(0)
+	{
+	}
+
 	// Render stuff
 
-	int m_window_width_ = 0;
-	int m_window_height_ = 0;
-	HorusWindowConfig* m_window_config_;
+	int m_WindowWidth_ = 0;
+	int m_WindowHeight_ = 0;
+	HorusWindowConfig* m_WindowConfig_;
 
-	int m_min_samples_ = 4;
-	int m_max_samples_ = 32;
-	int m_sample_count_ = 0;
-	int m_batch_size_ = 0;
+	int m_MinSamples_ = 4;
+	int m_MaxSamples_ = 32;
+	int m_SampleCount_ = 0;
+	int m_BatchSize_ = 0;
 
-	bool m_thread_running_ = false;
-	std::thread m_render_thread_;
+	int m_RenderTargetSizeX_ = m_WindowWidth_;
+	int m_RenderTargetSizeY_ = m_WindowHeight_;
+	const int m_MaxIterationTiledRendering_ = 128;
 
-	bool m_is_dirty_;
+	float m_SensorY_ = 36.0f;
+	float m_SensorX_ = m_SensorY_ * (float(m_RenderTargetSizeX_) / float(m_RenderTargetSizeY_));
+
+	float m_PreviousLensShift_ = 0.0;
+
+	bool m_ThreadRunning_ = false;
+	std::thread m_RenderThread_; // single-threading
+	std::vector<std::thread> m_RenderThreads_; // multi-threading
+
+	bool m_IsDirty_;
 
 	// Radeon stuff
 
-	GLuint m_program_;
+	GLuint m_Program_;
 
-	GLuint m_texture_buffer_ = 0;
-	GLuint m_vertex_buffer_id_ = 0;
-	GLuint m_index_buffer_id_ = 0;
+	GLuint m_TextureBuffer_ = 0;
+	GLuint m_VertexBufferId_ = 0;
+	GLuint m_IndexBufferId_ = 0;
 
-	GLuint m_up_buffer_ = 0;
+	GLuint m_UpBuffer_ = 0;
 
-	rpr_framebuffer m_frame_buffer_ = nullptr;
-	rpr_framebuffer m_frame_buffer_2_ = nullptr;
+	rpr_framebuffer m_FrameBuffer_ = nullptr;
+	rpr_framebuffer m_FrameBuffer2_ = nullptr;
 
-	rpr_context m_context_ = nullptr;
-	rpr_material_system m_matsys_ = nullptr;
-	rpr_camera m_camera_ = nullptr;
+	rpr_context m_Context_ = nullptr;
+	rpr_material_system m_Matsys_ = nullptr;
+	rpr_camera m_Camera_ = nullptr;
 
-	std::shared_ptr<float> m_fb_data_ = nullptr;
+	std::shared_ptr<float> m_FbData_ = nullptr;
 };

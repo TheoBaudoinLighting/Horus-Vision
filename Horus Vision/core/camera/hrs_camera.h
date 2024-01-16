@@ -1,10 +1,7 @@
 #pragma once
 
-//  Quaternion camera code adapted from: https://hamelot.io/visualization/moderngl-camera/
-
 #include <RadeonProRender_v2.h>
-#include <Math/float3.h>
-#include <Math/matrix.h>
+#include <Math/mathutils.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -33,7 +30,21 @@ class HorusCamera
 {
 public:
 
-	HorusCamera() {}
+	HorusCamera(): m_CameraType_(), m_Viewport_X_(0), m_Viewport_Y_(0), _Window_Width_(0), _Window_Height_(0),
+	               m_Aspect_(0), m_Fov_(0),
+	               m_Near_(0),
+	               m_Far_(0), m_FStop_(0),
+	               m_Transform_(),
+	               m_LookAt_(), m_Up_(),
+	               m_Position_(),
+	               m_CameraScale_(),
+	               m_Direction_(),
+	               m_Right_(),
+	               m_PitchAxis_(),
+	               m_HeadingAxis_()
+	{
+	}
+
 	~HorusCamera() {}
 
 	HorusCamera(const HorusCamera&) = delete;
@@ -43,7 +54,7 @@ public:
 	void Reset();
 	void Destroy();
 
-	void VariableCheckers(std::string name);
+	void VariableCheckers(std::string Name);
 
 	void Bind();
 	void Unbind();
@@ -57,13 +68,6 @@ public:
 
 	void Move2D(int x, int y);
 
-	void SetMode(CameraType cam_mode);
-	void SetPosition(glm::vec3 pos);
-	void SetLookAt(glm::vec3 pos);
-	void SetFOV(double fov);
-	void SetViewport(int loc_x, int loc_y, int width, int height);
-	void SetClipping(double near_clip_distance, double far_clip_distance);
-
 	void Tumbling(float x, float y);
 	void Zoom(float distance);
 	void Pan(float x, float y);
@@ -74,10 +78,39 @@ public:
 	CameraType GetMode();
 	void GetViewport(int& loc_x, int& loc_y, int& width, int& height);
 	void GetMatrices(glm::mat4& P, glm::mat4& V, glm::mat4& M);
+	
+	// For Inspector
+	glm::vec3 GetLookAt();
+	glm::vec3 GetPosition();
+	glm::vec3 GetTranslation();
+	glm::vec3 GetRotation();
+	glm::vec3 GetUp();
+	glm::vec3 GetRight();
+	glm::vec3 GetDirection();
+	glm::vec3 GetPitchAxis();
+	glm::vec3 GetHeadingAxis();
+	glm::vec3 GetCameraScale();
+
+	double GetFOV();
+	double GetNear();
+	double GetFar();
+	double GetFStop();
+	double GetAspect();
+
+	std::string& GetName() { return name; }
+	
+	// Setters
+	void SetMode(CameraType cam_mode);
+	void SetPosition(glm::vec3 pos);
+	void SetLookAt(glm::vec3 pos);
+	void SetFOV(double fov);
+	void SetViewport(int loc_x, int loc_y, int width, int height);
+	void SetClipping(double near_clip_distance, double far_clip_distance);
+	void SetAspect(double aspect);
+	void SetCameraScale(glm::vec3 scale);
+	void SetCameraRotation(float pitch, float yaw, float roll);
 
 private:
-
-	
 
 	std::string name;
 

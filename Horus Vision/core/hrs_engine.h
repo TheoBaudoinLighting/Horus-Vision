@@ -21,18 +21,18 @@ class HorusEngine
 {
 public:
 
-	static HorusEngine& get_instance()
+	static HorusEngine& GetInstance()
 	{
-		static HorusEngine instance;
-		return instance;
+		static HorusEngine Instance;
+		return Instance;
 	}
 
 	HorusEngine(HorusEngine const&) = delete;
 	void operator=(HorusEngine const&) = delete;
 
-	int context_info(rpr_context& context);
+	int ContextInfo(rpr_context& Context);
 
-	void Init(int width, int height, const std::string& title, const std::string& SaveFilename);
+	void Init(int Width, int Height, const std::string& Title, const std::string& SaveFilename);
 	void InitContexts(int width, int height, HorusWindow* window);
 	void PreRender();
 	void Render();
@@ -40,122 +40,127 @@ public:
 	bool IsRunning() const { return m_IsRunning_; }
 	void Close();
 
-	void update_performance_data(float currentFPS, float currentSampling)
+	void UpdatePerformanceData(float CurrentFps, float CurrentSampling)
 	{
-		fps_data_[current_frame_ % data_points_count] = currentFPS;
-		sampling_data_[current_frame_ % data_points_count] = currentSampling;
-		current_frame_++;
+		m_FpsData_[m_CurrentFrame_ % DataPointsCount] = CurrentFps;
+		m_SamplingData_[m_CurrentFrame_ % DataPointsCount] = CurrentSampling;
+		m_CurrentFrame_++;
 	}
 
-	bool get_is_closing() { return m_is_closing_; }
-	void set_is_closing(bool closing) { m_is_closing_ = closing; }
+	bool GetIsClosing() { return m_is_closing_; }
+	void SetIsClosing(bool closing) { m_is_closing_ = closing; }
 
-	ImVec2 get_image_size() { return img_size; }
-	float get_image_aspect_ratio() { return aspect_ratio_viewer; }
+	ImVec2 GetImageSize() { return m_ImgSize_; }
+	float GetImageAspectRatio() { return m_AspectRatioViewer_; }
 
-	void call_reset_buffer();
+	void CallResetBuffer();
 
 private:
 
-	HorusEngine() {}
+	HorusEngine(): m_NumFrames_(0), m_RenderStatistics_(), m_Gpu00N_{}, m_Gpu01N_{}, m_AspectRatioViewer_(0), m_ChronoTime_(0),
+	               m_TotalSeconds_(0), m_Hours_(0),
+	               m_Minutes_(0),
+	               m_Seconds_(0),
+	               m_Milliseconds_(0)
+	{
+	}
 
-	std::unique_ptr<HorusWindow> m_window_;
-	std::string m_save_filename_;
+	std::unique_ptr<HorusWindow> m_Window_;
+	std::string m_SaveFilename_;
 
 	bool m_IsRunning_ = true;
 	bool m_IsClosing_ = false;
 
-	const float desired_width_ = 800.0f;
-	char userInput[256] = "";
-	int suffix = 001;
+	const float m_DesiredWidth_ = 800.0f;
+	char m_UserInput_[256] = "";
+	int m_Suffix_ = 001;
 
-	int camera_number_ = 0;
-	int light_number_ = 0;
-	int mesh_number_ = 0;
-	int material_number_ = 0;
-	int image_number_ = 0;
-	int post_effect_number_ = 0;
-	int volume_number_ = 0;
-	int curve_number_ = 0;
-	int grid_number_ = 0;
-	int buffer_number_ = 0;
-	int framebuffer_number_ = 0;
-	int scene_number_ = 0;
-	int material_node_number_ = 0;
-	int composite_number_ = 0;
-	int lut_number_ = 0;
+	int m_CameraNumber_ = 0;
+	int m_LightNumber_ = 0;
+	int m_MeshNumber_ = 0;
+	int m_MaterialNumber_ = 0;
+	int m_ImageNumber_ = 0;
+	int m_PostEffectNumber_ = 0;
+	int m_VolumeNumber_ = 0;
+	int m_CurveNumber_ = 0;
+	int m_GridNumber_ = 0;
+	int m_BufferNumber_ = 0;
+	int m_FramebufferNumber_ = 0;
+	int m_SceneNumber_ = 0;
+	int m_MaterialNodeNumber_ = 0;
+	int m_CompositeNumber_ = 0;
+	int m_LutNumber_ = 0;
 
-	rpr_uint numFrames;
-	rpr_render_statistics render_statistics_;
+	rpr_uint m_NumFrames_;
+	rpr_render_statistics m_RenderStatistics_;
 
-	bool enable_adaptive_sampling_ = false;
-	bool enable_preview_mode_ = false;
-	bool enable_AA_ = true;
-	bool show_object_contour_ = false;
-	int samplerType = RPR_CONTEXT_SAMPLER_TYPE_SOBOL;
+	bool m_EnableAdaptiveSampling_ = false;
+	bool m_EnablePreviewMode_ = false;
+	bool m_EnableAa_ = true;
+	bool m_ShowObjectContour_ = false;
+	int m_SamplerType_ = RPR_CONTEXT_SAMPLER_TYPE_SOBOL;
 
-	char GPU00N[1024];
-	char GPU01N[1024];
+	char m_Gpu00N_[1024];
+	char m_Gpu01N_[1024];
 
-	std::vector<float> frame;
-	std::vector<float> samples_mkr;
+	std::vector<float> m_Frame_;
+	std::vector<float> m_SamplesMkr_;
 
 	bool m_is_closing_ = false;
 
-	glm::vec2 size_{};
+	glm::vec2 m_Size_{};
 
-	ImVec2 img_size;
-	float aspect_ratio_viewer;
-	ImVec2 stored_image_position_;
+	ImVec2 m_ImgSize_;
+	float m_AspectRatioViewer_;
+	ImVec2 m_StoredImagePosition_;
 
-	bool enable_render_region_ = false;
-	bool previous_enable_adaptive_sampling_ = false;
-	bool previous_enable_AA_ = false;
-	bool previous_reset_mode_ = false;
+	bool m_EnableRenderRegion_ = false;
+	bool m_PreviousEnableAdaptiveSampling_ = false;
+	bool m_PreviousEnableAa_ = false;
+	bool m_PreviousResetMode_ = false;
 	bool m_ResetBuffer_ = false;
-	bool enable_backdrop_image_ = false;
-	bool previous_enable_backdrop_image_ = false;
-	bool enable_denoiser_ = false;
-	bool enable_russian_roulette_ = false;
-	bool previous_enable_russian_roulette_ = false;
-	bool previous_enable_transparent_background = false;
-	bool enable_transparent_background = false;
-	long long m_chrono_time_;
+	bool m_EnableBackdropImage_ = false;
+	bool m_PreviousEnableBackdropImage_ = false;
+	bool m_EnableDenoiser_ = false;
+	bool m_EnableRussianRoulette_ = false;
+	bool m_PreviousEnableRussianRoulette_ = false;
+	bool m_PreviousEnableTransparentBackground_ = false;
+	bool m_EnableTransparentBackground_ = false;
+	long long m_ChronoTime_;
 
-	inline static float last_progress = -1.0f;
-	inline static bool has_started = false;
-	inline static bool is_options_changed = false;
-	inline static std::chrono::high_resolution_clock::time_point start_time;
-	inline static std::chrono::high_resolution_clock::time_point end_time;
-	long long total_seconds;
-	long long hours;
-	long long minutes;
-	long long seconds;
-	long long milliseconds;
+	inline static float m_LastProgress_ = -1.0f;
+	inline static bool m_HasStarted_ = false;
+	inline static bool m_IsOptionsChanged_ = false;
+	inline static std::chrono::high_resolution_clock::time_point m_StartTime_;
+	inline static std::chrono::high_resolution_clock::time_point m_EndTime_;
+	long long m_TotalSeconds_;
+	long long m_Hours_;
+	long long m_Minutes_;
+	long long m_Seconds_;
+	long long m_Milliseconds_;
 
-	static const int data_points_count = 100;
+	static const int DataPointsCount = 100;
 
+	float m_FpsData_[DataPointsCount] = {};
+	float m_SamplingData_[DataPointsCount] = {};
+	int m_CurrentFrame_ = 0;
 
-	float fps_data_[data_points_count] = {};
-	float sampling_data_[data_points_count] = {};
-	int current_frame_ = 0;
+	inline static bool m_ShowWinuiViewer_ = false;
+	inline static bool m_ShowWinuiRender_ = true;
+	inline static bool m_ShowWinuiPropertyEditor_ = true;
+	inline static bool m_ShowWinuiOutliner_ = false;
+	inline static bool m_ShowWinuiMaterialEditor_ = false;
+	inline static bool m_ShowWinuiMainMenuBar_ = false;
+	inline static bool m_ShowWinuiMaterialBrowser_ = true;
+	inline static bool m_ShowWinuiViewerRt_ = true;
+	inline static bool m_ShowWinuiConsole_ = true;
 
-	inline static bool show_winui_viewer = false;
-	inline static bool show_winui_render = true;
-	inline static bool show_winui_property_editor = true;
-	inline static bool show_winui_outliner = false;
-	inline static bool show_winui_material_editor = false;
-	inline static bool show_winui_main_menu_bar = false;
-	inline static bool show_winui_material_browser = true;
-	inline static bool show_winui_viewer_rt = true;
-	inline static bool show_winui_console = true;
+	std::string m_SelectedMesh_;
+	std::string m_SelectedMaterial_;
+	std::string m_SelectedCamera_;
+	std::map<std::string, int> m_MeshNameToId_;
 
-	std::string selectedMesh;
-	std::string selectedMaterial;
-	std::string selectedCamera;
-	std::map<std::string, int> meshNameToID;
-
-	int m_min_samples_ = 4;
-	int m_max_samples_ = 128;
-	float m_adaptive_threshold_ = 0.01f;
+	int m_MinSamples_ = 4;
+	int m_MaxSamples_ = 128;
+	float m_AdaptiveThreshold_ = 0.01f;
 };

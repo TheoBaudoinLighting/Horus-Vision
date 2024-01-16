@@ -1,48 +1,47 @@
 #pragma once
 
-#include <map>
-#include <string>
-
 #include <RadeonProRender_v2.h>
-#include <Math/quaternion.h>
 
-#include "hrs_garbage_collector.h"
+#include <glm/glm.hpp>
 
 class HorusMesh
 {
 public:
 
-	void init(const char* path);
-	void destroy_mesh();
+	void GetMeshInfo();
 
-	void assign_material(rpr_material_node material);
+	void Init(const char* path);
+	void DestroyMesh();
 
-	void get_info();
+	void AssignMaterial(rpr_material_node material);
 
-	RadeonProRender::matrix get_transform() const { return m_transform_; }
+	// Getters
+	rpr_shape GetShape() const { return m_Shape_; }
+	glm::mat4 GetTransform() const { return m_Transform_; }
+	glm::vec3 GetShapePosition() const { return glm::vec3(m_Position_.x, m_Position_.y, m_Position_.z); }
+	glm::vec3 GetShapeRotation() const { return glm::vec3(m_Rotation_.x, m_Rotation_.y, m_Rotation_.z); }
+	glm::vec3 GetShapeScale() const { return glm::vec3(m_Scale_.x, m_Scale_.y, m_Scale_.z); }
 
-	void set_shape_position(RadeonProRender::float3 pos);
-	void set_shape_rot(RadeonProRender::float3 rotation_axis, float rotation_angle);
-	void set_shape_scale(RadeonProRender::float3 scale);
+	// Setters
+	void SetShapePosition(glm::vec3 pos);
+	void SetShapeRotation(glm::vec3 rot);
+	void SetShapeScale(glm::vec3 scale);
 
-	void set_object_to_scene(rpr_scene& scene);
-
-	rpr_shape get_shape() const { return m_shape_; }
+	void SetObjectToScene(rpr_scene& scene);
 
 private:
 
-	void update_transform();
+	void UpdateTransform();
 
-	rpr_shape m_shape_;
+	rpr_shape m_Shape_ = nullptr;
 
-	RadeonProRender::float3 m_translation_ = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 m_position_ = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float4 m_rotation_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 m_scale_ = { 1.0f, 1.0f, 1.0f };
+	glm::mat4 m_Transform_ = glm::mat4(1.0f);
+	glm::vec3 m_Position_ = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 m_Rotation_ = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 m_Scale_ = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	RadeonProRender::matrix m_transform_;
+	float m_RotationAngle_ = 0.0f;
 
-	std::map<int, std::string> m_mesh_names_;
-	float m_rotation_angle_ = 0.0f;
-	RadeonProRender::float3 m_rotation_axis_ = { 0.0f, 0.0f, 0.0f };
+
+
 };

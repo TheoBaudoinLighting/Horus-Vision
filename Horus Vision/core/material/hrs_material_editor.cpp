@@ -20,25 +20,25 @@ static float current_time_seconds = 0.f;
 static bool  emulate_three_button_mouse = false;
 
 template<class T>
-T clamp(T x, T a, T b)
+T Clamp(T x, T a, T b)
 {
 	return std::min(b, std::max(x, a));
 }
 
 rpr_image load_texture(std::string path)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
 	rpr_image image = nullptr;
 
-	if (rprContextCreateImageFromFile(Radeon.get_context(), path.c_str(), &image) != RPR_SUCCESS)
+	if (rprContextCreateImageFromFile(Radeon.GetContext(), path.c_str(), &image) != RPR_SUCCESS)
 	{
 		spdlog::error("Error: Texture -> {} not found.", path);
 		return nullptr;
 	}
 
-	gc.add(image);
+	gc.Add(image);
 
 	spdlog::info("Texture -> {} loaded.", path);
 
@@ -47,9 +47,9 @@ rpr_image load_texture(std::string path)
 
 rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGraph<HorusNode>& graph, const int root_node_id)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance(); m_garbage_collector_.GCClean();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance(); m_garbage_collector_.GCClean();
 
 	std::stack<int> post_order_stack;
 
@@ -80,7 +80,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 			rpr_material_node new_node = meta_top.get_node();
 
 
-			rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
+			rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
 			m_garbage_collector_.GCAdd(new_node);
 
 
@@ -178,7 +178,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 				rpr_material_node new_node = meta_top.get_node();
 				material_node_stack.pop();
 
-				CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
+				CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &new_node));
 				m_garbage_collector_.GCAdd(new_node);
 
 				CHECK(rprMaterialNodeSetInputImageDataByKey(new_node, RPR_MATERIAL_INPUT_DATA, image));
@@ -208,7 +208,7 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 
 
-			rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
+			rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_UBERV2, &new_node);
 			m_garbage_collector_.GCAdd(new_node);
 
 			rprMaterialNodeSetInputFByKey(new_node, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, node.m_color_.x, node.m_color_.y, node.m_color_.z, node.m_color_.w);
@@ -244,13 +244,13 @@ rpr_material_node HorusMaterialEditor::evaluate_rpr_material_node(const HorusGra
 
 void HorusMaterialEditor::init()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
 
-	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
-	gc.add(m_out_node_);
+	CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
+	gc.Add(m_out_node_);
 
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 1.f, 0.5f, 0.5f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_node_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
@@ -304,8 +304,8 @@ void HorusMaterialEditor::init()
 
 
 
-	CHECK(rprMaterialSystemCreateNode(Radeon.get_matsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_modified_));
-	gc.add(m_out_modified_);
+	CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_modified_));
+	gc.Add(m_out_modified_);
 
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(m_out_modified_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
@@ -364,9 +364,9 @@ void HorusMaterialEditor::init()
 
 void HorusMaterialEditor::update()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
 	auto flags = ImGuiWindowFlags_MenuBar;
 	ImGui::Begin("Material Editor", nullptr, flags);
@@ -1572,9 +1572,9 @@ void HorusMaterialEditor::update()
 
 void HorusMaterialEditor::update_material()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
 	root_node_changed();
 
@@ -1586,7 +1586,7 @@ void HorusMaterialEditor::update_material()
 			{
 				// TODO : Check here if the material is already set or if it's correctly set after a change
 
-				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_modified_);
+				ObjectManager.SetMaterialFromEditorNode(ObjectManager.GetMeshIdToSetMaterial(), m_out_modified_);
 				material_already_set = true;
 				change_detected = true;
 			}
@@ -1597,7 +1597,7 @@ void HorusMaterialEditor::update_material()
 		{
 			if (output_connected_last_frame)
 			{
-				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_node_);
+				ObjectManager.SetMaterialFromEditorNode(ObjectManager.GetMeshIdToSetMaterial(), m_out_node_);
 				material_already_set = false;
 				change_detected = true;
 			}
@@ -1626,8 +1626,8 @@ void HorusMaterialEditor::update_material()
 
 				m_out_modified_ = evaluate_rpr_material_node(m_graph_, m_root_node_ID_);
 
-				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_modified_); // Set final material 
-				spdlog::info("id to set is {}", ObjectManager.get_mesh_id_to_set_material());
+				ObjectManager.SetMaterialFromEditorNode(ObjectManager.GetMeshIdToSetMaterial(), m_out_modified_); // Set final material 
+				spdlog::info("id to set is {}", ObjectManager.GetMeshIdToSetMaterial());
 
 				need_reevaluate = false;
 
@@ -1636,15 +1636,15 @@ void HorusMaterialEditor::update_material()
 			{
 				m_IsThisMaterial_ = false;
 
-				ObjectManager.set_material_from_editor_node(ObjectManager.get_mesh_id_to_set_material(), m_out_node_);
+				ObjectManager.SetMaterialFromEditorNode(ObjectManager.GetMeshIdToSetMaterial(), m_out_node_);
 
-				spdlog::info("id to set is {}", ObjectManager.get_mesh_id_to_set_material());
+				spdlog::info("id to set is {}", ObjectManager.GetMeshIdToSetMaterial());
 
 				need_reevaluate = false;
 			}
 		}
 
-		Engine.call_reset_buffer();
+		Engine.CallResetBuffer();
 		change_detected = false;
 	}
 }
@@ -1673,9 +1673,9 @@ void HorusMaterialEditorBrowser::init()
 
 void HorusMaterialEditorBrowser::update()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
 	ImGui::Begin("Material Browser");
 
@@ -1685,7 +1685,7 @@ void HorusMaterialEditorBrowser::update()
 		selectedMaterial = materials[0];
 	}*/
 
-	ObjectManager.get_material_editor_materials(materials);
+	ObjectManager.GetMaterialEditorMaterials(materials);
 
 
 
@@ -1698,10 +1698,10 @@ void HorusMaterialEditorBrowser::update()
 			{
 				selectedMaterial = material;
 
-				int id = ObjectManager.get_material_editor_id_by_name(material.c_str());
+				int id = ObjectManager.GetMaterialEditorIdByName(material.c_str());
 
-				ObjectManager.set_material_editor_mesh_to_set_material(id);
-				ObjectManager.set_material_editor_to_show(id);
+				ObjectManager.SetMaterialEditorMeshToSetMaterial(id);
+				ObjectManager.SetMaterialEditorToShow(id);
 
 			}
 		}

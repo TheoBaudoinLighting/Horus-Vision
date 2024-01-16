@@ -1454,6 +1454,18 @@
     <ClInclude Include="core\ui\hrs_outliner.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="core\implementations\imgui\hrs_fonts.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\IconsFontAwesome6.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\imgui\hrs_icons_fa.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\imgui\hrs_icons.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="external\GLFW\LIB-VC2022\glfw3.dll" />

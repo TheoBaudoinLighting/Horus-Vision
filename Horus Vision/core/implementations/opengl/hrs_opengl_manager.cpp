@@ -1,9 +1,12 @@
 #include "hrs_opengl_manager.h"
 #include <hrs_console.h>
+#include <ranges>
+
+#include "spdlog/spdlog.h"
 
 HorusVAO& HorusOpenGLManager::CreateVAO(int ID)
 {
-	if (m_VAOs_.find(ID) != m_VAOs_.end())
+	if (m_VAOs_.contains(ID))
 	{
 		spdlog::error("VAO with ID {} already exists", ID);
 
@@ -21,7 +24,7 @@ HorusVAO& HorusOpenGLManager::CreateVAO(int ID)
 
 HorusVBO& HorusOpenGLManager::CreateVBO(int ID, GLfloat* vertices, GLsizeiptr size)
 {
-	if (m_VBOs_.find(ID) != m_VBOs_.end())
+	if (m_VBOs_.contains(ID))
 	{
 		spdlog::error("VBO with ID {} already exists", ID);
 
@@ -39,7 +42,7 @@ HorusVBO& HorusOpenGLManager::CreateVBO(int ID, GLfloat* vertices, GLsizeiptr si
 
 HorusEBO& HorusOpenGLManager::CreateEBO(int ID, GLuint* indices, GLuint size)
 {
-	if (m_EBOs_.find(ID) != m_EBOs_.end())
+	if (m_EBOs_.contains(ID))
 	{
 		spdlog::error("EBO with ID {} already exists", ID);
 
@@ -57,7 +60,7 @@ HorusEBO& HorusOpenGLManager::CreateEBO(int ID, GLuint* indices, GLuint size)
 
 void HorusOpenGLManager::BindVAO(int ID)
 {
-	if (m_VAOs_.find(ID) == m_VAOs_.end())
+	if (!m_VAOs_.contains(ID))
 	{
 		spdlog::error("VAO with ID {} does not exist", ID);
 		return;
@@ -68,7 +71,7 @@ void HorusOpenGLManager::BindVAO(int ID)
 
 void HorusOpenGLManager::BindVBO(int ID)
 {
-	if (m_VBOs_.find(ID) == m_VBOs_.end())
+	if (!m_VBOs_.contains(ID))
 	{
 		spdlog::error("VBO with ID {} does not exist", ID);
 		return;
@@ -79,7 +82,7 @@ void HorusOpenGLManager::BindVBO(int ID)
 
 void HorusOpenGLManager::BindEBO(int ID)
 {
-	if (m_EBOs_.find(ID) == m_EBOs_.end())
+	if (!m_EBOs_.contains(ID))
 	{
 		spdlog::error("EBO with ID {} does not exist", ID);
 		return;
@@ -90,7 +93,7 @@ void HorusOpenGLManager::BindEBO(int ID)
 
 void HorusOpenGLManager::UnbindVAO(int ID)
 {
-	if (m_VAOs_.find(ID) == m_VAOs_.end())
+	if (!m_VAOs_.contains(ID))
 	{
 		spdlog::error("VAO with ID {} does not exist", ID);
 		return;
@@ -101,7 +104,7 @@ void HorusOpenGLManager::UnbindVAO(int ID)
 
 void HorusOpenGLManager::UnbindVBO(int ID)
 {
-	if (m_VBOs_.find(ID) == m_VBOs_.end())
+	if (!m_VBOs_.contains(ID))
 	{
 		spdlog::error("VBO with ID {} does not exist", ID);
 		return;
@@ -112,7 +115,7 @@ void HorusOpenGLManager::UnbindVBO(int ID)
 
 void HorusOpenGLManager::UnbindEBO(int ID)
 {
-	if (m_EBOs_.find(ID) == m_EBOs_.end())
+	if (!m_EBOs_.contains(ID))
 	{
 		spdlog::error("EBO with ID {} does not exist", ID);
 		return;
@@ -123,11 +126,10 @@ void HorusOpenGLManager::UnbindEBO(int ID)
 
 void HorusOpenGLManager::DeleteVAO(int ID)
 {
-	auto it = m_VAOs_.find(ID);
-	if (it != m_VAOs_.end())
+	if (auto It = m_VAOs_.find(ID); It != m_VAOs_.end())
 	{
-		it->second.Delete();
-		m_VAOs_.erase(it);
+		It->second.Delete();
+		m_VAOs_.erase(It);
 	}
 
 	spdlog::info(" [info] Deleted VAO with ID {}", ID);
@@ -135,11 +137,10 @@ void HorusOpenGLManager::DeleteVAO(int ID)
 
 void HorusOpenGLManager::DeleteVBO(int ID)
 {
-	auto it = m_VBOs_.find(ID);
-	if (it != m_VBOs_.end())
+	if (auto It = m_VBOs_.find(ID); It != m_VBOs_.end())
 	{
-		it->second.Delete();
-		m_VBOs_.erase(it);
+		It->second.Delete();
+		m_VBOs_.erase(It);
 	}
 
 	spdlog::info("Deleted VBO with ID {}", ID);
@@ -147,11 +148,10 @@ void HorusOpenGLManager::DeleteVBO(int ID)
 
 void HorusOpenGLManager::DeleteEBO(int ID)
 {
-	auto it = m_EBOs_.find(ID);
-	if (it != m_EBOs_.end())
+	if (auto It = m_EBOs_.find(ID); It != m_EBOs_.end())
 	{
-		it->second.Delete();
-		m_EBOs_.erase(it);
+		It->second.Delete();
+		m_EBOs_.erase(It);
 	}
 
 	spdlog::info("Deleted EBO with ID {}", ID);
@@ -159,9 +159,9 @@ void HorusOpenGLManager::DeleteEBO(int ID)
 
 void HorusOpenGLManager::DeleteAllVAOs()
 {
-	for (auto& VAO : m_VAOs_)
+	for (auto& Val : m_VAOs_ | std::views::values)
 	{
-		VAO.second.Delete();
+		Val.Delete();
 	}
 
 	m_VAOs_.clear();
@@ -171,9 +171,9 @@ void HorusOpenGLManager::DeleteAllVAOs()
 
 void HorusOpenGLManager::DeleteAllVBOs()
 {
-	for (auto& VBO : m_VBOs_)
+	for (auto& Val : m_VBOs_ | std::views::values)
 	{
-		VBO.second.Delete();
+		Val.Delete();
 	}
 
 	m_VBOs_.clear();
@@ -183,9 +183,9 @@ void HorusOpenGLManager::DeleteAllVBOs()
 
 void HorusOpenGLManager::DeleteAllEBOs()
 {
-	for (auto& EBO : m_EBOs_)
+	for (auto& Val : m_EBOs_ | std::views::values)
 	{
-		EBO.second.Delete();
+		Val.Delete();
 	}
 
 	m_EBOs_.clear();
@@ -193,9 +193,9 @@ void HorusOpenGLManager::DeleteAllEBOs()
 	spdlog::info("Deleted all EBOs");
 }
 
-void HorusOpenGLManager::SetVAOAttrib(int ID, int index, int size, int stride, int offset)
+void HorusOpenGLManager::SetVaoAttrib(int ID, int index, int size, int stride, int offset)
 {
-	if (m_VAOs_.find(ID) == m_VAOs_.end())
+	if (!m_VAOs_.contains(ID))
 	{
 		spdlog::error("VAO with ID {} does not exist", ID);
 
@@ -204,5 +204,5 @@ void HorusOpenGLManager::SetVAOAttrib(int ID, int index, int size, int stride, i
 
 	spdlog::info("Set VAO attribute with ID {}", ID);
 
-	m_VAOs_[ID].LinkAttrib(m_VBOs_[ID], index, size, GL_FLOAT, stride, (void*)offset);
+	m_VAOs_[ID].LinkAttrib(m_VBOs_[ID], index, size, GL_FLOAT, stride, reinterpret_cast<void*>(offset));
 }

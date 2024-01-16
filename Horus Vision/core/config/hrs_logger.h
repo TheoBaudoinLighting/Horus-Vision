@@ -1,22 +1,19 @@
 #pragma once
 
-#include <iostream>
-
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 
 class HorusLogger
 {
 public:
-	static HorusLogger& get_instance()
+	static HorusLogger& GetInstance()
 	{
-		static HorusLogger instance;
-		return instance;
+		static HorusLogger Instance;
+		return Instance;
 	}
 
-	void init();
+	void Init();
 
-	std::shared_ptr<spdlog::logger> get_logger() { return m_logger_; }
+	std::shared_ptr<spdlog::logger> GetLogger() { return Logger; }
 
-	std::shared_ptr<spdlog::logger> m_logger_;
+	std::shared_ptr<spdlog::logger> Logger;
 };

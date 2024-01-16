@@ -24,6 +24,7 @@ class HorusWindowConfig
 	HorusInput* m_InputHandler_;
 
 public:
+	virtual ~HorusWindowConfig() = default;
 
 	HorusWindowConfig() : m_InputHandler_(nullptr) {}
 
@@ -84,7 +85,7 @@ public:
 	virtual void resize_callback(int width, int height) = 0;
 	virtual void close_callback() = 0;
 
-	int m_window_width_ = 1280;
-	int m_window_height_ = 800;
-	std::string m_window_title_;
+	int m_WindowWidth_ = 1280;
+	int m_WindowHeight_ = 800;
+	std::string m_WindowTitle_;
 };

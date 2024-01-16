@@ -1,21 +1,23 @@
 #include "hrs_imgui.h"
 
-#include "imgui.h"
+#include "spdlog/spdlog.h"
+
+#include "hrs_fonts.h"
+#include "imnodes.h"
+
+#include "GLFW/glfw3.h"
+#include <hrs_icons.h>
+
+#include "hrs_icons_fa.h"
 #include "ImGuizmo.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "imnodes.h"
-#include "imgui_notify.h"
 
-#include "spdlog/spdlog.h"
-
-#include "GLFW/glfw3.h"
-
-bool HorusImGui::init(int width, int height, HorusWindowConfig* window)
+bool HorusImGui::Init(int width, int height, HorusWindowConfig* window)
 {
 	spdlog::info("Initialize ImGui..");
 
-	__super::init(width, height, window);
+	__super::Init(width, height, window);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -33,78 +35,78 @@ bool HorusImGui::init(int width, int height, HorusWindowConfig* window)
 
 	ImGui::StyleColorsDark();               // Apply the dark theme
 
-	ImGuiStyle& style = ImGui::GetStyle();  // Get the style structure
-	ImVec4* colors = style.Colors;          // Get the colors array
+	ImGuiStyle& Style = ImGui::GetStyle();  // Get the style structure
+	ImVec4* Colors = Style.Colors;          // Get the colors array
 
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		// Background
 
-		colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.105f, 0.11f, 1.0f);
+		Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.105f, 0.11f, 1.0f);
 
 		// Headers
 
-		colors[ImGuiCol_Header] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+		Colors[ImGuiCol_Header] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
 
 		// Headers Hovered
 
-		colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
+		Colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
 
 		// Headers Active
 
-		colors[ImGuiCol_HeaderActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_HeaderActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Buttons
 
-		colors[ImGuiCol_Button] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+		Colors[ImGuiCol_Button] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
 
 		// Buttons Hovered
 
-		colors[ImGuiCol_ButtonHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
+		Colors[ImGuiCol_ButtonHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
 
 		// Buttons Active
 
-		colors[ImGuiCol_ButtonActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_ButtonActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Frame Background
 
-		colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+		Colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
 
 		// Frame Background Hovered
 
-		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
+		Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
 
 		// Frame Background Active
 
-		colors[ImGuiCol_FrameBgActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_FrameBgActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Tabs
 
-		colors[ImGuiCol_Tab] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_Tab] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Tabs Hovered
 
-		colors[ImGuiCol_TabHovered] = ImVec4(0.39f, 0.4f, 0.41f, 1.0f);
+		Colors[ImGuiCol_TabHovered] = ImVec4(0.39f, 0.4f, 0.41f, 1.0f);
 
 		// Tabs Active
 
-		colors[ImGuiCol_TabActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.0f);
+		Colors[ImGuiCol_TabActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.0f);
 
 		// Title
 
-		colors[ImGuiCol_TitleBg] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_TitleBg] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Title Active
 
-		colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// Title Text
 
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 		// List Box Background
 
-		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
+		Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.15f, 0.1505f, 0.151f, 1.0f);
 
 
 		// Imgui style setup
@@ -114,20 +116,33 @@ bool HorusImGui::init(int width, int height, HorusWindowConfig* window)
 
 	ImFontConfig font_cfg;
 	font_cfg.FontDataOwnedByAtlas = false;
+	font_cfg.PixelSnapH = false;
+	font_cfg.OversampleH = 5;
+	font_cfg.OversampleV = 5;
+	font_cfg.RasterizerMultiply = 1.7f;
 
-	io.Fonts->AddFontFromFileTTF(m_font_path_.c_str(), 16.0f, &font_cfg);
+	//io.Fonts->AddFontFromFileTTF(m_font_SemiBold_path_.c_str(), 16.0f, &font_cfg);
+	io.Fonts->AddFontFromMemoryTTF(Montserrat_SemiBold, sizeof(Montserrat_SemiBold), 16.0f, &font_cfg);
 
-	ImGui::MergeIconsWithLatestFont(16.0f, false);
+	static const ImWchar IconsRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+	ImFontConfig IconsConfig;
+	IconsConfig.MergeMode = true;
+	IconsConfig.PixelSnapH = true;
+	IconsConfig.OversampleH = 5;
+	IconsConfig.OversampleV = 5;
+	IconsConfig.RasterizerMultiply = 1.7f;
 
-	ImGui_ImplGlfw_InitForOpenGL(m_window_->get_window(), true);
-	ImGui_ImplOpenGL3_Init(m_glsl_version_);
+	m_IconFont_ = io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_data, font_awesome_size, 19.5f, &IconsConfig, IconsRanges);
+
+	ImGui_ImplGlfw_InitForOpenGL(m_Window_->get_window(), true);
+	ImGui_ImplOpenGL3_Init(m_GlslVersion_);
 
 	spdlog::info("ImGui initialized.");
 
 	return true;
 }
 
-void HorusImGui::init_render()
+void HorusImGui::InitRender()
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -135,30 +150,30 @@ void HorusImGui::init_render()
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::BeginFrame();
 
-	ImGuiWindowFlags window_flags =
+	ImGuiWindowFlags WindowFlags =
 		ImGuiWindowFlags_NoBringToFrontOnFocus |
 		ImGuiWindowFlags_MenuBar |
 		ImGuiWindowFlags_AlwaysAutoResize;
 
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->Pos);
-	ImGui::SetNextWindowSize(viewport->Size);
-	ImGui::SetNextWindowViewport(viewport->ID);
+	ImGuiViewport* Viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(Viewport->Pos);
+	ImGui::SetNextWindowSize(Viewport->Size);
+	ImGui::SetNextWindowViewport(Viewport->ID);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-	ImGui::Begin("Horus_MainDockspace", nullptr, window_flags);
+	ImGui::Begin("Horus_MainDockspace", nullptr, WindowFlags);
 
 	ImGui::PopStyleVar(3);
-	ImGuiID dockspace_id = ImGui::GetID("Horus_MainDockspace");
-	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+	ImGuiID DockspaceId = ImGui::GetID("Horus_MainDockspace");
+	ImGui::DockSpace(DockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
 	ImGui::End();
 }
 
-void HorusImGui::post_render()
+void HorusImGui::PostRender()
 {
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -167,14 +182,14 @@ void HorusImGui::post_render()
 
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
-		GLFWwindow* backup_current_context = glfwGetCurrentContext();
+		GLFWwindow* BackupCurrentContext = glfwGetCurrentContext();
 		ImGui::UpdatePlatformWindows();
 		ImGui::RenderPlatformWindowsDefault();
-		glfwMakeContextCurrent(backup_current_context);
+		glfwMakeContextCurrent(BackupCurrentContext);
 	}
 }
 
-void HorusImGui::quit_render()
+void HorusImGui::QuitRender()
 {
 	spdlog::info("Unload ImGui..");
 	ImGui_ImplOpenGL3_Shutdown();

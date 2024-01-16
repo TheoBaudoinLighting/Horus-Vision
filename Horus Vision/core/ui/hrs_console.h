@@ -9,19 +9,16 @@
 
 #include <ctype.h>         
 #include <limits.h>        
-#include <math.h>          
-#include <stdio.h>         
 #include <stdlib.h>        
-#include <stdint.h>   
 
 class HorusConsole
 {
 public:
 
-	static HorusConsole& get_instance()
+	static HorusConsole& GetInstance()
 	{
-		static HorusConsole instance;
-		return instance;
+		static HorusConsole Instance;
+		return Instance;
 	}
 
 	HorusConsole(HorusConsole const&) = delete;
@@ -42,7 +39,7 @@ public:
 
 private:
 
-	HorusConsole() {}
+	HorusConsole() = default;
 
 	char m_InputBuf_[256];
 

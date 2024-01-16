@@ -8,45 +8,39 @@ class HorusOutlinerObject
 {
 public:
 
-	std::string name;
-	std::string type;
-	std::vector<HorusOutlinerObject*> children;
+	std::string Name;
+	std::string Type;
+	std::vector<HorusOutlinerObject*> Children;
 
-	HorusOutlinerObject(std::string name, std::string type) : name(name), type(type) {}
+	HorusOutlinerObject(std::string name, std::string type) : Name(name), Type(type) {}
 
 	~HorusOutlinerObject()
 	{
-		for (auto& child : children)
+		for (auto& Child : Children)
 		{
-			delete child;
+			delete Child;
 		}
 	}
 
 	void AddChild(HorusOutlinerObject* child)
 	{
-		children.push_back(child);
+		Children.push_back(child);
 	}
 
 	void RemoveChild(HorusOutlinerObject* child)
 	{
-		children.erase(std::remove(children.begin(), children.end(), child), children.end());
+		std::erase(Children, child);
 	}
-
-
-private:
-
-
-
 };
 
 class HorusOutliner
 {
 public:
 
-	static HorusOutliner& get_instance()
+	static HorusOutliner& GetInstance()
 	{
-		static HorusOutliner instance;
-		return instance;
+		static HorusOutliner Instance;
+		return Instance;
 	}
 
 	HorusOutliner(HorusOutliner const&) = delete;
@@ -56,12 +50,12 @@ public:
 
 	void AddRootObject(HorusOutlinerObject* object)
 	{
-		rootObjects.push_back(object);
+		m_RootObjects_.push_back(object);
 	}
 
 	void RemoveRootObject(HorusOutlinerObject* object)
 	{
-		rootObjects.erase(std::remove(rootObjects.begin(), rootObjects.end(), object), rootObjects.end());
+		std::erase(m_RootObjects_, object);
 	}
 
 	void AddChildToObject(HorusOutlinerObject* parent, HorusOutlinerObject* child)
@@ -76,38 +70,34 @@ public:
 
 	void SetSelectedObject(std::string object)
 	{
-		selectedObject = object;
+		m_SelectedObject_ = object;
 	}
 
 	std::string GetSelectedObject()
 	{
-		return selectedObject;
+		return m_SelectedObject_;
 	}
 
 	void MoveObject(HorusOutlinerObject* object, HorusOutlinerObject* newParent);
-
-
 
 private:
 
 	HorusOutliner() {}
 	~HorusOutliner()
 	{
-		for (auto& object : rootObjects)
+		for (auto& Object : m_RootObjects_)
 		{
-			delete object;
+			delete Object;
 		}
 	}
 
-	std::vector<HorusOutlinerObject*> rootObjects;
+	std::vector<HorusOutlinerObject*> m_RootObjects_;
 
-	std::string selectedObject;
+	std::string m_SelectedObject_;
 
-	std::string selectedMesh;
-	std::string selectedMaterial;
-	std::string selectedCamera;
-	std::string selectedLight;
-	std::map<std::string, int> meshNameToID;
-
-
+	std::string m_SelectedMesh_;
+	std::string m_SelectedMaterial_;
+	std::string m_SelectedCamera_;
+	std::string m_SelectedLight_;
+	std::map<std::string, int> m_MeshNameToId_;
 };

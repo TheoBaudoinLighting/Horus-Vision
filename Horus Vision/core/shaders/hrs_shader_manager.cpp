@@ -11,122 +11,119 @@
 #include "spdlog/spdlog.h"
 #include <hrs_console.h>
 
-static void load_file(std::string const& name, std::vector<char>& contents, bool binary = false)
+static void LoadFile(std::string const& Name, std::vector<char>& Contents, bool Binary = false)
 {
-	std::ios_base::openmode open_mode = std::ios::in;
-	if (binary) {
-		open_mode |= std::ios::binary;
+	std::ios_base::openmode OpenMode = std::ios::in;
+	if (Binary) {
+		OpenMode |= std::ios::binary;
 	}
 
-	std::ifstream file(name, open_mode);
-	if (!file.is_open())
+	std::ifstream File(Name, OpenMode);
+	if (!File.is_open())
 	{
-
 		exit(-1);
 	}
 
-	contents.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+	Contents.assign(std::istreambuf_iterator<char>(File), std::istreambuf_iterator<char>());
 }
 
-static GLuint compile_shader(GLenum type, std::vector<GLchar> const& source)
+static GLuint CompileShader(GLenum Type, std::vector<GLchar> const& Source)
 {
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
-	GLuint shader = glCreateShader(type);
+	GLuint Shader = glCreateShader(Type);
 
-	GLint len = static_cast<GLint>(source.size());
-	GLchar const* source_array = &source[0];
+	GLint Len = static_cast<GLint>(Source.size());
+	GLchar const* SourceArray = Source.data();
 
-	glShaderSource(shader, 1, &source_array, &len);
-	glCompileShader(shader);
+	glShaderSource(Shader, 1, &SourceArray, &Len);
+	glCompileShader(Shader);
 
-	GLint result = GL_TRUE;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+	GLint Result = GL_TRUE;
+	glGetShaderiv(Shader, GL_COMPILE_STATUS, &Result);
 
-	if (result == GL_FALSE)
+	if (Result == GL_FALSE)
 	{
-		std::string log(len, '\0');
-		glGetShaderInfoLog(shader, len, &result, log.data());
-		glDeleteShader(shader);
-		throw std::runtime_error(log);
+		std::string Log(Len, '\0');
+		glGetShaderInfoLog(Shader, Len, &Result, Log.data());
+		glDeleteShader(Shader);
+		throw std::runtime_error(Log);
 	}
 
 	spdlog::info("shader compiled with success");
-	spdlog::info("shader type: {}", shader);
+	spdlog::info("shader type: {}", Shader);
 
 	Console.AddLog(" [success] Shader compiled with success");
-	Console.AddLog(" [success] Shader type: %d ", shader);
+	Console.AddLog(" [success] Shader type: %d ", Shader);
 
-	return shader;
+	return Shader;
 }
 
-GLuint HorusShaderManager::compile_program(std::string const& prog_name)
+GLuint HorusShaderManager::CompileProgram(std::string const& ProgName)
 {
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
-	std::string vsName = prog_name + ".vert";
-	std::string fsName = prog_name + ".frag";
+	std::string VsName = ProgName + ".vert";
+	std::string FsName = ProgName + ".frag";
 
-	auto load_and_compile_shader = [](const std::string& filename, GLenum shader_type)
+	auto LoadAndCompileShader = [](const std::string& Filename, GLenum ShaderType)
 		{
-			std::vector<GLchar> source_code;
-			load_file(filename, source_code);
-			return compile_shader(shader_type, source_code);
+			std::vector<GLchar> SourceCode;
+			LoadFile(Filename, SourceCode);
+			return CompileShader(ShaderType, SourceCode);
 		};
 
-	GLuint vertex_shader = load_and_compile_shader(vsName, GL_VERTEX_SHADER);
-	GLuint frag_shader = load_and_compile_shader(fsName, GL_FRAGMENT_SHADER);
+	GLuint VertexShader = LoadAndCompileShader(VsName, GL_VERTEX_SHADER);
+	GLuint FragShader = LoadAndCompileShader(FsName, GL_FRAGMENT_SHADER);
 
-	GLuint program = glCreateProgram();
+	GLuint Program = glCreateProgram();
 
-	glAttachShader(program, vertex_shader);
-	glAttachShader(program, frag_shader);
+	glAttachShader(Program, VertexShader);
+	glAttachShader(Program, FragShader);
 
-	glDeleteShader(vertex_shader);
-	glDeleteShader(frag_shader);
+	glDeleteShader(VertexShader);
+	glDeleteShader(FragShader);
 
-	glLinkProgram(program);
+	glLinkProgram(Program);
 
-	GLint result = GL_TRUE;
-	glGetProgramiv(program, GL_LINK_STATUS, &result);
+	GLint Result = GL_TRUE;
+	glGetProgramiv(Program, GL_LINK_STATUS, &Result);
 
-	if (result == GL_FALSE)
+	if (Result == GL_FALSE)
 	{
-		GLint length = 0;
-		std::vector<char> log;
+		GLint Length = 0;
+		std::vector<char> Log;
 
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+		glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &Length);
 
-		log.resize(length);
+		Log.resize(Length);
 
-		glGetProgramInfoLog(program, length, &result, &log[0]);
+		glGetProgramInfoLog(Program, Length, &Result, Log.data());
 
-		glDeleteProgram(program);
+		glDeleteProgram(Program);
 
-		throw std::runtime_error(std::string(log.begin(), log.end()));
+		throw std::runtime_error(std::string(Log.begin(), Log.end()));
 	}
 
 	spdlog::info("program compiled with success");
-	spdlog::info("program name: {}", program);
+	spdlog::info("program name: {}", Program);
 
 	Console.AddLog(" [success] Program compiled with success");
-	Console.AddLog(" [success] Program name: %d ", program);
+	Console.AddLog(" [success] Program name: %d ", Program);
 
-	return program;
+	return Program;
 }
 
-GLuint HorusShaderManager::get_program(std::string const& prog_name)
+GLuint HorusShaderManager::GetProgram(std::string const& ProgName)
 {
-	auto iter = programs_.find(prog_name);
-
-	if (iter != programs_.end())
+	if (auto Iter = m_Programs_.find(ProgName); Iter != m_Programs_.end())
 	{
-		return iter->second;
+		return Iter->second;
 	}
 	else
 	{
-		GLuint program = compile_program(prog_name);
-		programs_[prog_name] = program;
-		return program;
+		GLuint Program = CompileProgram(ProgName);
+		m_Programs_[ProgName] = Program;
+		return Program;
 	}
 }

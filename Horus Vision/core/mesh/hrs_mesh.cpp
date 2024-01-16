@@ -7,105 +7,98 @@
 #include "hrs_material.h"
 #include "hrs_radeon.h"
 #include "hrs_object_manager.h"
+#include <hrs_console.h>
 
-//HorusRadeon& Radeon = HorusRadeon::get_instance();
-//HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-//HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
-
-void HorusMesh::init(const char* path)
+void HorusMesh::GetMeshInfo()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusMeshImporter& MeshImporter = HorusMeshImporter::get_instance();
+	rprShapeGetInfo(m_Shape_, RPR_SHAPE_TRANSFORM, sizeof(int), &m_Transform_, nullptr);
+}
+
+void HorusMesh::Init(const char* path)
+{
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusMeshImporter& MeshImporter = HorusMeshImporter::GetInstance();
 	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
-	m_shape_ = MeshImporter.load_mesh(path);
+	m_Shape_ = MeshImporter.LoadMesh(path);
 
-	rpr_scene g_scene = nullptr;
-	g_scene = ObjectManager.get_scene();
-
-	rprSceneAttachShape(g_scene, m_shape_);
-
-	gc.add(m_shape_);
-}
-
-void HorusMesh::destroy_mesh()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	GetMeshInfo();
 
 	rpr_scene g_scene = nullptr;
-	g_scene = ObjectManager.get_scene();
+	g_scene = ObjectManager.GetScene();
 
-	rprSceneDetachShape(g_scene, m_shape_);
+	rprSceneAttachShape(g_scene, m_Shape_);
+	gc.Add(m_Shape_);
 
-	rprObjectDelete(m_shape_);
+	spdlog::info("Mesh {} loaded", path);
+	Console.AddLog("Mesh %s loaded", path);
 }
 
-void HorusMesh::assign_material(rpr_material_node material)
+void HorusMesh::DestroyMesh()
 {
-	CHECK(rprShapeSetMaterial(m_shape_, material));
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	rpr_scene GScene = ObjectManager.GetScene();
+
+	rprSceneDetachShape(GScene, m_Shape_);
+
+	rprObjectDelete(m_Shape_);
 }
 
-void HorusMesh::get_info()
+void HorusMesh::AssignMaterial(rpr_material_node material)
 {
-	rprShapeGetInfo(m_shape_, RPR_SHAPE_TRANSFORM, sizeof(int), &m_transform_, nullptr);
-	//rprShapeGetInfo(m_shape_, RPR_SHAPE_MATERIAL, sizeof(int), &m_material_, nullptr);
+	CHECK(rprShapeSetMaterial(m_Shape_, material));
 }
 
-void HorusMesh::set_shape_position(RadeonProRender::float3 pos)
+void HorusMesh::SetShapePosition(glm::vec3 pos)
 {
-	get_info();
+	GetMeshInfo();
 
-	m_position_ = pos;
+	m_Position_ = pos;
 
-	update_transform();
+	UpdateTransform();
+}
+void HorusMesh::SetShapeRotation(glm::vec3 rot)
+{
+	GetMeshInfo();
+
+	m_Rotation_ = rot;
+
+	UpdateTransform();
+}
+void HorusMesh::SetShapeScale(glm::vec3 scale)
+{
+	GetMeshInfo();
+
+	m_Scale_ = scale;
+
+	UpdateTransform();
 }
 
-void HorusMesh::set_shape_rot(RadeonProRender::float3 rotation_axis, float rotation_angle)
+void HorusMesh::SetObjectToScene(rpr_scene& scene)
 {
-	get_info();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	m_rotation_axis_ = rotation_axis;
-	m_rotation_angle_ = rotation_angle;
+	rpr_scene GScene = ObjectManager.GetScene();
 
-	m_transform_ = m_transform_ * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_);
-
-	update_transform();
+	rprSceneAttachShape(GScene, m_Shape_);
 }
 
-void HorusMesh::set_shape_scale(RadeonProRender::float3 scale)
+void HorusMesh::UpdateTransform()
 {
-	get_info();
+	glm::mat4 Translate = glm::translate(glm::mat4(1.0f), m_Position_);
+	glm::mat4 RotationX = glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation_.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 RotationY = glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation_.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 RotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation_.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), m_Scale_);
 
-	m_scale_ = scale;
+	glm::mat4 Rotation = RotationX * RotationY * RotationZ;
 
-	m_transform_.m00 = m_scale_.x;
-	m_transform_.m11 = m_scale_.y;
-	m_transform_.m22 = m_scale_.z;
+	m_Transform_ = Translate * Rotation * Scale;
 
-	update_transform();
-}
-
-void HorusMesh::set_object_to_scene(rpr_scene& scene)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-
-	rpr_scene g_scene = nullptr;
-	g_scene = ObjectManager.get_scene();
-
-	rprSceneAttachShape(g_scene, m_shape_);
-}
-
-void HorusMesh::update_transform()
-{
-	//m_transform_ = RadeonProRender::scale(m_scale_) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::translation(m_position_);
-
-	//RadeonProRender::matrix mat = RadeonProRender::translation(RadeonProRender::float3(translationX, translationY, translationZ)) * RadeonProRender::scale(RadeonProRender::float3(scaleX, 1.0f, scaleY));
-	//rprShapeSetTransform(plane, RPR_TRUE, &mat.m00);
-
-	m_transform_ = RadeonProRender::translation(RadeonProRender::float3(m_position_.x, m_position_.y, m_position_.z)) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::scale(RadeonProRender::float3(m_scale_.x, m_scale_.y, m_scale_.z));
-
-	CHECK(rprShapeSetTransform(m_shape_, RPR_TRUE, &m_transform_.m00));
+	rprShapeSetTransform(m_Shape_, RPR_TRUE, &m_Transform_[0][0]);
 }
 
 

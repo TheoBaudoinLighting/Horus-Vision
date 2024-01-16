@@ -4,7 +4,7 @@
 
 void main()
 {
-	HorusEngine& engine = HorusEngine::get_instance();
+	HorusEngine& engine = HorusEngine::GetInstance();
 
 	engine.Init(800, 600, "Horus Vision", "DefaultUserSave.json");
 

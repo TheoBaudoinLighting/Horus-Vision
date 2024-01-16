@@ -1,9 +1,11 @@
 #include "hrs_console.h"
 
+#include <cstdio>
+
 static int TextEditCallbackStub(ImGuiInputTextCallbackData* data)
 {
-	HorusConsole& console = HorusConsole::get_instance();
-	return console.TextEditCallback(data);
+	HorusConsole& Console = HorusConsole::GetInstance();
+	return Console.TextEditCallback(data);
 }
 
 void HorusConsole::InitConsole()
@@ -85,18 +87,16 @@ void HorusConsole::Console(bool* p_open)
 
 	ImGui::Separator();
 
-	// Options menu
 	if (ImGui::BeginPopup("Options"))
 	{
 		ImGui::Checkbox("Auto-scroll", &m_AutoScroll_);
 		ImGui::EndPopup();
 	}
 
-	// Options, Filter
 	if (ImGui::Button("Options"))
 		ImGui::OpenPopup("Options");
 	ImGui::SameLine();
-	m_Filter_.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
+	m_Filter_.Draw(R"(Filter ("incl,-excl") ("error"))", 180);
 	ImGui::Separator();
 
 	const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -179,7 +179,6 @@ void HorusConsole::Console(bool* p_open)
 	ImGui::EndChild();
 	ImGui::Separator();
 
-	// Command-line
 	bool reclaim_focus = false;
 	ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
 	if (ImGui::InputText("Input", m_InputBuf_, IM_ARRAYSIZE(m_InputBuf_), input_text_flags, &TextEditCallbackStub, (void*)this))
@@ -192,7 +191,6 @@ void HorusConsole::Console(bool* p_open)
 		reclaim_focus = true;
 	}
 
-	// Auto-focus on window apparition
 	ImGui::SetItemDefaultFocus();
 	if (reclaim_focus)
 		ImGui::SetKeyboardFocusHere(-1);
@@ -225,7 +223,6 @@ void HorusConsole::ExecCommand(const char* command_line)
 		}
 	m_History_.push_back(Strdup(command_line));
 
-	// Process command
 	if (Stricmp(command_line, "CLEAR") == 0)
 	{
 		ClearLog();
@@ -238,8 +235,8 @@ void HorusConsole::ExecCommand(const char* command_line)
 	}
 	else if (Stricmp(command_line, "HISTORY") == 0)
 	{
-		int first = m_History_.Size - 10;
-		for (int i = first > 0 ? first : 0; i < m_History_.Size; i++)
+		int First = m_History_.Size - 10;
+		for (int i = First > 0 ? First : 0; i < m_History_.Size; i++)
 			AddLog("%3d: %s\n", i, m_History_[i]);
 	}
 	else
@@ -247,7 +244,6 @@ void HorusConsole::ExecCommand(const char* command_line)
 		AddLog("Unknown command: '%s'\n", command_line);
 	}
 
-	// On command input, we scroll to bottom even if AutoScroll==false
 	m_ScrollToBottom_ = true;
 }
 
@@ -258,64 +254,64 @@ int HorusConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 	{
 	case ImGuiInputTextFlags_CallbackCompletion:
 	{
-		const char* word_end = data->Buf + data->CursorPos;
-		const char* word_start = word_end;
-		while (word_start > data->Buf)
+		const char* WordEnd = data->Buf + data->CursorPos;
+		const char* WordStart = WordEnd;
+		while (WordStart > data->Buf)
 		{
-			const char c = word_start[-1];
-			if (c == ' ' || c == '\t' || c == ',' || c == ';')
+			const char C = WordStart[-1];
+			if (C == ' ' || C == '\t' || C == ',' || C == ';')
 				break;
-			word_start--;
+			WordStart--;
 		}
 
-		ImVector<const char*> candidates;
+		ImVector<const char*> Candidates;
 		for (int i = 0; i < m_Commands_.Size; i++)
-			if (Strnicmp(m_Commands_[i], word_start, (int)(word_end - word_start)) == 0)
-				candidates.push_back(m_Commands_[i]);
+			if (Strnicmp(m_Commands_[i], WordStart, int(WordEnd - WordStart)) == 0)
+				Candidates.push_back(m_Commands_[i]);
 
-		if (candidates.Size == 0)
+		if (Candidates.Size == 0)
 		{
-			AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+			AddLog("No match for \"%.*s\"!\n", int(WordEnd - WordStart), WordStart);
 		}
-		else if (candidates.Size == 1)
+		else if (Candidates.Size == 1)
 		{
-			data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
-			data->InsertChars(data->CursorPos, candidates[0]);
+			data->DeleteChars(int(WordStart - data->Buf), int(WordEnd - WordStart));
+			data->InsertChars(data->CursorPos, Candidates[0]);
 			data->InsertChars(data->CursorPos, " ");
 		}
 		else
 		{
-			int match_len = (int)(word_end - word_start);
+			int MatchLen = int(WordEnd - WordStart);
 			for (;;)
 			{
 				int c = 0;
 				bool all_candidates_matches = true;
-				for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
+				for (int i = 0; i < Candidates.Size && all_candidates_matches; i++)
 					if (i == 0)
-						c = toupper(candidates[i][match_len]);
-					else if (c == 0 || c != toupper(candidates[i][match_len]))
+						c = toupper(Candidates[i][MatchLen]);
+					else if (c == 0 || c != toupper(Candidates[i][MatchLen]))
 						all_candidates_matches = false;
 				if (!all_candidates_matches)
 					break;
-				match_len++;
+				MatchLen++;
 			}
 
-			if (match_len > 0)
+			if (MatchLen > 0)
 			{
-				data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
-				data->InsertChars(data->CursorPos, candidates[0], candidates[0] + match_len);
+				data->DeleteChars(int(WordStart - data->Buf), int(WordEnd - WordStart));
+				data->InsertChars(data->CursorPos, Candidates[0], Candidates[0] + MatchLen);
 			}
 
 			AddLog("Possible matches:\n");
-			for (int i = 0; i < candidates.Size; i++)
-				AddLog("- %s\n", candidates[i]);
+			for (int i = 0; i < Candidates.Size; i++)
+				AddLog("- %s\n", Candidates[i]);
 		}
 
 		break;
 	}
 	case ImGuiInputTextFlags_CallbackHistory:
 	{
-		const int prev_history_pos = m_HistoryPos_;
+		const int PrevHistoryPos = m_HistoryPos_;
 		if (data->EventKey == ImGuiKey_UpArrow)
 		{
 			if (m_HistoryPos_ == -1)
@@ -330,11 +326,11 @@ int HorusConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 					m_HistoryPos_ = -1;
 		}
 
-		if (prev_history_pos != m_HistoryPos_)
+		if (PrevHistoryPos != m_HistoryPos_)
 		{
-			const char* history_str = (m_HistoryPos_ >= 0) ? m_History_[m_HistoryPos_] : "";
+			const char* HistoryStr = (m_HistoryPos_ >= 0) ? m_History_[m_HistoryPos_] : "";
 			data->DeleteChars(0, data->BufTextLen);
-			data->InsertChars(0, history_str);
+			data->InsertChars(0, HistoryStr);
 		}
 	}
 	}

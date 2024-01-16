@@ -15,26 +15,26 @@
 
 struct HorusMaterialParameters
 {
-	std::optional<float> base_color_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> base_color;
+	std::optional<float> BaseColorWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> BaseColor;
 
-	std::optional<float> roughness_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> roughness;
+	std::optional<float> RoughnessWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> Roughness;
 
-	std::optional<float> normal_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> normal_map;
+	std::optional<float> NormalWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> NormalMap;
 
-	std::optional<float> metallic_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> metallic;
+	std::optional<float> MetallicWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> Metallic;
 
-	std::optional<float> emissive_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> emissive;
+	std::optional<float> EmissiveWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> Emissive;
 
-	std::optional<float> opacity_weight;
-	std::optional<std::variant<std::array<float, 3>, std::string>> opacity;
+	std::optional<float> OpacityWeight;
+	std::optional<std::variant<std::array<float, 3>, std::string>> Opacity;
 
-	std::optional<float> ior_weight;
-	std::optional<float> ior;
+	std::optional<float> IorWeight;
+	std::optional<float> Ior;
 };
 
 class HorusMaterial
@@ -43,116 +43,116 @@ public:
 
 	HorusMaterial() {}
 
-	void init();
+	void Init();
 
-	rpr_material_node create_material();
-	void destroy_material();
+	rpr_material_node CreateMaterial();
+	void DestroyMaterial();
 
 	// Basic and principled material parameters
 
-	void set_base_color(const std::string& texturePath);
-	void set_base_color(const std::array<float, 3>& color);
+	void SetBaseColor(const std::string& texturePath);
+	void SetBaseColor(const std::array<float, 3>& color);
 
-	void set_roughness(const std::string& texturePath);
-	void set_roughness(const std::array<float, 3>& color);
+	void SetRoughness(const std::string& TexturePath);
+	void SetRoughness(const std::array<float, 3>& color);
 
-	void set_normal(const std::string& texturePath);
-	void set_normal(const std::array<float, 3>& color);
+	void SetNormal(const std::string& texturePath);
+	void SetNormal(const std::array<float, 3>& color);
 
-	void set_metallic(const std::string& texturePath);
-	void set_metallic(const std::array<float, 3>& color);
+	void SetMetallic(const std::string& texturePath);
+	void SetMetallic(const std::array<float, 3>& color);
 
-	void set_emissive(const std::string& texturePath);
-	void set_emissive(const std::array<float, 3>& color);
+	void SetEmissive(const std::string& texturePath);
+	void SetEmissive(const std::array<float, 3>& color);
 
-	void set_opacity(const std::string& texturePath);
-	void set_opacity(const std::array<float, 3>& color);
+	void SetOpacity(const std::string& texturePath);
+	void SetOpacity(const std::array<float, 3>& color);
 
-	void set_diffuse_weight(const std::array<float, 3>& color);
-	void set_diffuse_weight(const std::string& texturePath);
+	void SetDiffuseWeight(const std::array<float, 3>& color);
+	void SetDiffuseWeight(const std::string& texturePath);
 
-	void set_reflection_color(const std::array<float, 3>& color);
-	void set_reflection_color(const std::string& texturePath);
+	void SetReflectionColor(const std::array<float, 3>& color);
+	void SetReflectionColor(const std::string& texturePath);
 
-	void set_reflection_weight(const std::array<float, 3>& color);
-	void set_reflection_weight(const std::string& texturePath);
+	void SetReflectionWeight(const std::array<float, 3>& color);
+	void SetReflectionWeight(const std::string& texturePath);
 
-	void set_reflection_roughness(const std::array<float, 3>& color);
-	void set_reflection_roughness(const std::string& texturePath);
+	void SetReflectionRoughness(const std::array<float, 3>& color);
+	void SetReflectionRoughness(const std::string& texturePath);
 
-	void set_refraction_color(const std::array<float, 3>& color);
-	void set_refraction_color(const std::string& texturePath);
+	void SetRefractionColor(const std::array<float, 3>& color);
+	void SetRefractionColor(const std::string& texturePath);
 
-	void set_refraction_weight(const std::array<float, 3>& color);
-	void set_refraction_weight(const std::string& texturePath);
+	void SetRefractionWeight(const std::array<float, 3>& color);
+	void SetRefractionWeight(const std::string& texturePath);
 
-	void set_refraction_roughness(const std::array<float, 3>& color);
-	void set_refraction_roughness(const std::string& texturePath);
+	void SetRefractionRoughness(const std::array<float, 3>& color);
+	void SetRefractionRoughness(const std::string& texturePath);
 
-	void set_coating_color(const std::array<float, 3>& color);
-	void set_coating_color(const std::string& texturePath);
+	void SetCoatingColor(const std::array<float, 3>& color);
+	void SetCoatingColor(const std::string& texturePath);
 
-	void set_coating_weight(const std::array<float, 3>& color);
-	void set_coating_weight(const std::string& texturePath);
+	void SetCoatingWeight(const std::array<float, 3>& color);
+	void SetCoatingWeight(const std::string& texturePath);
 
-	void set_coating_roughness(const std::array<float, 3>& color);
-	void set_coating_roughness(const std::string& texturePath);
+	void SetCoatingRoughness(const std::array<float, 3>& color);
+	void SetCoatingRoughness(const std::string& texturePath);
 
-	void set_sheen(const std::array<float, 3>& color);
-	void set_sheen(const std::string& texturePath);
+	void SetSheen(const std::array<float, 3>& color);
+	void SetSheen(const std::string& texturePath);
 
-	void set_sheen_tint(const std::array<float, 3>& color);
-	void set_sheen_tint(const std::string& texturePath);
+	void SetSheenTint(const std::array<float, 3>& color);
+	void SetSheenTint(const std::string& texturePath);
 
-	void set_emission_weight(const std::array<float, 3>& color);
-	void set_emission_weight(const std::string& texturePath);
+	void SetEmissionWeight(const std::array<float, 3>& color);
+	void SetEmissionWeight(const std::string& texturePath);
 
-	void set_transparency(const std::array<float, 3>& color);
-	void set_transparency(const std::string& texturePath);
+	void SetTransparency(const std::array<float, 3>& color);
+	void SetTransparency(const std::string& texturePath);
 
-	void set_sss_scatter_color(const std::array<float, 3>& color);
-	void set_sss_scatter_color(const std::string& texturePath);
+	void SetSssScatterColor(const std::array<float, 3>& color);
+	void SetSssScatterColor(const std::string& texturePath);
 
-	void set_sss_scatter_distance(const std::array<float, 3>& color);
-	void set_sss_scatter_distance(const std::string& texturePath);
+	void SetSssScatterDistance(const std::array<float, 3>& color);
+	void SetSssScatterDistance(const std::string& texturePath);
 
-	void set_backscatter_weight(const std::array<float, 3>& color);
-	void set_backscatter_weight(const std::string& texturePath);
+	void SetBackscatterWeight(const std::array<float, 3>& color);
+	void SetBackscatterWeight(const std::string& texturePath);
 
-	void set_backscatter_color(const std::array<float, 3>& color);
-	void set_backscatter_color(const std::string& texturePath);
+	void SetBackscatterColor(const std::array<float, 3>& color);
+	void SetBackscatterColor(const std::string& texturePath);
 
-	void set_sheen_weight(const std::array<float, 3>& weight);
-	void set_sheen_weight(const std::string& texturePath);
+	void SetSheenWeight(const std::array<float, 3>& weight);
+	void SetSheenWeight(const std::string& texturePath);
 
-	void set_ior(float ior);
+	void SetIor(float ior);
 
-	void set_reflection_mode(int mode);
-	void set_coating_mode(int mode);
+	void SetReflectionMode(int mode);
+	void SetCoatingMode(int mode);
 
 	// Other ----------------------------------------
 
-	void set_background_image(const std::string& texturePath);
+	void SetBackgroundImage(const std::string& texturePath);
 
-	void unset_background_image();
+	void UnsetBackgroundImage();
 
-	rpr_material_node get_material()
+	rpr_material_node GetMaterial()
 	{
-		return m_material_;
+		return m_Material_;
 	}
 
 	// ----------------------------------------------
 	// Texture object -------------------------------
 
-	rpr_image load_texture(std::string path);
+	rpr_image LoadTexture(std::string path);
 
 	// ----------------------------------------------
 
 
 private:
 
-	bool m_IsMaterialCreated = false;
+	bool m_IsMaterialCreated_ = false;
 
-	rpr_material_node m_material_ = nullptr;
+	rpr_material_node m_Material_ = nullptr;
 
 };

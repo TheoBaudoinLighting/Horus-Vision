@@ -8,10 +8,10 @@ class HorusInput
 {
 public:
 
-	static HorusInput& get_instance()
+	static HorusInput& GetInstance()
 	{
-		static HorusInput instance;
-		return instance;
+		static HorusInput Instance;
+		return Instance;
 	}
 
 	HorusInput(HorusInput const&) = delete;

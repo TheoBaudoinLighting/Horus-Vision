@@ -3,7 +3,6 @@
 #include "hrs_radeon.h"
 
 #include <tbb/task_group.h>
-#include <Math/mathutils.h>
 
 #include <thread>
 #include <mutex>
@@ -12,27 +11,26 @@
 #include "objects/hrs_object_manager.h"
 #include <hrs_console.h>
 
-std::mutex mtx;
+std::mutex Mtx;
 
-void HorusLight::init(const std::string& light_type, const std::string& hdri_image)
+void HorusLight::Init(const std::string& light_type, const std::string& hdri_image)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
 
-	m_light = create_light(light_type, hdri_image);
+	m_Light_ = CreateLight(light_type, hdri_image);
 
-	gc.add(m_light);
+	Gc.Add(m_Light_);
 }
 
-rpr_light create_hdri_light(const std::string& hdri_image)
+rpr_light CreateHdriLight(const std::string& hdri_image)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
-	rpr_light light = nullptr;
-	rpr_image image = nullptr;
+	rpr_light Light = nullptr;
+	rpr_image Image = nullptr;
 
 	if (hdri_image == "")
 	{
@@ -42,109 +40,113 @@ rpr_light create_hdri_light(const std::string& hdri_image)
 		return nullptr;
 	}
 
-	CHECK(rprContextCreateEnvironmentLight(Radeon.get_context(), &light));
-	gc.add(light);
+	CHECK(rprContextCreateEnvironmentLight(Radeon.GetContext(), &Light))
+	gc.Add(Light);
 
-	const std::string path = hdri_image;
+	const std::string Path = hdri_image;
 
-	rpr_status status = rprContextCreateImageFromFile(Radeon.get_context(), path.c_str(), &image);
+	rpr_status Status = rprContextCreateImageFromFile(Radeon.GetContext(), Path.c_str(), &Image);
 
-	if (status != RPR_SUCCESS)
+	if (Status != RPR_SUCCESS)
 	{
-		spdlog::error("Failed to load image: {}", path);
-		Console.AddLog(" [error] Failed to load image : %s ", path.c_str());
+		spdlog::error("Failed to load image: {}", Path);
+		Console.AddLog(" [error] Failed to load image : %s ", Path.c_str());
 
 		return nullptr;
 	}
-	CHECK(status);
-	gc.add(image);
+	CHECK(Status)
+	gc.Add(Image);
 
-	CHECK(rprEnvironmentLightSetImage(light, image));
-	CHECK(rprEnvironmentLightSetIntensityScale(light, 1.f));
-	CHECK(rprSceneAttachLight(ObjectManager.get_scene(), light));
+	CHECK(rprEnvironmentLightSetImage(Light, Image))
+	CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f))
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
 
 	spdlog::info("Light created");
 	Console.AddLog(" [success] Light created");
 
-	return light;
+	return Light;
 }
 
-rpr_light HorusLight::create_light(const std::string& light_type, const std::string& hdri_image)
+rpr_light HorusLight::CreateLight(const std::string& light_type, const std::string& hdri_image)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
 	spdlog::info("Create light of type: {}", light_type);
 	Console.AddLog(" [info] Create light of type: %s ", light_type.c_str());
 
-	rpr_light light = nullptr;
+	rpr_light Light = nullptr;
 
 	if (light_type == "hdri")
 	{
-		std::thread t([&]()
+		std::thread T([&]()
 			{
-				std::lock_guard<std::mutex> lock(mtx);
-				light = create_hdri_light(hdri_image);
-				gc.add(light);
-			}); t.join();
+				std::lock_guard<std::mutex> Lock(Mtx);
+				Light = CreateHdriLight(hdri_image);
+				Gc.Add(Light);
+			}); T.join();
 
 	}
 
 	// TODO: add other types of light
 
-	return light;
+	return Light;
 }
 
-void HorusLight::destroy_light()
+void HorusLight::DestroyLight()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	if (m_light != nullptr)
+	if (m_Light_ != nullptr)
 	{
-		CHECK(rprSceneDetachLight(ObjectManager.get_scene(), m_light));
-		CHECK(rprObjectDelete(m_light));
-		m_light = nullptr;
+		CHECK(rprSceneDetachLight(ObjectManager.GetScene(), m_Light_))
+		CHECK(rprObjectDelete(m_Light_))
+		m_Light_ = nullptr;
 	}
 }
 
-void HorusLight::get_info()
+void HorusLight::GetInfo()
 {
-	rpr_light_type type;
-	CHECK(rprLightGetInfo(m_light, RPR_LIGHT_TYPE, sizeof(rpr_light_type), &type, nullptr));
+	rpr_light_type Type;
+	rprLightGetInfo(m_Light_, RPR_LIGHT_TYPE, sizeof(rpr_light_type), &Type, nullptr);
 }
 
-void HorusLight::set_position(const RadeonProRender::float3& position) 
+void HorusLight::SetPosition(const glm::vec3& position)
 {
-	get_info();
+	GetInfo();
 
-	m_position_ = position;
+	m_Position_ = position;
 
-	update_light();
+	UpdateLight();
 }
 
-void HorusLight::set_rotation(RadeonProRender::float3 rotation_axis, float rotation_angle)
+void HorusLight::SetRotation(const glm::vec3& rotation_axis, float rotation_angle)
 {
-	get_info();
+	GetInfo();
 
-	m_rotation_axis_ = rotation_axis;
-	m_rotation_angle_ = rotation_angle;
+	m_RotationAxis_ = rotation_axis;
+	m_RotationAngle_ = rotation_angle;
 
-	update_light();
+	UpdateLight();
 }
 
-void HorusLight::set_scale(const RadeonProRender::float3& scale) 
+void HorusLight::SetScale(const glm::vec3& scale)
 {
-	get_info();
+	GetInfo();
 
-	m_scale_ = scale;
+	m_Scale_ = scale;
 
-	update_light();
+	UpdateLight();
 }
 
-void HorusLight::update_light()
+void HorusLight::UpdateLight()
 {
-	m_transform_ = RadeonProRender::translation(m_position_) * RadeonProRender::rotation(m_rotation_axis_, m_rotation_angle_) * RadeonProRender::scale(m_scale_);
 
-	CHECK(rprLightSetTransform(m_light, RPR_TRUE, &m_transform_.m00));
+	m_Transform_ = glm::translate(m_Position_) * glm::rotate(m_RotationAngle_, m_RotationAxis_) * glm::scale(m_Scale_);
+
+	rprLightSetTransform(m_Light_, RPR_TRUE, &m_Transform_[0][0]);
+
+
+	/*m_transform_ = glm::translate(m_position_) * glm::rotate(m_rotation_angle_, m_rotation_axis_) * glm::scale(m_scale_);
+	CHECK(rprLightSetTransform(m_light, RPR_TRUE, &m_transform_));*/
 }

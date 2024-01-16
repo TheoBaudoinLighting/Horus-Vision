@@ -6,30 +6,30 @@
 
 #include "GLFW/glfw3.h"
 
-void HorusWindow::init_contexts(int width, int height, HorusWindow* window)
+void HorusWindow::InitContexts(int width, int height, HorusWindow* window)
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	OpenGL.init(width, height, window);
-	ImGui.init(width, height, window);
-	Radeon.init(width, height, window);
+	OpenGL.Init(width, height, window);
+	ImGui.Init(width, height, window);
+	Radeon.Init(width, height, window);
 
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
 }
 
-bool HorusWindow::init_window(int width, int height, const std::string& title)
+bool HorusWindow::InitWindow(int width, int height, const std::string& title)
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
-	m_window_width_ = width;
-	m_window_height_ = height;
-	m_window_title_ = title;
+	m_WindowWidth_ = width;
+	m_WindowHeight_ = height;
+	m_WindowTitle_ = title;
 
-	Engine.InitContexts(m_window_width_, m_window_height_, this);
-	Radeon.init_graphics();
+	Engine.InitContexts(m_WindowWidth_, m_WindowHeight_, this);
+	Radeon.InitGraphics();
 
 	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");
@@ -37,29 +37,29 @@ bool HorusWindow::init_window(int width, int height, const std::string& title)
 	return m_IsRunning_;
 }
 
-void HorusWindow::render()
+void HorusWindow::Render()
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusEngine& Engine = HorusEngine::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
-	m_IsClosing_ = Engine.get_is_closing();
+	m_IsClosing_ = Engine.GetIsClosing();
 
-	OpenGL.init_render();
-	ImGui.init_render();
+	OpenGL.InitRender();
+	ImGui.InitRender();
 
-	Radeon.render_engine();
+	Radeon.RenderEngine();
 	// TODO Render UI Here
 
-	ImGui.post_render();
-	OpenGL.post_render();
+	ImGui.PostRender();
+	OpenGL.PostRender();
 
-	process_input();
+	ProcessInput();
 
 	if (m_IsClosing_ == true)
 	{
-		close();
+		Close();
 	}
 }
 
@@ -71,112 +71,110 @@ void HorusWindow::key_callback(int key, int scancode, int action, int mods)
 {
 }
 
-void HorusWindow::process_input()
+void HorusWindow::ProcessInput()
 {
-	HorusEngine& Engine = HorusEngine::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 
 	// close callback
-	if (glfwWindowShouldClose(m_window_))
+	if (glfwWindowShouldClose(m_Window_))
 	{
-		close();
+		Close();
 	}
 
-	if (glfwGetKey(m_window_, GLFW_KEY_F11) == GLFW_PRESS)
+	if (glfwGetKey(m_Window_, GLFW_KEY_F11) == GLFW_PRESS)
 	{
-		if (glfwGetWindowAttrib(m_window_, GLFW_DECORATED) == GLFW_TRUE)
+		if (glfwGetWindowAttrib(m_Window_, GLFW_DECORATED) == GLFW_TRUE)
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_DECORATED, GLFW_FALSE);
+			glfwSetWindowAttrib(m_Window_, GLFW_DECORATED, GLFW_FALSE);
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_DECORATED, GLFW_TRUE);
+			glfwSetWindowAttrib(m_Window_, GLFW_DECORATED, GLFW_TRUE);
 		}
 	}
 
-	if (glfwGetKey(m_window_, GLFW_KEY_F10) == GLFW_PRESS)
+	if (glfwGetKey(m_Window_, GLFW_KEY_F10) == GLFW_PRESS)
 	{
-		if (glfwGetWindowAttrib(m_window_, GLFW_FLOATING) == GLFW_TRUE)
+		if (glfwGetWindowAttrib(m_Window_, GLFW_FLOATING) == GLFW_TRUE)
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_FLOATING, GLFW_FALSE);
+			glfwSetWindowAttrib(m_Window_, GLFW_FLOATING, GLFW_FALSE);
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_FLOATING, GLFW_TRUE);
+			glfwSetWindowAttrib(m_Window_, GLFW_FLOATING, GLFW_TRUE);
 		}
 	}
 
-	if (glfwGetKey(m_window_, GLFW_KEY_F9) == GLFW_PRESS)
+	if (glfwGetKey(m_Window_, GLFW_KEY_F9) == GLFW_PRESS)
 	{
-		if (glfwGetWindowAttrib(m_window_, GLFW_RESIZABLE) == GLFW_TRUE)
+		if (glfwGetWindowAttrib(m_Window_, GLFW_RESIZABLE) == GLFW_TRUE)
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_RESIZABLE, GLFW_FALSE);
+			glfwSetWindowAttrib(m_Window_, GLFW_RESIZABLE, GLFW_FALSE);
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_RESIZABLE, GLFW_TRUE);
+			glfwSetWindowAttrib(m_Window_, GLFW_RESIZABLE, GLFW_TRUE);
 		}
 	}
 
-	if (glfwGetKey(m_window_, GLFW_KEY_F8) == GLFW_PRESS)
+	if (glfwGetKey(m_Window_, GLFW_KEY_F8) == GLFW_PRESS)
 	{
-		if (glfwGetWindowAttrib(m_window_, GLFW_MAXIMIZED) == GLFW_TRUE)
+		if (glfwGetWindowAttrib(m_Window_, GLFW_MAXIMIZED) == GLFW_TRUE)
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_MAXIMIZED, GLFW_FALSE);
+			glfwSetWindowAttrib(m_Window_, GLFW_MAXIMIZED, GLFW_FALSE);
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_MAXIMIZED, GLFW_TRUE);
+			glfwSetWindowAttrib(m_Window_, GLFW_MAXIMIZED, GLFW_TRUE);
 		}
 	}
 
-	if (glfwGetKey(m_window_, GLFW_KEY_F7) == GLFW_PRESS)
+	if (glfwGetKey(m_Window_, GLFW_KEY_F7) == GLFW_PRESS)
 	{
-		if (glfwGetWindowAttrib(m_window_, GLFW_VISIBLE) == GLFW_TRUE)
+		if (glfwGetWindowAttrib(m_Window_, GLFW_VISIBLE) == GLFW_TRUE)
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_VISIBLE, GLFW_FALSE);
+			glfwSetWindowAttrib(m_Window_, GLFW_VISIBLE, GLFW_FALSE);
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_window_, GLFW_VISIBLE, GLFW_TRUE);
+			glfwSetWindowAttrib(m_Window_, GLFW_VISIBLE, GLFW_TRUE);
 		}
 	}
 
-	if (glfwGetWindowAttrib(m_window_, GLFW_RESIZABLE) == GLFW_TRUE)
+	if (glfwGetWindowAttrib(m_Window_, GLFW_RESIZABLE) == GLFW_TRUE)
 	{
-		ImVec2 img_size = Engine.get_image_size();
+		ImVec2 ImgSize = Engine.GetImageSize();
 
-		float img_aspect_ratio = Engine.get_image_aspect_ratio();
-		float current_aspect_ratio = img_size.x / img_size.y;
+		float ImgAspectRatio = Engine.GetImageAspectRatio();
+		float CurrentAspectRatio = ImgSize.x / ImgSize.y;
 
-		const float epsilon = 0.01f;
-
-		if (abs(current_aspect_ratio - img_aspect_ratio) > epsilon)
+		if (const float Epsilon = 0.01f; abs(CurrentAspectRatio - ImgAspectRatio) > Epsilon)
 		{
-			if (current_aspect_ratio > img_aspect_ratio)
+			if (CurrentAspectRatio > ImgAspectRatio)
 			{
-				img_size.x = img_size.y * img_aspect_ratio;
+				ImgSize.x = ImgSize.y * ImgAspectRatio;
 			}
 			else
 			{
-				img_size.y = img_size.x / img_aspect_ratio;
+				ImgSize.y = ImgSize.x / ImgAspectRatio;
 			}
 
-			Radeon.resize_render(img_size.x, img_size.y);
+			Radeon.ResizeRender(ImgSize.x, ImgSize.y);
 		}
 	}
 }
 
-void HorusWindow::close()
+void HorusWindow::Close()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 
-	Radeon.quit_render();
-	ImGui.quit_render();
-	OpenGL.quit_render();
+	Radeon.QuitRender();
+	ImGui.QuitRender();
+	OpenGL.QuitRender();
 
 	m_IsRunning_ = false;
 }

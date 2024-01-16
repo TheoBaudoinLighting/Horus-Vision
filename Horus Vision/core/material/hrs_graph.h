@@ -19,16 +19,16 @@ struct HorusSpan
 	using iterator = HorusElementType*;
 
 	template<typename HorusContainer>
-	HorusSpan(HorusContainer& c) : begin_(c.data()), end_(begin_ + c.size())
+	HorusSpan(HorusContainer& c) : m_Begin_(c.data()), m_End_(m_Begin_ + c.size())
 	{
 	}
 
-	iterator begin() const { return begin_; }
-	iterator end() const { return end_; }
+	iterator begin() const { return m_Begin_; }
+	iterator end() const { return m_End_; }
 
 private:
-	iterator begin_;
-	iterator end_;
+	iterator m_Begin_;
+	iterator m_End_;
 };
 
 template<typename HorusElementType>

@@ -1,13 +1,11 @@
 
 // External includes
 #include "imgui.h"
-#include "imnodes.h"
 
 // Basic includes
 #include <filesystem>
 #include <regex>
 #include <vector>
-#include <chrono>
 
 // Project includes
 #include "hrs_engine.h" // glad.h
@@ -18,169 +16,165 @@
 
 // External includes
 #include "ImGuizmo.h"
-#include "L2DFileDialog.h"
 #include <hrs_console.h>
 
-static long long duration = 0;
-bool options_changed = false;
+bool OptionsChanged = false;
 
-int HorusEngine::context_info(rpr_context& context)
+int HorusEngine::ContextInfo(rpr_context& Context)
 {
-	rpr_int status = RPR_SUCCESS;
+	rpr_int Status = RPR_SUCCESS;
 
-	std::vector<rpr_context_info> context_info_list;
+	std::vector<rpr_context_info> ContextInfoList;
 
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_CAMERAS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_MATERIALNODES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_LIGHTS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_SHAPES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_POSTEFFECTS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_HETEROVOLUMES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_GRIDS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_BUFFERS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_IMAGES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_FRAMEBUFFERS);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_SCENES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_CURVES);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_MATERIALSYSTEM);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_COMPOSITE);
-	context_info_list.push_back(RPR_CONTEXT_LIST_CREATED_LUT);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_CAMERAS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_MATERIALNODES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_LIGHTS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_SHAPES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_POSTEFFECTS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_HETEROVOLUMES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_GRIDS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_BUFFERS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_IMAGES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_FRAMEBUFFERS);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_SCENES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_CURVES);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_MATERIALSYSTEM);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_COMPOSITE);
+	ContextInfoList.push_back(RPR_CONTEXT_LIST_CREATED_LUT);
 
-	std::unordered_map<std::string, int> object_count;
+	std::unordered_map<std::string, int> ObjectCount;
 
-	for (int i = 0; i < context_info_list.size(); i++)
+	for (auto& i : ContextInfoList)
 	{
-		size_t count = 0;
-		status = rprContextGetInfo(context, context_info_list[i], 0, nullptr, &count);
+		size_t Count = 0;
+		Status = rprContextGetInfo(Context, i, 0, nullptr, &Count);
 
-		int size = count / sizeof(void*);
-
-		if (size > 0)
+		if (int Size = Count / sizeof(void*); Size > 0)
 		{
-			std::string objectType;
-			int countPerObject = 0;
+			std::string ObjectType;
+			int CountPerObject = 0;
 
-			if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_CAMERAS)
+			if (i == RPR_CONTEXT_LIST_CREATED_CAMERAS)
 			{
-				objectType = "camera";
-				countPerObject = size;
-				camera_number_ = size;
+				ObjectType = "camera";
+				CountPerObject = Size;
+				m_CameraNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_MATERIALNODES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_MATERIALNODES)
 			{
-				objectType = "material node";
-				countPerObject = size;
-				material_number_ = size;
+				ObjectType = "material node";
+				CountPerObject = Size;
+				m_MaterialNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_LIGHTS)
+			else if (i == RPR_CONTEXT_LIST_CREATED_LIGHTS)
 			{
-				objectType = "light";
-				countPerObject = size;
-				light_number_ = size;
+				ObjectType = "light";
+				CountPerObject = Size;
+				m_LightNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_SHAPES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_SHAPES)
 			{
-				objectType = "shape";
-				countPerObject = size;
-				mesh_number_ = size;
+				ObjectType = "shape";
+				CountPerObject = Size;
+				m_MeshNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_POSTEFFECTS)
+			else if (i == RPR_CONTEXT_LIST_CREATED_POSTEFFECTS)
 			{
-				objectType = "postEffect";
-				countPerObject = size;
-				post_effect_number_ = size;
+				ObjectType = "postEffect";
+				CountPerObject = Size;
+				m_PostEffectNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_HETEROVOLUMES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_HETEROVOLUMES)
 			{
-				objectType = "heteroVolume";
-				countPerObject = size;
-				volume_number_ = size;
+				ObjectType = "heteroVolume";
+				CountPerObject = Size;
+				m_VolumeNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_GRIDS)
+			else if (i == RPR_CONTEXT_LIST_CREATED_GRIDS)
 			{
-				objectType = "grid";
-				countPerObject = size;
-				grid_number_ = size;
+				ObjectType = "grid";
+				CountPerObject = Size;
+				m_GridNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_BUFFERS)
+			else if (i == RPR_CONTEXT_LIST_CREATED_BUFFERS)
 			{
-				objectType = "buffer";
-				countPerObject = size;
-				buffer_number_ = size;
+				ObjectType = "buffer";
+				CountPerObject = Size;
+				m_BufferNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_IMAGES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_IMAGES)
 			{
-				objectType = "image";
-				countPerObject = size;
-				image_number_ = size;
+				ObjectType = "image";
+				CountPerObject = Size;
+				m_ImageNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_FRAMEBUFFERS)
+			else if (i == RPR_CONTEXT_LIST_CREATED_FRAMEBUFFERS)
 			{
-				objectType = "framebuffer";
-				countPerObject = size;
-				framebuffer_number_ = size;
+				ObjectType = "framebuffer";
+				CountPerObject = Size;
+				m_FramebufferNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_SCENES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_SCENES)
 			{
-				objectType = "scene";
-				countPerObject = size;
-				scene_number_ = size;
+				ObjectType = "scene";
+				CountPerObject = Size;
+				m_SceneNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_CURVES)
+			else if (i == RPR_CONTEXT_LIST_CREATED_CURVES)
 			{
-				objectType = "curve";
-				countPerObject = size;
-				curve_number_ = size;
+				ObjectType = "curve";
+				CountPerObject = Size;
+				m_CurveNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_MATERIALSYSTEM)
+			else if (i == RPR_CONTEXT_LIST_CREATED_MATERIALSYSTEM)
 			{
-				objectType = "material system";
-				countPerObject = size;
-				material_node_number_ = size;
+				ObjectType = "material system";
+				CountPerObject = Size;
+				m_MaterialNodeNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_COMPOSITE)
+			else if (i == RPR_CONTEXT_LIST_CREATED_COMPOSITE)
 			{
-				objectType = "composite";
-				countPerObject = size;
-				composite_number_ = size;
+				ObjectType = "composite";
+				CountPerObject = Size;
+				m_CompositeNumber_ = Size;
 			}
-			else if (context_info_list[i] == RPR_CONTEXT_LIST_CREATED_LUT)
+			else if (i == RPR_CONTEXT_LIST_CREATED_LUT)
 			{
-				objectType = "lut";
-				countPerObject = size;
-				lut_number_ = size;
+				ObjectType = "lut";
+				CountPerObject = Size;
+				m_LutNumber_ = Size;
 			}
 			else
 			{
-				objectType = "unknown";
-				countPerObject = size;
+				ObjectType = "unknown";
+				CountPerObject = Size;
 			}
 
-			object_count[objectType] = countPerObject;
+			ObjectCount[ObjectType] = CountPerObject;
 		}
 	}
 
 	return 0;
 }
 
-void HorusEngine::Init(int width, int height, const std::string& title, const std::string& SavePath)
+void HorusEngine::Init(int Width, int Height, const std::string& Title, const std::string& SavePath)
 {
-	m_window_ = std::make_unique<HorusWindow>();
-	m_window_->init_window(width, height, title);
+	m_Window_ = std::make_unique<HorusWindow>();
+	m_Window_->InitWindow(Width, Height, Title);
 }
 
 void HorusEngine::InitContexts(int width, int height, HorusWindow* window)
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusUI& UI = HorusUI::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusUI& UI = HorusUI::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
 	UI.Init();
-	OpenGL.init(width, height, window);
-	ImGui.init(width, height, window);
-	Radeon.init(width, height, window);
+	OpenGL.Init(width, height, window);
+	ImGui.Init(width, height, window);
+	Radeon.Init(width, height, window);
 	
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
 	Console.AddLog(" [info] OpenGL, ImGui and Radeon contexts initialized.");
@@ -188,26 +182,26 @@ void HorusEngine::InitContexts(int width, int height, HorusWindow* window)
 
 void HorusEngine::PreRender()
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	
-	m_IsClosing_ = get_is_closing();
+	m_IsClosing_ = GetIsClosing();
 
-	OpenGL.init_render();
-	ImGui.init_render();
-	Radeon.init_render();
+	OpenGL.InitRender();
+	ImGui.InitRender();
+	Radeon.InitRender();
 }
 
 void HorusEngine::Render()
 {
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
-	HorusUI& UI = HorusUI::get_instance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusUI& UI = HorusUI::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	//glm::mat4 model, view, projection; // Later for OpenGL
 
-	Radeon.render_engine();
+	Radeon.RenderEngine();
 	//ObjectManager.UpdateCamera(ObjectManager.get_active_camera_id());
 	//ObjectManager.GetMatrices(ObjectManager.get_active_camera_id(), model, view, projection);
 
@@ -219,13 +213,13 @@ void HorusEngine::Render()
 
 void HorusEngine::PostRender()
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	ImGui.post_render();
-	OpenGL.post_render();
-	Radeon.post_render();
+	ImGui.PostRender();
+	OpenGL.PostRender();
+	Radeon.PostRender();
 
 	//process_input();
 
@@ -235,38 +229,36 @@ void HorusEngine::PostRender()
 	}
 }
 
-int get_existing_file_suffix(std::string base_name, std::string extension)
+int GetExistingFileSuffix(std::string BaseName, std::string Extension)
 {
-	std::string regex_string = base_name + R"((_\d+)?)";
-	std::regex regex(regex_string + extension + "$");
+	std::string RegexString = BaseName + R"((_\d+)?)";
+	std::regex Regex(RegexString + Extension + "$");
 
-	int max_suffix = -1;
-	for (auto& file : std::filesystem::directory_iterator("."))
+	int MaxSuffix = -1;
+	for (auto& File : std::filesystem::directory_iterator("."))
 	{
-		if (std::filesystem::is_regular_file(file) && std::regex_match(file.path().filename().string(), regex))
+		if (std::filesystem::is_regular_file(File) && std::regex_match(File.path().filename().string(), Regex))
 		{
-			std::string suffix_str = file.path().filename().string().substr(base_name.size());
+			std::string suffix_str = File.path().filename().string().substr(BaseName.size());
 			if (!suffix_str.empty())
 			{
-				int suffix = std::stoi(suffix_str.substr(1));
-				if (suffix > max_suffix)
+				if (int Suffix = std::stoi(suffix_str.substr(1)); Suffix > MaxSuffix)
 				{
-					max_suffix = suffix;
+					MaxSuffix = Suffix;
 				}
 			}
 		}
 	}
 
-	return max_suffix;
+	return MaxSuffix;
 }
 
-void edit_transform_with_gizmo(const float* view, const float* projection, float* matrix)
+void EditTransformWithGizmo(const float* view, const float* projection, float* matrix)
 {
 	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
-	static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::WORLD);
+	static ImGuizmo::MODE MCurrentGizmoMode(ImGuizmo::WORLD);
 
 	ImGuiIO& io = ImGui::GetIO();
-	bool isLeftAltPressed = io.KeyAlt;
 
 	// radio button translation
 	if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
@@ -295,39 +287,39 @@ void edit_transform_with_gizmo(const float* view, const float* projection, float
 
 	if (mCurrentGizmoOperation != ImGuizmo::SCALE)
 	{
-		if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
+		if (ImGui::RadioButton("Local", MCurrentGizmoMode == ImGuizmo::LOCAL))
 		{
-			mCurrentGizmoMode = ImGuizmo::LOCAL;
+			MCurrentGizmoMode = ImGuizmo::LOCAL;
 		}
 
-		if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
+		if (ImGui::RadioButton("World", MCurrentGizmoMode == ImGuizmo::WORLD))
 		{
-			mCurrentGizmoMode = ImGuizmo::WORLD;
+			MCurrentGizmoMode = ImGuizmo::WORLD;
 		}
 	}
 
 
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, NULL);
+	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, MCurrentGizmoMode, matrix, NULL, NULL);
 
 }
 
 void HorusEngine::Close()
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::get_instance();
-	HorusImGui& ImGui = HorusImGui::get_instance();
-	HorusRadeon& Radeon = HorusRadeon::get_instance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	Radeon.quit_render();
-	ImGui.quit_render();
-	OpenGL.quit_render();
+	Radeon.QuitRender();
+	ImGui.QuitRender();
+	OpenGL.QuitRender();
 
 	m_IsRunning_ = false;
 }
 
-void HorusEngine::call_reset_buffer()
+void HorusEngine::CallResetBuffer()
 {
-	HorusResetBuffers::get_instance().CallResetBuffers();
+	HorusResetBuffers::GetInstance().CallResetBuffers();
 }
 
 

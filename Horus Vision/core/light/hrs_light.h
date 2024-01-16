@@ -2,56 +2,61 @@
 
 #include <string>
 
-#include "hrs_garbage_collector.h"
 #include "RadeonProRender_v2.h"
 #include "common.h"
-#include "Math/mathutils.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct HorusLightData
 {
-	RadeonProRender::float3 position = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 rotation = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 scale = { 1.0f, 1.0f, 1.0f };
+	glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
-	RadeonProRender::float3 intesity = { 1.f, 1.f, 1.f };
-	RadeonProRender::float3 color = { 1.f, 1.f, 1.f };
-	float temperature = 6500.f;
+	glm::vec3 Intesity = { 1.f, 1.f, 1.f };
+	glm::vec3 Color = { 1.f, 1.f, 1.f };
+	float Temperature = 6500.f;
 
-	std::string path = "";
+	std::string Path = "";
 };
 
 class HorusLight
 {
 public:
 
-	HorusLight() {}
+	HorusLight(): m_Transform_()
+	{
+	}
+
 	~HorusLight() {}
 
-	void init(const std::string& light_type, const std::string& hdri_image = "");
+	void Init(const std::string& light_type, const std::string& hdri_image = "");
 
-	rpr_light create_light(const std::string& light_type, const std::string& hdri_image = "");
+	rpr_light CreateLight(const std::string& light_type, const std::string& hdri_image = "");
 
-	void destroy_light();
+	void DestroyLight();
 
-	void get_info();
+	void GetInfo();
 
-	void set_position(const RadeonProRender::float3& position);
-	void set_rotation(RadeonProRender::float3 rotation_axis, float rotation_angle);
-	void set_scale(const RadeonProRender::float3& scale);
+	void SetPosition(const glm::vec3& position);
+	void SetRotation(const glm::vec3& rotation_axis, float rotation_angle);
+	void SetScale(const glm::vec3& scale);
 
-	void update_light();
+	void UpdateLight();
 
 private:
 
-	rpr_light m_light = nullptr;
+	rpr_light m_Light_ = nullptr;
 
-	RadeonProRender::float3 m_translation_ = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 m_position_ = { 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float4 m_rotation_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	RadeonProRender::float3 m_scale_ = { 1.0f, 1.0f, 1.0f };
-	RadeonProRender::float3 m_rotation_axis_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_Translation_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_Position_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_Rotation_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_Scale_ = { 1.0f, 1.0f, 1.0f };
+	glm::vec3 m_RotationAxis_ = { 0.0f, 0.0f, 0.0f };
 
-	float m_rotation_angle_ = 0.0f;
+	float m_RotationAngle_ = 0.0f;
 
-	RadeonProRender::matrix m_transform_;
+	//RadeonProRender::matrix m_transform_;
+	glm::mat4 m_Transform_;
 };

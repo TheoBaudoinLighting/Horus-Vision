@@ -1,29 +1,17 @@
 #pragma once
+#pragma warning( disable : 4005)
+#pragma warning( disable : 4996)
 
-// External includes
-#include "imgui.h"
-#include "imgui_internal.h"
-#include "imnodes.h"
-#include "ImGuizmo.h"
-//#include "L2DFileDialog.h"
-
-// Basic includes
-#include <filesystem>
-#include <string>
-#include <vector>
-#include <map>
-#include <memory>
-#include <regex>
-#include <chrono>
+#include "glad/glad.h"
 
 class HorusUI
 {
 public:
 
-	static HorusUI& get_instance()
+	static HorusUI& GetInstance()
 	{
-		static HorusUI instance;
-		return instance;
+		static HorusUI Instance;
+		return Instance;
 	}
 
 	HorusUI(HorusUI const&) = delete;
@@ -47,7 +35,7 @@ public:
 
 private:
 
-	HorusUI() {}
+	HorusUI() = default;
 
 	// Init
 	inline static bool m_ShowOpenGLViewport_ = false;
@@ -56,6 +44,17 @@ private:
 	inline static bool m_ShowConsole_ = false;
 	inline static bool m_ShowScene_ = false;
 	inline static bool m_ShowInspector_ = true;
+
+	bool m_LoadLogoTexture_ = true;
+	bool m_LoadUILogoTexture_ = true;
+
+	int m_LogoWidth_ = 0;
+	int m_LogoHeight_ = 0;
+	GLuint m_LogoTexture_ = 0;
+
+	int m_UILogoWidth_ = 0;
+	int m_UILogoHeight_ = 0;
+	GLuint m_UILogoTexture_ = 0;
 
 	// Main Menu Bar
 	bool m_IsRunning_ = true;

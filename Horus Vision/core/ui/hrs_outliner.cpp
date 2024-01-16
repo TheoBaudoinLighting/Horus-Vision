@@ -5,10 +5,12 @@
 #include <hrs_console.h>
 #include <hrs_inspector.h>
 
+#include "ImGuizmo.h"
+
 void HorusOutliner::Outliner(bool* p_open)
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
 	ImGuizmo::BeginFrame();
 	{
@@ -18,77 +20,87 @@ void HorusOutliner::Outliner(bool* p_open)
 		// toggle button
 
 		std::vector<std::string> meshes;
-		ObjectManager.get_outliner_meshes(meshes);
+		ObjectManager.GetOutlinerMeshes(meshes);
 
 		std::vector<std::string> materials;
-		ObjectManager.get_outliner_materials(materials);
+		ObjectManager.GetOutlinerMaterials(materials);
 
 		std::vector<std::string> cameras;
-		ObjectManager.get_outliner_cameras(cameras);
+		ObjectManager.GetOutlinerCameras(cameras);
 
 		std::vector<std::string> lights;
-		ObjectManager.get_outliner_lights(lights);
+		ObjectManager.GetOutlinerLights(lights);
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::Text("Debug Options");
 
 		if (ImGui::Button("Show Property panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
 		}
 
 		if (ImGui::Button("Show Render panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::RENDER);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::RENDER);
 		}
 
 		if (ImGui::Button("Show Scene panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::SCENE);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::SCENE);
 		}
 
 		if (ImGui::Button("Show Mesh panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::MESH);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
 		}
 
 		if (ImGui::Button("Show Material panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
 		}
 
 		if (ImGui::Button("Show Camera panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
 		}
 
 		if (ImGui::Button("Show Light panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
 		}
 
 		if (ImGui::Button("Show Texture panel"))
 		{
-			HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::TEXTURE);
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::TEXTURE);
 		}
 
+		ImGui::Spacing();
 		ImGui::Separator();
+		ImGui::Spacing();
 
 		if (ImGui::TreeNode("Meshes"))
 		{
 			for (const auto& mesh : meshes)
 			{
-				bool isSelected = (mesh == selectedObject);
+				bool IsSelected = (mesh == m_SelectedObject_);
 
-				ImGui::PushStyleColor(ImGuiCol_Text, isSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+				ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
 
-				if (ImGui::Selectable(mesh.c_str(), isSelected))
+				if (ImGui::Selectable(mesh.c_str(), IsSelected))
 				{
-					selectedObject = mesh;
+					m_SelectedObject_ = mesh;
 					spdlog::info("Mesh selected : {}", mesh);
 					Console.AddLog(" [info] Mesh selected : %s ", mesh.c_str());
-					int id = ObjectManager.GetIdByName(mesh);
-					spdlog::info("Mesh id : {}", id);
-					Console.AddLog(" [info] Mesh id : %d ", id);
+					int Id = ObjectManager.GetIdByName(mesh);
+					spdlog::info("Mesh id : {}", Id);
+					Console.AddLog(" [info] Mesh id : %d ", Id);
 
-					HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::MESH);
+					ObjectManager.SetActualSelectedId(Id);
+					ObjectManager.SetActiveMesh(Id);
+					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
 				}
 				ImGui::PopStyleColor();
 			}
@@ -101,20 +113,21 @@ void HorusOutliner::Outliner(bool* p_open)
 		{
 			for (const auto& material : materials)
 			{
-				bool isSelected = (material == selectedObject);
+				bool IsSelected = (material == m_SelectedObject_);
 
-				ImGui::PushStyleColor(ImGuiCol_Text, isSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+				ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
 
-				if (ImGui::Selectable(material.c_str(), isSelected))
+				if (ImGui::Selectable(material.c_str(), IsSelected))
 				{
-					selectedObject = material;
+					m_SelectedObject_ = material;
 					spdlog::info("Material selected: {}", material);
 					Console.AddLog(" [info] Material selected : %s ", material.c_str());
-					int id = ObjectManager.GetIdByName(material);
-					spdlog::info("Material id: {}", id);
-					Console.AddLog(" [info] Material id : %d ", id);
+					int Id = ObjectManager.GetIdByName(material);
+					spdlog::info("Material id: {}", Id);
+					Console.AddLog(" [info] Material id : %d ", Id);
 
-					HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
+					ObjectManager.SetActualSelectedId(Id);
+					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
 				}
 				ImGui::PopStyleColor();
 			}
@@ -125,22 +138,23 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		if (ImGui::TreeNode("Cameras"))
 		{
-			for (const auto& camera : cameras)
+			for (const auto& Camera : cameras)
 			{
-				bool isSelected = (camera == selectedObject);
+				bool IsSelected = (Camera == m_SelectedObject_);
 
-				ImGui::PushStyleColor(ImGuiCol_Text, isSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+				ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
 
-				if (ImGui::Selectable(camera.c_str(), isSelected))
+				if (ImGui::Selectable(Camera.c_str(), IsSelected))
 				{
-					selectedObject = camera;
-					spdlog::info("Camera selected: {}", camera);
-					Console.AddLog(" [info] Camera selected : %s ", camera.c_str());
-					int id = ObjectManager.GetIdByName(camera);
-					spdlog::info("Camera id: {}", id);
-					Console.AddLog(" [info] Camera id : %d ", id);
+					m_SelectedObject_ = Camera;
+					spdlog::info("Camera selected: {}", Camera);
+					Console.AddLog(" [info] Camera selected : %s ", Camera.c_str());
+					int Id = ObjectManager.GetIdByName(Camera);
+					spdlog::info("Camera id: {}", Id);
+					Console.AddLog(" [info] Camera id : %d ", Id);
 
-					HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
+					ObjectManager.SetActualSelectedId(Id);
+					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
 				}
 				ImGui::PopStyleColor();
 			}
@@ -151,66 +165,28 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		if (ImGui::TreeNode("Lights"))
 		{
-			for (const auto& light : lights)
+			for (const auto& Light : lights)
 			{
-				bool isSelected = (light == selectedObject);
+				bool IsSelected = (Light == m_SelectedObject_);
 
-				ImGui::PushStyleColor(ImGuiCol_Text, isSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+				ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
 
-				if (ImGui::Selectable(light.c_str(), isSelected))
+				if (ImGui::Selectable(Light.c_str(), IsSelected))
 				{
-					selectedObject = light;
-					spdlog::info("Light selected: {}", light);
-					Console.AddLog(" [info] Light selected : %s ", light.c_str());
-					int id = ObjectManager.GetIdByName(light);
-					spdlog::info("Light id: {}", id);
-					Console.AddLog(" [info] Light id : %d ", id);
+					m_SelectedObject_ = Light;
+					spdlog::info("Light selected: {}", Light);
+					Console.AddLog(" [info] Light selected : %s ", Light.c_str());
+					int Id = ObjectManager.GetIdByName(Light);
+					spdlog::info("Light id: {}", Id);
+					Console.AddLog(" [info] Light id : %d ", Id);
 
-					HorusInspector::get_instance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
+					ObjectManager.SetActualSelectedId(Id);
+					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
 				}
 				ImGui::PopStyleColor();
 			}
 			ImGui::TreePop();
 		}
-
-
-
-		// Transform section
-
-		//if (ImGui::CollapsingHeader("Transforms", ImGuiTreeNodeFlags_DefaultOpen))
-		//{
-		//	ImGui::Text("Transforms");
-
-		//	float viewMatrix[16];
-		//	float projectionMatrix[16];
-
-		//	auto io = ImGui::GetIO();
-
-		//	ObjectManager.compute_view_projection_matrix(0, viewMatrix, projectionMatrix, io.DisplaySize.x / io.DisplaySize.y);
-
-		//	RadeonProRender::matrix viewMatrixRPR = ObjectManager.get_mesh_transform(0);
-
-		//	//edit_transform_with_gizmo(viewMatrix, projectionMatrix, (float*)&viewMatrix);
-
-
-
-
-		//	ImGuizmo::Manipulate(viewMatrix, projectionMatrix, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, (float*)&viewMatrixRPR);
-
-		//	if (memcmp(&viewMatrix, &viewMatrixRPR, sizeof(float) * 16) != 0)
-		//	{
-		//		//ObjectManager.set_mesh_transform(0, viewMatrixRPR);
-		//	}
-
-
-		//}
-
-
-
-
-		ImGui::Separator();
-
 		ImGui::End();
-
 	}
 }

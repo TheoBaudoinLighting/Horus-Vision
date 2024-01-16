@@ -4,7 +4,11 @@
 #include <spdlog/spdlog.h>
 #include <hrs_console.h>
 
-void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) 
+#include <stdio.h>
+#include <cassert>
+#include <chrono>
+
+void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam) 
 {
 	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
@@ -13,41 +17,41 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 void KeyCallbacks(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	HorusInput::get_instance().OnKey(window, key, scancode, action, mods);
+	HorusInput::GetInstance().OnKey(window, key, scancode, action, mods);
 }
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	HorusInput::get_instance().OnScroll(window, xoffset, yoffset);
+	HorusInput::GetInstance().OnScroll(window, xoffset, yoffset);
 }
 void MouseCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	HorusInput::get_instance().OnMouse(window, button, action, mods);
+	HorusInput::GetInstance().OnMouse(window, button, action, mods);
 }
 void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
 {
-	HorusInput::get_instance().OnMouseMove(window, xpos, ypos);
+	HorusInput::GetInstance().OnMouseMove(window, xpos, ypos);
 }
 void WindowResizeCallback(GLFWwindow* window, int width, int height)
 {
-	HorusInput::get_instance().OnResize(window, width, height);
+	HorusInput::GetInstance().OnResize(window, width, height);
 }
 void WindowCloseCallback(GLFWwindow* window)
 {
-	HorusInput::get_instance().OnClose();
+	HorusInput::GetInstance().OnClose();
 }
 
-bool HorusOpenGL::init(int width, int height, HorusWindowConfig* window)
+bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 {
-	HorusShaderManager& ShaderManager = HorusShaderManager::get_instance();
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::get_instance();
-	HorusConsole& Console = HorusConsole::get_instance();
+	HorusShaderManager& ShaderManager = HorusShaderManager::GetInstance();
+	[[maybe_unused]] HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
 
-	m_logger_.init();
+	m_logger_.Init();
 
 	spdlog::info("Horus Engine initialization");
 	Console.AddLog(" [info] Horus Engine initialization");
 
-	__super::init(width, height, window); // Call base class init
+	__super::Init(width, height, window); // Call base class init
 
 	m_WindowWidth_ = width;
 	m_WindowHeight_ = height;
@@ -64,9 +68,9 @@ bool HorusOpenGL::init(int width, int height, HorusWindowConfig* window)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL
 
-	glfwSetErrorCallback([](int error, const char* description) { spdlog::error("GLFW error: {}", description); });
+	glfwSetErrorCallback([]([[maybe_unused]] int Error, const char* Description) { spdlog::error("GLFW error: {}", Description); });
 
-	m_HorusWindow_ = glfwCreateWindow(m_WindowWidth_, m_WindowHeight_, window->m_window_title_.c_str(), nullptr, nullptr);
+	m_HorusWindow_ = glfwCreateWindow(m_WindowWidth_, m_WindowHeight_, window->m_WindowTitle_.c_str(), nullptr, nullptr);
 
 	if (!m_HorusWindow_)
 	{
@@ -92,7 +96,7 @@ bool HorusOpenGL::init(int width, int height, HorusWindowConfig* window)
 
 	gladLoadGL();
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	if (!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
 	{
 		spdlog::error("Failed to initialize GLAD");
 		return false;
@@ -100,8 +104,8 @@ bool HorusOpenGL::init(int width, int height, HorusWindowConfig* window)
 
 	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
 
-	m_ProgramID_ = ShaderManager.get_program("core/shaders/shader");
-	GetShaderVariables(m_ProgramID_, "g_Texture", "inPosition", "inTexcoord");
+	m_ProgramId_ = ShaderManager.GetProgram("core/shaders/shader");
+	GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
 
 	InitBuffers(m_WindowWidth_, m_WindowHeight_);
 
@@ -119,24 +123,24 @@ bool HorusOpenGL::init(int width, int height, HorusWindowConfig* window)
 	return true;
 }
 
-void HorusOpenGL::InitBuffers(int width, int height)
+void HorusOpenGL::InitBuffers(int Width, int Height)
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::get_instance();
+	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
+	m_WindowWidth_ = Width;
+	m_WindowHeight_ = Height;
 
 	//glEnable(GL_DEPTH_TEST);
 
 	OpenGLManager.CreateVAO(0);
 	OpenGLManager.BindVAO(0);
 
-	OpenGLManager.CreateVBO(0, quadVertexData, sizeof(quadVertexData));
-	OpenGLManager.CreateEBO(0, quadIndexData, sizeof(quadIndexData));
+	OpenGLManager.CreateVBO(0, m_QuadVertexData_, sizeof(m_QuadVertexData_));
+	OpenGLManager.CreateEBO(0, m_QuadIndexData_, sizeof(m_QuadIndexData_));
 
-	OpenGLManager.SetVAOAttrib(0, 0, 3, 5 * sizeof(GLfloat), 0);
-	OpenGLManager.SetVAOAttrib(0, 1, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
-	OpenGLManager.SetVAOAttrib(0, 2, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
+	OpenGLManager.SetVaoAttrib(0, 0, 3, 5 * sizeof(GLfloat), 0);
+	OpenGLManager.SetVaoAttrib(0, 1, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
+	OpenGLManager.SetVaoAttrib(0, 2, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
 
 	OpenGLManager.UnbindVAO(0);
 	OpenGLManager.UnbindVBO(0);
@@ -155,9 +159,9 @@ void HorusOpenGL::InitBuffers(int width, int height)
 
 }
 
-void HorusOpenGL::init_render()
+void HorusOpenGL::InitRender()
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::get_instance();
+	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
 	glClearColor(0.298f, 0.384f, 0.419f, 1.0f); // green - blue pastel
 	//glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // sky blue
@@ -168,9 +172,9 @@ void HorusOpenGL::init_render()
 	OpenGLManager.BindVAO(0);
 	OpenGLManager.BindVBO(0);
 
-	auto [texture_location, position_location, texcoord_location] = GetShaderVariables(m_ProgramID_, "g_Texture", "inPosition", "inTexcoord");
+	auto [texture_location, position_location, texcoord_location] = GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
 
-	glUseProgram(m_ProgramID_);
+	glUseProgram(m_ProgramId_);
 
 	glUniform1i(m_TextureLocation_, 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -182,7 +186,7 @@ void HorusOpenGL::init_render()
 	glEnableVertexAttribArray(m_PositionLocation_);
 	glEnableVertexAttribArray(m_TexcoordLocation_);
 
-	glDrawElements(GL_TRIANGLES, sizeof(quadIndexData) / sizeof(int), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, sizeof(m_QuadIndexData_) / sizeof(int), GL_UNSIGNED_INT, 0);
 
 	glDisableVertexAttribArray(m_PositionLocation_);
 	glDisableVertexAttribArray(m_TexcoordLocation_);
@@ -193,17 +197,16 @@ void HorusOpenGL::init_render()
 	glUseProgram(0);
 }
 
-void HorusOpenGL::post_render()
+void HorusOpenGL::PostRender()
 {
-	
 	//ErrorManager();
 	glfwSwapBuffers(m_HorusWindow_);
 	glfwPollEvents();
 }
 
-void HorusOpenGL::quit_render()
+void HorusOpenGL::QuitRender()
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::get_instance();
+	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
 	spdlog::info("Unloading OpenGL..");
 
@@ -223,11 +226,11 @@ std::tuple<GLuint, GLuint, GLuint> HorusOpenGL::GetShaderVariables(GLuint progra
 	m_PositionLocation_ = glGetAttribLocation(program, position_name);
 	m_TexcoordLocation_ = glGetAttribLocation(program, texcoord_name);
 
-	GLuint texture_location = m_TextureLocation_;
-	GLuint position_location = m_PositionLocation_;
-	GLuint texcoord_location = m_TexcoordLocation_;
+	GLuint TextureLocation = m_TextureLocation_;
+	GLuint PositionLocation = m_PositionLocation_;
+	GLuint TexcoordLocation = m_TexcoordLocation_;
 
-	return std::make_tuple(texture_location, position_location, texcoord_location);
+	return std::make_tuple(TextureLocation, PositionLocation, TexcoordLocation);
 }
 
 void HorusOpenGL::ErrorManager()
@@ -235,7 +238,7 @@ void HorusOpenGL::ErrorManager()
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 	{
-		HorusConsole& Console = HorusConsole::get_instance();
+		HorusConsole& Console = HorusConsole::GetInstance();
 
 		spdlog::error("OpenGL error : {} at file {} line {}", error, __FILE__, __LINE__);
 		Console.AddLog(" [error] OpenGL error : {} at file {} line {}", error, __FILE__, __LINE__);

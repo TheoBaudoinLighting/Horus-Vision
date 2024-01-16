@@ -8,147 +8,151 @@
 #include "hrs_light.h" // nothing
 #include "hrs_material.h" // nothing
 #include "hrs_material_editor.h" // nothing
-#include "hrs_radeon.h" // glfw3.h
 
 #include <string>
 #include <variant>
 #include <queue>
 #include <map>
+#include <ranges>
 
-class IDManager 
+class IDManager
 {
 public:
-	static IDManager& getInstance() 
+	static IDManager& GetInstance()
 	{
-		static IDManager instance;
-		return instance;
+		static IDManager Instance;
+		return Instance;
 	}
 
 	IDManager(const IDManager&) = delete;
 	IDManager& operator=(const IDManager&) = delete;
 
-	int getNewID() 
+	int GetNewId()
 	{
-		if (!availableIDs.empty()) 
+		if (!m_AvailableIDs_.empty())
 		{
-			int id = availableIDs.front();
-			availableIDs.pop();
-			return id;
+			int Id = m_AvailableIDs_.front();
+			m_AvailableIDs_.pop();
+			return Id;
 		}
-		return nextID++;
+		return m_NextId_++;
 	}
 
-	void releaseID(int id) 
+	void ReleaseId(int id)
 	{
-		availableIDs.push(id);
+		m_AvailableIDs_.push(id);
 	}
 
 private:
-	IDManager() : nextID(0) {}
+	IDManager() : m_NextId_(0)
+	{
+	}
 
-	int nextID;
-	std::queue<int> availableIDs;
+	int m_NextId_;
+	std::queue<int> m_AvailableIDs_;
 };
-
-
 
 class HorusObjectManager
 {
 public:
-
-	static HorusObjectManager& get_instance()
+	static HorusObjectManager& GetInstance()
 	{
-		static HorusObjectManager instance;
-		return instance;
+		static HorusObjectManager Instance;
+		return Instance;
 	}
 
-	HorusObjectManager(HorusObjectManager const&) = delete;
-	void operator=(HorusObjectManager const&) = delete;
+	HorusObjectManager(const HorusObjectManager&) = delete;
+	void operator=(const HorusObjectManager&) = delete;
 
 	int GetIdByName(const std::string& name)
 	{
-		auto it = objectNameToIdMap.find(name);
-		if (it != objectNameToIdMap.end())
+		if (auto It = m_ObjectNameToIdMap_.find(name); It != m_ObjectNameToIdMap_.end())
 		{
-			return it->second;
+			return It->second;
 		}
 
 		return -1;
 	}
 
+	// General ---------------------------------------
+
+	void SetActualSelectedId(int id)
+	{
+		m_ActualSelectedId_ = id;
+	}
+
 	// Other -----------------------------------------
 
-	void set_background_image(const std::string& path);
+	void SetBackgroundImage(const std::string& path);
 
-	void unset_background_image();
+	void UnsetBackgroundImage();
 
 	// ----------------------------------------------
 	// Outliner -------------------------------------
 
-	void get_outliner_meshes(std::vector<std::string>& meshes)
+	void GetOutlinerMeshes(std::vector<std::string>& Meshes)
 	{
-		for (auto& mesh : m_meshes_)
+		for (const auto& Key : m_Meshes_ | std::views::keys)
 		{
-			int id = mesh.first;
-			std::string name = m_mesh_names_[id];
-			meshes.push_back(name);
+			int Id = Key;
+			std::string Name = m_MeshNames_[Id];
+			Meshes.push_back(Name);
 		}
 	}
 
-	void get_outliner_materials(std::vector<std::string>& materials)
+	void GetOutlinerMaterials(std::vector<std::string>& Materials)
 	{
-		for (auto& material : m_materials_)
+		for (const auto& Key : m_Materials_ | std::views::keys)
 		{
-			int id = material.first;
-			std::string name = m_material_names_[id];
-			materials.push_back(name);
+			int Id = Key;
+			std::string Name = m_MaterialNames_[Id];
+			Materials.push_back(Name);
 		}
 	}
 
-	void get_outliner_cameras(std::vector<std::string>& cameras)
+	void GetOutlinerCameras(std::vector<std::string>& Cameras)
 	{
-		for (auto& camera : m_cameras_)
+		for (const auto& Key : m_Cameras_ | std::views::keys)
 		{
-			int id = camera.first;
-			std::string name = m_camera_names_[id];
-			cameras.push_back(name);
+			int Id = Key;
+			std::string Name = m_CameraNames_[Id];
+			Cameras.push_back(Name);
 		}
 	}
 
-	void get_outliner_lights(std::vector<std::string>& lights)
+	void GetOutlinerLights(std::vector<std::string>& Lights)
 	{
-		for (auto& light : m_lights_)
+		for (const auto& Key : m_Lights_ | std::views::keys)
 		{
-			int id = light.first;
-			std::string name = m_light_names_[id];
-			lights.push_back(name);
+			int Id = Key;
+			std::string Name = m_LightNames_[Id];
+			Lights.push_back(Name);
 		}
 	}
 
 	// ----------------------------------------------
 	// Camera object ----------------------------------
 
-	int create_camera(int SceneID, const std::string name);
+	int CreateCamera(int SceneID, std::string Name);
 
-	void destroy_camera(int id);
+	void DestroyCamera(int id);
 
-	void destroy_all_cameras()
+	void DestroyAllCameras()
 	{
-		for (auto& camera : m_cameras_)
+		for (auto& Val : m_Cameras_ | std::views::values)
 		{
-			camera.second.Destroy();
+			Val.Destroy();
 		}
-
-		m_cameras_.clear();
+		m_Cameras_.clear();
 	}
 
-	HorusCamera& get_camera(int id)
+	HorusCamera& GetCamera(int id)
 	{
-		return m_cameras_[id];
+		return m_Cameras_[id];
 	}
 
-	void bind_camera(int id);
-	void unbind_camera(int id);
+	void BindCamera(int id);
+	void UnbindCamera(int id);
 
 	void UpdateCamera(int id);
 	void GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
@@ -158,86 +162,101 @@ public:
 
 	void SetViewport(int id, int x, int y, int width, int height);
 
-	int get_active_camera_id();
-	void set_active_camera(int id);
+	int GetActiveCameraId();
+	void SetActiveCamera(int id);
 
-	void get_camera_id_by_name(const char* name);
-	void get_camera_name_by_id(int id);
+	int GetCameraIdByName(const char* name);
+	std::string& GetCameraNameById(int id);
 
-	void move_camera_forward(int id);
-	void move_camera_backward(int id);
-	void move_camera_left(int id);
-	void move_camera_right(int id);
-	void move_camera_up(int id);
-	void move_camera_down(int id);
-	void scroll_camera(int id, float delta);
+	void MoveCameraForward(int id);
+	void MoveCameraBackward(int id);
+	void MoveCameraLeft(int id);
+	void MoveCameraRight(int id);
+	void MoveCameraUp(int id);
+	void MoveCameraDown(int id);
+	void ScrollCamera(int id, float delta);
 
 	void SetPitch(int id, float pitch);
 	void SetHeading(int id, float heading);
 
-	void set_camera_lookat(int id, RadeonProRender::float3& pivot);
+	void SetCameraLookat(int id, glm::vec3& pivot);
 
 	void TumbleCamera(int id, float x, float y);
 	void PanCamera(int id, float x, float y);
 	void ZoomCamera(int id, float distance);
 
-	void compute_view_projection_matrix(int id, float* view, float* projection, float ratio);
+	// Getters for inspector
 
-	// Info for inspector
 	glm::vec3 GetCameraLookAt(int id);
 	glm::vec3 GetCameraPosition(int id);
+	glm::vec3 GetCameraTranslation(int id);
 	glm::vec3 GetCameraRotation(int id);
 	glm::vec3 GetCameraScale(int id);
+	float GetCameraFov(int id);
+	float GetCameraAspectRatio(int id);
+	float GetCameraNearPlane(int id);
+	float GetCameraFarPlane(int id);
 
-	void CameraSetPos(int id,int button, int state, int x, int y);
+	// Setters for inspector
 
-	void set_camera_fov(int id, float fov);
-	void set_camera_aspect_ratio(int id, float aspect_ratio);
-	void set_camera_near_plane(int id, float near_plane);
-	void set_camera_far_plane(int id, float far_plane);
+	void SetCameraFov(int id, float fov);
+	void SetCameraAspectRatio(int id, float aspect_ratio);
+	void SetCameraNear(int id, float near_plane);
+	void SetCameraFar(int id, float far_plane);
+	void SetAperture(int id, float aperture);
 
-	void set_enable_dof(int id, bool enable);
-	void set_dof_aperture(int id, float aperture);
-	void set_dof_focal_distance(int id, float focal_distance);
-
+	void SetCameraLookAt(int id, glm::vec3 lookat);
+	void SetCameraPosition(int id, glm::vec3 position);
+	void SetCameraRotation(int id, glm::vec3 rotation_axis);
+	void SetCameraScale(int id, glm::vec3 scale);
 
 	// ----------------------------------------------
 	// Mesh object ----------------------------------
 
-	int create_mesh(const char* path,const std::string& name);
-	void destroy_mesh(int id);
+	int CreateMesh(const char* path, const std::string& name);
 
-	HorusMesh& get_mesh(int id /*, HorusMesh* mesh*/);
-	rpr_shape get_mesh_shape(int id);
-	void get_mesh_count(int* count);
-	void get_mesh_name(int id);
-	void get_mesh_id(const char* name);
-	void get_mesh_id_by_index(int index, int* id);
-	void get_mesh_index_by_id(int id, int* index);
-	void get_mesh_index_by_name(const char* name);
+	void DestroyMesh(int id);
+	void DestroyAllMeshes();
 
-	RadeonProRender::matrix get_mesh_transform(int id);
+	// Getters for inspector
+	HorusMesh& GetMesh(int id /*, HorusMesh* mesh*/);
 
-	void destroy_all_meshes();
+	rpr_shape GetMeshShape(int id);
 
-	void set_mesh_name(int id, const char* name);
-	void set_mesh_id(int id, int new_id);
-	void set_mesh_index(int id, int index);
+	std::string& GetMeshName(int id);
+	void SetActiveMesh(int id);
+	int GetActiveMeshId();
 
-	void set_shape_position(int id, RadeonProRender::float3 pos);
-	void set_shape_rotation(int id, RadeonProRender::float3 rotate_axis, float rotation_angle);
-	void set_shape_scale(int id, RadeonProRender::float3 scale);
+	void GetMeshCount(int count);
+	int GetMeshId(const char* name);
+	void GetMeshIdByIndex(int index, int* id);
+	void GetMeshIndexById(int id, int* index);
+	void GetMeshIndexByName(const char* name);
+
+	glm::mat4 GetMeshTransform(int id);
+	glm::vec3 GetMeshPosition(int id);
+	glm::vec3 GetMeshRotation(int id);
+	glm::vec3 GetMeshScale(int id);
+
+	// Setters for inspector
+
+	void SetMeshName(int id, const char* name);
+	void SetMeshId(int id, int new_id);
+
+	void SetShapePosition(int id, glm::vec3 pos);
+	void SetShapeRotation(int id, glm::vec3 rot);
+	void SetShapeScale(int id, glm::vec3 scale);
 
 	// ----------------------------------------------
 	// Material object ------------------------------
 
-	int create_material(std::string name)
+	int CreateMaterial(std::string name)
 	{
 		std::string material_name = name;
 
 		int suffix = 0;
 
-		while (objectNameToIdMap.find(material_name) != objectNameToIdMap.end())
+		while (m_ObjectNameToIdMap_.contains(material_name))
 		{
 			material_name = name + "_" + std::to_string(suffix);
 			suffix++;
@@ -245,312 +264,314 @@ public:
 			spdlog::info("Material with name {} already exists", name);
 		}
 
-		int id = IDManager::getInstance().getNewID();
+		int id = IDManager::GetInstance().GetNewId();
 
 		HorusMaterial new_material;
-		new_material.init();
-		m_materials_[id] = new_material;
-		m_material_names_[id] = material_name;
-		objectNameToIdMap[material_name] = id;
+		new_material.Init();
+		m_Materials_[id] = new_material;
+		m_MaterialNames_[id] = material_name;
+		m_ObjectNameToIdMap_[material_name] = id;
 
 		spdlog::info("Creating {} material with id {}", material_name, id);
 
 		return id;
 	}
 
-	void destroy_material(int id)
+	void DestroyMaterial(int id)
 	{
-		auto it = m_materials_.find(id);
-		if (it != m_materials_.end())
+		auto it = m_Materials_.find(id);
+		if (it != m_Materials_.end())
 		{
-			it->second.destroy_material();
-			m_materials_.erase(it);
-			m_material_names_.erase(id);
+			it->second.DestroyMaterial();
+			m_Materials_.erase(it);
+			m_MaterialNames_.erase(id);
 		}
 		else
 		{
 			spdlog::error("Material with id {} does not exist", id);
 		}
 
-		for (auto it = objectNameToIdMap.begin(); it != objectNameToIdMap.end(); ++it)
+		for (auto it = m_ObjectNameToIdMap_.begin(); it != m_ObjectNameToIdMap_.end(); ++it)
 		{
 			if (it->second == id)
 			{
-				objectNameToIdMap.erase(it);
+				m_ObjectNameToIdMap_.erase(it);
 				break;
 			}
 		}
 
-		IDManager::getInstance().releaseID(id);
+		IDManager::GetInstance().ReleaseId(id);
 	}
 
-	void destroy_all_material();
+	void DestroyAllMaterial();
 
-	void assign_material(int mesh_id, int mat_id);
+	void AssignMaterial(int mesh_id, int mat_id);
 
-	void set_base_color(int id, const std::string& texturePath);
-	void set_base_color(int id, const std::array<float, 3>& color);
+	void SetBaseColor(int id, const std::string& texturePath);
+	void SetBaseColor(int id, const std::array<float, 3>& color);
 
-	void set_metallic(int id, const std::string& texturePath);
-	void set_metallic(int id, const std::array<float, 3>& color);
+	void SetMetallic(int id, const std::string& texturePath);
+	void SetMetallic(int id, const std::array<float, 3>& color);
 
-	void set_roughness(int id, const std::string& texturePath);
-	void set_roughness(int id, const std::array<float, 3>& color);
+	void SetRoughness(int id, const std::string& texturePath);
+	void SetRoughness(int id, const std::array<float, 3>& color);
 
-	void set_normal(int id, const std::string& texturePath);
-	void set_normal(int id, const std::array<float, 3>& color);
+	void SetNormal(int id, const std::string& texturePath);
+	void SetNormal(int id, const std::array<float, 3>& color);
 
-	void set_opacity(int id, const std::string& texturePath);
-	void set_opacity(int id, const std::array<float, 3>& color);
+	void SetOpacity(int id, const std::string& texturePath);
+	void SetOpacity(int id, const std::array<float, 3>& color);
 
-	void set_emissive(int id, const std::string& texturePath);
-	void set_emissive(int id, const std::array<float, 3>& color);
+	void SetEmissive(int id, const std::string& texturePath);
+	void SetEmissive(int id, const std::array<float, 3>& color);
 
-	void set_reflection_color(int id, const std::array<float, 3>& color);
-	void set_reflection_color(int id, const std::string& texturePath);
+	void SetReflectionColor(int id, const std::array<float, 3>& color);
+	void SetReflectionColor(int id, const std::string& texturePath);
 
-	void set_reflection_weight(int id, const std::array<float, 3>& color);
-	void set_reflection_weight(int id, const std::string& texturePath);
+	void SetReflectionWeight(int id, const std::array<float, 3>& color);
+	void SetReflectionWeight(int id, const std::string& texturePath);
 
-	void set_reflection_roughness(int id, const std::array<float, 3>& color);
-	void set_reflection_roughness(int id, const std::string& texturePath);
+	void SetReflectionRoughness(int id, const std::array<float, 3>& color);
+	void SetReflectionRoughness(int id, const std::string& texturePath);
 
-	void set_refraction_color(int id, const std::array<float, 3>& color);
-	void set_refraction_color(int id, const std::string& texturePath);
+	void SetRefractionColor(int id, const std::array<float, 3>& color);
+	void SetRefractionColor(int id, const std::string& texturePath);
 
-	void set_coating_color(int id, const std::array<float, 3>& color);
-	void set_coating_color(int id, const std::string& texturePath);
+	void SetCoatingColor(int id, const std::array<float, 3>& color);
+	void SetCoatingColor(int id, const std::string& texturePath);
 
-	void set_sheen(int id, const std::array<float, 3>& color);
-	void set_sheen(int id, const std::string& texturePath);
+	void SetSheen(int id, const std::array<float, 3>& color);
+	void SetSheen(int id, const std::string& texturePath);
 
-	void set_sss_scatter_color(int id, const std::array<float, 3>& color);
-	void set_sss_scatter_color(int id, const std::string& texturePath);
+	void SetSssScatterColor(int id, const std::array<float, 3>& color);
+	void SetSssScatterColor(int id, const std::string& texturePath);
 
-	void set_backscatter_color(int id, const std::array<float, 3>& color);
-	void set_backscatter_color(int id, const std::string& texturePath);
+	void SetBackscatterColor(int id, const std::array<float, 3>& color);
+	void SetBackscatterColor(int id, const std::string& texturePath);
 
-	void set_ior(int id, float ior);
+	void SetIor(int id, float ior);
 
-	void set_refraction_weight(int id, const std::array<float, 3>& weight);
-	void set_refraction_weight(int id, const std::string& texturePath);
+	void SetRefractionWeight(int id, const std::array<float, 3>& weight);
+	void SetRefractionWeight(int id, const std::string& texturePath);
 
-	void set_refraction_roughness(int id, const std::array<float, 3>& roughness);
-	void set_refraction_roughness(int id, const std::string& texturePath);
+	void SetRefractionRoughness(int id, const std::array<float, 3>& roughness);
+	void SetRefractionRoughness(int id, const std::string& texturePath);
 
-	void set_coating_weight(int id, const std::array<float, 3>& weight);
-	void set_coating_weight(int id, const std::string& texturePath);
+	void SetCoatingWeight(int id, const std::array<float, 3>& weight);
+	void SetCoatingWeight(int id, const std::string& texturePath);
 
-	void set_coating_roughness(int id, const std::array<float, 3>& roughness);
-	void set_coating_roughness(int id, const std::string& texturePath);
+	void SetCoatingRoughness(int id, const std::array<float, 3>& roughness);
+	void SetCoatingRoughness(int id, const std::string& texturePath);
 
-	void set_sheen_weight(int id, const std::array<float, 3>& weight);
-	void set_sheen_weight(int id, const std::string& texturePath);
+	void SetSheenWeight(int id, const std::array<float, 3>& weight);
+	void SetSheenWeight(int id, const std::string& texturePath);
 
-	void set_backscatter_weight(int id, const std::array<float, 3>& weight);
-	void set_backscatter_weight(int id, const std::string& texturePath);
+	void SetBackscatterWeight(int id, const std::array<float, 3>& weight);
+	void SetBackscatterWeight(int id, const std::string& texturePath);
 
-	void set_diffuse_weight(int id, const std::array<float, 3>& color);
-	void set_diffuse_weight(int id, const std::string& texturePath);
+	void SetDiffuseWeight(int id, const std::array<float, 3>& color);
+	void SetDiffuseWeight(int id, const std::string& texturePath);
 
-	void set_emission_weight(int id, const std::array<float, 3>& color);
-	void set_emission_weight(int id, const std::string& texturePath);
+	void SetEmissionWeight(int id, const std::array<float, 3>& color);
+	void SetEmissionWeight(int id, const std::string& texturePath);
 
-	void set_transparency(int id, const std::array<float, 3>& color);
-	void set_transparency(int id, const std::string& texturePath);
+	void SetTransparency(int id, const std::array<float, 3>& color);
+	void SetTransparency(int id, const std::string& texturePath);
 
-	void set_sss_scatter_distance(int id, const std::array<float, 3>& color);
-	void set_sss_scatter_distance(int id, const std::string& texturePath);
+	void SetSssScatterDistance(int id, const std::array<float, 3>& color);
+	void SetSssScatterDistance(int id, const std::string& texturePath);
 
-	void set_reflection_mode(int id, int mode);
-	void set_coating_mode(int id, int mode);
+	void SetReflectionMode(int id, int mode);
+	void SetCoatingMode(int id, int mode);
 
 	// ----------------------------------------------
 	// Material Editor object --------------------------
 
-	HorusMaterialEditor& create_material_editor_node(int id, std::string name)
+	HorusMaterialEditor& CreateMaterialEditorNode(int id, std::string Name)
 	{
-		if (m_material_editors_.find(id) != m_material_editors_.end())
+		if (m_MaterialEditors_.contains(id))
 		{
 			spdlog::error("Material Editor with id {} already exists", id);
 
-			return m_material_editors_[id];
+			return m_MaterialEditors_[id];
 		}
 
 		spdlog::info("Creating material graph with id {}", id);
 
-		HorusMaterialEditor new_material_editor;
-		new_material_editor.init();
+		HorusMaterialEditor NewMaterialEditor;
+		NewMaterialEditor.init();
 
-		m_material_editors_[id] = new_material_editor;
-		m_material_editor_names_[id] = name;
-		m_material_editor_mesh_to_set_material_[id] = id;
+		m_MaterialEditors_[id] = NewMaterialEditor;
+		m_MaterialEditorNames_[id] = Name;
+		m_MaterialEditorMeshToSetMaterial_[id] = id;
 
-		return m_material_editors_[id];
+		return m_MaterialEditors_[id];
 	}
 
-	void assign_material_editor_node(int mesh_id, int mat_id);
+	void AssignMaterialEditorNode(int mesh_id, int mat_id);
 
-	void set_material_from_editor_node(int id, rpr_material_node mat);
+	void SetMaterialFromEditorNode(int id, rpr_material_node mat);
 
-	int set_material_editor_mesh_to_set_material(int id)
+	int SetMaterialEditorMeshToSetMaterial(int id)
 	{
-		m_material_editor_mesh_to_set_material_[m_material_editor_to_show_] = id;
+		m_MaterialEditorMeshToSetMaterial_[m_MaterialEditorToShow_] = id;
 
 		return id;
 	}
 
-	int get_mesh_id_to_set_material()
+	int GetMeshIdToSetMaterial()
 	{
-		return m_material_editor_mesh_to_set_material_[m_material_editor_to_show_];
+		return m_MaterialEditorMeshToSetMaterial_[m_MaterialEditorToShow_];
 	}
 
-	void show_material_editor(int id);
+	void ShowMaterialEditor(int id);
 
-	void open_material_editor(int id);
+	void OpenMaterialEditor(int id);
 
-	void close_material_editor(int id);
+	void CloseMaterialEditor(int id);
 
-	void open_material_editor_browser();
+	void OpenMaterialEditorBrowser();
 
-	void close_material_editor_browser();
+	void CloseMaterialEditorBrowser();
 
-	void get_material_editor_materials(std::vector<std::string>& materials)
+	void GetMaterialEditorMaterials(std::vector<std::string>& materials)
 	{
-		for (auto& material : m_material_editors_)
+		for (const auto& Key : m_MaterialEditors_ | std::views::keys)
 		{
-			int id = material.first;
-			std::string name = m_material_editor_names_[id];
-			materials.push_back(name);
+			int Id = Key;
+			std::string Name = m_MaterialEditorNames_[Id];
+			materials.push_back(Name);
 		}
 	}
 
-	int get_material_editor_id_by_name(const char* name)
+	int GetMaterialEditorIdByName(const char* name)
 	{
-		for (auto& material : m_material_editors_)
+		for (const auto& Key : m_MaterialEditors_ | std::views::keys)
 		{
-			int id = material.first; 
-			std::string material_name = m_material_editor_names_[id];
+			int Id = Key;
 
-			if (material_name == name)
+			if (std::string MaterialName = m_MaterialEditorNames_[Id]; MaterialName == name)
 			{
-				return id;
+				return Id;
 			}
 		}
 
 		return -1;
 	}
 
-	int set_material_editor_to_show(int id);
+	int SetMaterialEditorToShow(int id);
 
-	int get_material_editor_to_show();
+	int GetMaterialEditorToShow();
 
-	void open_material_editor_create_menu();
+	void OpenMaterialEditorCreateMenu();
 
-	void close_material_editor_create_menu();
+	void CloseMaterialEditorCreateMenu();
 
-	void quit_material_editor(int id);
+	void QuitMaterialEditor(int id);
 
-	void destroy_all_material_editors();
+	void DestroyAllMaterialEditors();
 
 	// ----------------------------------------------
 	// Light object ---------------------------------
 
-	int create_light(const std::string& name, const std::string& light_type, const std::string& hdri_image = "");
+	int CreateLight(const std::string& name, const std::string& light_type, const std::string& hdri_image = "");
 
-	void destroy_light(int id);
+	void DestroyLight(int id);
 
-	void destroy_all_lights();
+	void DestroyAllLights();
 
-	void set_light_position(int id, RadeonProRender::float3& position);
-	void set_light_rotation(int id, RadeonProRender::float3& rotation);
-	void set_light_scale(int id, RadeonProRender::float3& scale);
+	void SetLightPosition(int id, const glm::vec3& position);
+	void SetLightRotation(int id, const glm::vec3& rotation, float rotation_angle);
+	void SetLightScale(int id, const glm::vec3& scale);
 
-	void set_light_intensity(int id, RadeonProRender::float3& intensity);
+	void SetLightIntensity(int id, glm::vec3& intensity);
 
 	// ----------------------------------------------
 	// Scene object ----------------------------------
 
-	int create_scene(const std::string& name);
-	void set_scene(int id);
-	rpr_scene get_scene();
-	int get_scene_id_by_name(const char* name);
+	int CreateScene(const std::string& name);
+	void SetScene(int id);
+	rpr_scene GetScene();
+	int GetSceneIdByName(const char* name);
 	int GetActiveSceneId();
-	std::string& get_scene_name_by_id(int id);
+	std::string& GetSceneNameById(int id);
 
-	void destroy_scene(int id);
-	void destroy_all_scenes();
+	void DestroyScene(int id);
+	void DestroyAllScenes();
 
 	int CreateDefaultScene();
 
-	void show_dummy_dragon();
-	void show_dummy_plane();
-	void show_LookdevScene();
+	void ShowDummyDragon();
+	void ShowDummyPlane();
+	void ShowLookdevScene();
 
 	// ----------------------------------------------
 
 private:
+	HorusObjectManager()
+	{
+	}
 
-	HorusObjectManager() : m_background_material_() {}
-
-	std::map<std::string, int> objectNameToIdMap;
-	std::string name;
+	std::map<std::string, int> m_ObjectNameToIdMap_;
+	int m_ActualSelectedId_ = -1;
+	std::string m_Name_;
 
 	// Camera object ----------------
 
-	std::map<int, HorusCamera> m_cameras_;
-	int m_active_camera_id = 0;
-	int m_next_camera_id_ = 0;
-	std::map<int, std::string> m_camera_names_;
+	std::map<int, HorusCamera> m_Cameras_;
+	int m_ActiveCameraId_ = 0;
+	int m_NextCameraId_ = 0;
+	std::map<int, std::string> m_CameraNames_;
 
 	// ------------------------------
 	// Mesh object ------------------
 
-	std::map<int, HorusMesh> m_meshes_;
-	int m_mesh_index_ = 0;
-	int m_mesh_count_ = 0;
-	std::map<int, std::string> m_mesh_names_;
+	std::map<int, HorusMesh> m_Meshes_;
+	int m_ActiveMeshId_ = 0;
+	int m_MeshIndex_ = 0;
+	int m_MeshCount_ = 0;
+	std::map<int, std::string> m_MeshNames_;
 
 	// ------------------------------
 	// Material object --------------
 
-	std::map<int, HorusMaterial> m_materials_;
-	std::unordered_map<int, HorusMaterialParameters> temp_mat_params_;
-	int m_material_index_ = 0;
-	int m_material_count_ = 0;
-	std::map<int, std::string> m_material_names_;
+	std::map<int, HorusMaterial> m_Materials_;
+	std::unordered_map<int, HorusMaterialParameters> m_TempMatParams_;
+	int m_MaterialIndex_ = 0;
+	int m_MaterialCount_ = 0;
+	std::map<int, std::string> m_MaterialNames_;
 
 	// ------------------------------
 	// Material Editor object -------
 
-	std::map<int, HorusMaterialEditor> m_material_editors_;
-	int m_material_editor_index_ = 0;
-	int m_material_editor_count_ = 0;
-	std::map<int, std::string> m_material_editor_names_;
-	std::map<int, int> m_material_editor_mesh_to_set_material_;
+	std::map<int, HorusMaterialEditor> m_MaterialEditors_;
+	int m_MaterialEditorIndex_ = 0;
+	int m_MaterialEditorCount_ = 0;
+	std::map<int, std::string> m_MaterialEditorNames_;
+	std::map<int, int> m_MaterialEditorMeshToSetMaterial_;
 
-	int m_material_editor_to_show_ = 0;
+	int m_MaterialEditorToShow_ = 0;
 
 	// ------------------------------
 	// background image
 
-	HorusMaterial m_background_material_;
+	HorusMaterial m_BackgroundMaterial_;
 
 	// ------------------------------
 	// Light object -----------------
 
-	std::map<int, HorusLight> m_lights_;
-	int m_light_index_ = 0;
-	int m_light_count_ = 0;
-	std::map<int, std::string> m_light_names_;
+	std::map<int, HorusLight> m_Lights_;
+	int m_LightIndex_ = 0;
+	int m_LightCount_ = 0;
+	std::map<int, std::string> m_LightNames_;
 	// ------------------------------
 	// Scene object -----------------
 
-	std::map<int, HorusScene> m_scenes_;
-	int m_scene_index_ = 0;
-	int m_scene_count_ = 0;
-	int m_active_scene_id_ = 0;
-	std::map<int, std::string> m_scene_names_;
+	std::map<int, HorusScene> m_Scenes_;
+	int m_SceneIndex_ = 0;
+	int m_SceneCount_ = 0;
+	int m_ActiveSceneId_ = 0;
+	std::map<int, std::string> m_SceneNames_;
 
 	// ------------------------------
 };

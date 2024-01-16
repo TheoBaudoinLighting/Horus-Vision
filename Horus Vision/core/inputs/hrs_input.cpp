@@ -9,11 +9,6 @@ void HorusInput::OnScroll(GLFWwindow* window, double xoffset, double yoffset)
 {
 
 
-
-
-
-
-
 	// Debug Scroll Input
 	/*if (yoffset > 0)
 	{
@@ -30,7 +25,7 @@ void HorusInput::OnKey(GLFWwindow* window, int key, int scancode, int action, in
 	// Close Engine
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		HorusEngine::get_instance().Close(); // Call directly close function
+		HorusEngine::GetInstance().Close(); // Call directly close function
 	}
 
 
@@ -163,5 +158,5 @@ void HorusInput::OnResize(GLFWwindow* window, int width, int height)
 
 void HorusInput::OnClose()
 {
-	HorusEngine::get_instance().Close();
+	HorusEngine::GetInstance().Close();
 }
