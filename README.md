@@ -4,7 +4,7 @@
 
 Horus Vision is an advanced, physically-based rendering engine powered by Radeon Pro Render. Designed for high-quality, realistic output, it provides a range of features to cater to diverse rendering needs.
 
-![2023-10-29 16_45_26-Horus Vision](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/c1129e46-2af2-4058-b4a3-cd8c073a05af)
+![2024-01-16 18_34_51-](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/f6195652-a41f-4bf9-8a1f-4dfa9eaf9c91)
 
 ## Features
 
