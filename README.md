@@ -8,6 +8,8 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 
 ## Features
 
+- **Quick presentation** : https://www.youtube.com/watch?v=enW34ooQwQI
+
 - **Physical Rendering**: High-quality, realistic rendering based on physical properties.
 - **Object Manager**: Comprehensive management of rendering objects.
 - **Inspector**: Interactively control and customize object properties in the scene, including materials, using an advanced and flexible interface.
