@@ -1,6 +1,16 @@
 
 #include "hrs_object_manager.h"
 
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
+#include "glm/detail/_noise.hpp"
 #include "spdlog/spdlog.h"
 
 // Camera management ------------------------------------------------------------------------------
@@ -357,7 +367,7 @@ int HorusObjectManager::CreateMesh(const char* path, const std::string& name)
 
 	auto& NewMesh = m_Meshes_[id];
 	NewMesh.Init(path);
-	//m_meshes_[id] = new_mesh;
+	//m_Meshes_[id] = NewMesh;
 	m_MeshNames_[id] = MeshName;
 	m_ObjectNameToIdMap_[MeshName] = id;
 	m_ActiveMeshId_ = id;
@@ -435,8 +445,8 @@ void HorusObjectManager::GetMeshIdByIndex(int index, int* id)
 {
 
 }
-void HorusObjectManager::GetMeshIndexById(int id, int* index){}
-void HorusObjectManager::GetMeshIndexByName(const char* name){}
+void HorusObjectManager::GetMeshIndexById(int id, int* index) {}
+void HorusObjectManager::GetMeshIndexByName(const char* name) {}
 
 int HorusObjectManager::GetActiveMeshId()
 {
@@ -1218,40 +1228,40 @@ void HorusObjectManager::DestroyAllMaterialEditors()
 // -----------------------------------------------------------------------------------------------
 // Light management ------------------------------------------------------------------------------
 
-int HorusObjectManager::CreateLight(const std::string& name, const std::string& light_type, const std::string& hdri_image)
+int HorusObjectManager::CreateLight(const std::string& Name, const std::string& LightType, const std::string& ImagePath)
 {
-	std::string LightName = name;
+	std::string LightName = Name;
 
 	int Suffix = 001;
 
 	while (m_ObjectNameToIdMap_.contains(LightName))
 	{
-		LightName = name + std::to_string(Suffix);
+		LightName = Name + std::to_string(Suffix);
 		Suffix++;
 
 		spdlog::info("Light name already exists, trying {} instead", LightName);
 	}
 
-	int id = IDManager::GetInstance().GetNewId();
+	int Id = IDManager::GetInstance().GetNewId();
 
 	HorusLight NewLight;
-	NewLight.Init(light_type, hdri_image);
-	//m_lights_[id] = new_light;
-	m_LightNames_[id] = LightName;
-	m_ObjectNameToIdMap_[LightName] = id;
+	NewLight.Init(LightType, ImagePath);
+	m_Lights_[Id] = NewLight;
+	m_LightNames_[Id] = LightName;
+	m_ObjectNameToIdMap_[LightName] = Id;
+	m_ActiveLightId_ = Id;
 
-	spdlog::info("Light {} created with id: {}", LightName, id);
+	spdlog::info("Light {} created with id: {}", LightName, Id);
 
-	return id;
+	return Id;
 }
-
-void HorusObjectManager::DestroyLight(int id)
+void HorusObjectManager::DestroyLight(int Id)
 {
-	if (auto It = m_Lights_.find(id); It != m_Lights_.end())
+	if (auto It = m_Lights_.find(Id); It != m_Lights_.end())
 	{
-		m_Lights_[id].DestroyLight();
+		m_Lights_[Id].DestroyLight();
 		m_Lights_.erase(It);
-		m_LightNames_.erase(id);
+		m_LightNames_.erase(Id);
 	}
 	else
 	{
@@ -1259,15 +1269,14 @@ void HorusObjectManager::DestroyLight(int id)
 	}
 
 	for (auto It = m_ObjectNameToIdMap_.begin(); It != m_ObjectNameToIdMap_.end(); ++It) {
-		if (It->second == id) {
+		if (It->second == Id) {
 			m_ObjectNameToIdMap_.erase(It);
 			break;
 		}
 	}
 
-	IDManager::GetInstance().ReleaseId(id);
+	IDManager::GetInstance().ReleaseId(Id);
 }
-
 void HorusObjectManager::DestroyAllLights()
 {
 	for (auto& Val : m_Lights_ | std::views::values)
@@ -1276,45 +1285,443 @@ void HorusObjectManager::DestroyAllLights()
 	}
 }
 
+// General Getters
+int HorusObjectManager::GetLightType(int id)
+{
+	HorusLight& Light = GetLight(GetActiveLightId());
+
+	rpr_light_type TempLightType = Light.GetLightType();
+
+	switch (TempLightType)
+	{
+	case RPR_LIGHT_TYPE_POINT:
+		return 0;
+	case RPR_LIGHT_TYPE_DIRECTIONAL:
+		return 1;
+	case RPR_LIGHT_TYPE_SPOT:
+		return 2;
+	case RPR_LIGHT_TYPE_ENVIRONMENT:
+		return 3;
+	case RPR_LIGHT_TYPE_SKY:
+		return 4;
+	case RPR_LIGHT_TYPE_IES:
+		return 5;
+	case RPR_LIGHT_TYPE_SPHERE:
+		return 6;
+	case RPR_LIGHT_TYPE_DISK:
+		return 7;
+	}
+}
+std::string& HorusObjectManager::GetLightName(int id)
+{
+	std::string& Name = m_LightNames_[id];
+
+	return Name;
+}
+HorusLight& HorusObjectManager::GetLight(int Id)
+{
+	return m_Lights_[Id];
+}
+glm::vec3 HorusObjectManager::GetLightPosition(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetPosition();
+}
+glm::vec3 HorusObjectManager::GetLightRotation(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetRotation();
+}
+glm::vec3 HorusObjectManager::GetLightScale(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetScale();
+}
+glm::vec3 HorusObjectManager::GetLightColor(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetColor();
+}
+glm::vec3 HorusObjectManager::GetLightDirection(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetDirection();
+}
+glm::vec3 HorusObjectManager::GetLightIntensity(int id)
+{
+	HorusLight& Light = GetLight(id);
+
+	return Light.GetIntensity();
+}
+int HorusObjectManager::GetActiveLightId()
+{
+	return m_ActiveLightId_;
+}
+
+// General Setters
+void HorusObjectManager::SetActiveLightId(int id)
+{
+	m_ActiveLightId_ = id;
+}
+void HorusObjectManager::SetLightType(int id, int type)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light type");
+
+		return;
+	}
+
+	switch (type)
+	{
+	case 0:
+		m_Lights_[id].SetLightType("point");
+		break;
+	case 1:
+		m_Lights_[id].SetLightType("directional");
+		break;
+	case 2:
+		m_Lights_[id].SetLightType("spot");
+		break;
+	case 3:
+		m_Lights_[id].SetLightType("environment");
+		break;
+	case 4:
+		m_Lights_[id].SetLightType("sky");
+		break;
+	case 5:
+		m_Lights_[id].SetLightType("ies");
+		break;
+	case 6:
+		m_Lights_[id].SetLightType("sphere");
+		break;
+	case 7:
+		m_Lights_[id].SetLightType("disk");
+		break;
+	}
+}
+void HorusObjectManager::SetLightName(int id, const std::string& name)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id exists. ");
+	}
+
+	m_LightNames_[id] = name;
+
+}
+void HorusObjectManager::SetLightVisibility(int id, bool visibility)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light visibility");
+
+		return;
+	}
+
+	m_Lights_[id].SetLightVisibility(visibility);
+}
+void HorusObjectManager::SetLightIntensity(int id, glm::vec3 Intensity)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id exists. : {}", id);
+		spdlog::error("Unable to set light intensity");
+
+		return;
+	}
+
+	m_Lights_[id].SetIntensity(Intensity);
+}
 void HorusObjectManager::SetLightPosition(int id, const glm::vec3& position)
 {
 	if (!m_Lights_.contains(id))
 	{
-		spdlog::error("no light with this id exists. ");
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light position");
+
+		return;
 	}
 
 	m_Lights_[id].SetPosition(position);
 }
-
-void HorusObjectManager::SetLightRotation(int id, const glm::vec3& rotation, float rotation_angle)
+void HorusObjectManager::SetLightRotation(int id, const glm::vec3& rotation)
 {
-	if (m_Lights_.contains(id))
+	if (!m_Lights_.contains(id))
 	{
-		spdlog::error("no light with this id exists. ");
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light rotation");
+
+		return;
 	}
 
-	m_Lights_[id].SetRotation(rotation, rotation_angle);
+	m_Lights_[id].SetRotation(rotation);
 }
-
 void HorusObjectManager::SetLightScale(int id, const glm::vec3& scale)
 {
 	if (!m_Lights_.contains(id))
 	{
-		spdlog::error("no light with this id exists. ");
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light scale");
+
+		return;
 	}
 
 	m_Lights_[id].SetScale(scale);
 }
 
-void HorusObjectManager::SetLightIntensity(int id, glm::vec3& intensity)
+// Directional light
+void HorusObjectManager::SetDirectionalLightShadowSoftnessAngle(int id, float Coef)
 {
-	/*if (m_lights_.find(id) == m_lights_.end())
+	if (!m_Lights_.contains(id))
 	{
-		spdlog::error("no light with this id exists. ");
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set light shadow softness angle");
+
+		return;
 	}
 
-	m_lights_[id].set_intensity(intensity);*/
+	m_Lights_[id].SetDirectionalLightShadowSoftnessAngle(Coef);
 }
+
+// Spot light
+void HorusObjectManager::SetConeShape(int id, float InAngle, float OutAngle)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set cone shape");
+
+		return;
+	}
+
+	m_Lights_[id].SetConeShape(InAngle, OutAngle);
+}
+void HorusObjectManager::SetSpotLightImage(int id, const std::string& ImagePath)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set spot light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetSpotLightImage(ImagePath);
+}
+
+// Environment light
+void HorusObjectManager::SetEnvironmentLightSetImage(int id, const std::string& ImagePath)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set environment light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetEnvironmentLightSetImage(ImagePath);
+}
+void HorusObjectManager::SetShapeEnvironmentLight(int id, rpr_shape Shape, bool IsEnvLight)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set environment light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetShapeEnvironmentLight(Shape, IsEnvLight);
+}
+void HorusObjectManager::SetEnvironmentLightAttachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ", id);
+		spdlog::error("Unable to set environment light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetEnvironmentLightAttachPortal(Scene, Light, Shape);
+}
+void HorusObjectManager::SetEnvironmentLightDetachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set environment light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetEnvironmentLightDetachPortal(Scene, Light, Shape);
+}
+
+// Sky light
+void HorusObjectManager::SetSkyLightTurbidity(int id, float Turbidity)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light turbidity");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightTurbidity(Turbidity);
+}
+void HorusObjectManager::SetSkyLightAlbedo(int id, const glm::vec3& Albedo)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light albedo");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightAlbedo(Albedo);
+}
+void HorusObjectManager::SetSkyLightScale(int id, const glm::vec3& Scale)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light scale");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightScale(Scale);
+}
+void HorusObjectManager::SetSkyLightDirection(int id, const glm::vec3& Direction)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light direction");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightDirection(Direction);
+
+}
+void HorusObjectManager::SetSkyLightAttachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light attach portal");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightAttachPortal(Scene, Light, Shape);
+}
+void HorusObjectManager::SetSkyLightDetachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sky light detach portal");
+
+		return;
+	}
+
+	m_Lights_[id].SetSkyLightDetachPortal(Scene, Light, Shape);
+}
+
+// IES light
+void HorusObjectManager::SetIesLightImage(int id, const std::string& ImagePath, int ImgSizeX, int ImgSizeY)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set ies light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetIesLightImage(ImagePath, ImgSizeX, ImgSizeY);
+}
+void HorusObjectManager::SetIesLightImage(int id, const char* ImagePath, int ImgSizeX, int ImgSizeY)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set ies light image");
+
+		return;
+	}
+
+	m_Lights_[id].SetIesLightImage(ImagePath, ImgSizeX, ImgSizeY);
+}
+
+// Sphere light
+void HorusObjectManager::SetSphereLightRadius(int id, float Radius)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set sphere light radius");
+
+		return;
+	}
+
+	m_Lights_[id].SetSphereLightRadius(Radius);
+}
+
+// Disk light
+void HorusObjectManager::SetDiskLightRadius(int id, const float& Radius)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set disk light radius");
+
+		return;
+	}
+
+	m_Lights_[id].SetDiskLightRadius(Radius);
+}
+void HorusObjectManager::SetDiskLightAngle(int id, const float& Angle)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists. ");
+		spdlog::error("Unable to set disk light angle");
+
+		return;
+	}
+
+	m_Lights_[id].SetDiskLightAngle(Angle);
+}
+void HorusObjectManager::SetDiskLightInnerAngle(int id, const float& InnerAngle)
+{
+		if (!m_Lights_.contains(id))
+		{
+					spdlog::error("no light with this id : {} exists.");
+		spdlog::error("Unable to set disk light inner angle");
+
+		return;
+	}
+
+	m_Lights_[id].SetDiskLightInnerAngle(InnerAngle);
+}
+
+
+// -----------------------------------------------------------------------------------------------
 
 int HorusObjectManager::CreateScene(const std::string& name)
 {
@@ -1335,7 +1742,6 @@ int HorusObjectManager::CreateScene(const std::string& name)
 
 	return Id;
 }
-
 void HorusObjectManager::SetScene(int id)
 {
 	if (!m_Scenes_.contains(id))
@@ -1352,7 +1758,6 @@ void HorusObjectManager::SetScene(int id)
 	spdlog::info("Scene {} set as active scene", id);
 
 }
-
 rpr_scene HorusObjectManager::GetScene()
 {
 	return  m_Scenes_[m_ActiveSceneId_].GetScene();
@@ -1428,10 +1833,11 @@ int HorusObjectManager::CreateDefaultScene()
 	CreateCamera(GetActiveSceneId(), "DefaultCamera");
 
 	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
-	int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
-	//create_light("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
+	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
+	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
 
-	SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f), 90.0f);
+
+	//SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f), 90.0f);
 
 	SetScene(Id);
 

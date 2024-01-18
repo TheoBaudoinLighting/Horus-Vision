@@ -15,7 +15,7 @@ std::mutex MaterialMutex;
 
 void HorusMaterial::Init()
 {
-	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	m_Material_ = CreateMaterial();
 
@@ -25,7 +25,7 @@ void HorusMaterial::Init()
 rpr_material_node HorusMaterial::CreateMaterial()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	rpr_material_node MaterialNodeUberv2 = nullptr;
 
@@ -100,7 +100,7 @@ void HorusMaterial::DestroyMaterial()
 void HorusMaterial::SetBaseColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -142,7 +142,7 @@ void HorusMaterial::SetBaseColor(const std::array<float, 3>& color)
 void HorusMaterial::SetRoughness(const std::string& TexturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	if (TexturePath.empty())
 	{
@@ -184,7 +184,7 @@ void HorusMaterial::SetRoughness(const std::array<float, 3>& color)
 void HorusMaterial::SetNormal(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -234,7 +234,7 @@ void HorusMaterial::SetNormal(const std::array<float, 3>& color)
 void HorusMaterial::SetMetallic(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -278,7 +278,7 @@ void HorusMaterial::SetMetallic(const std::array<float, 3>& color)
 void HorusMaterial::SetEmissive(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -323,7 +323,7 @@ void HorusMaterial::SetEmissive(const std::array<float, 3>& color)
 void HorusMaterial::SetOpacity(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -378,7 +378,7 @@ void HorusMaterial::SetDiffuseWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetDiffuseWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -420,7 +420,7 @@ void HorusMaterial::SetReflectionColor(const std::array<float, 3>& color)
 void HorusMaterial::SetReflectionColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -462,7 +462,7 @@ void HorusMaterial::SetReflectionWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetReflectionWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -504,7 +504,7 @@ void HorusMaterial::SetReflectionRoughness(const std::array<float, 3>& color)
 void HorusMaterial::SetReflectionRoughness(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -547,7 +547,7 @@ void HorusMaterial::SetRefractionColor(const std::array<float, 3>& color)
 void HorusMaterial::SetRefractionColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -590,7 +590,7 @@ void HorusMaterial::SetRefractionWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetRefractionWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -633,7 +633,7 @@ void HorusMaterial::SetRefractionRoughness(const std::array<float, 3>& color)
 void HorusMaterial::SetRefractionRoughness(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -676,7 +676,7 @@ void HorusMaterial::SetCoatingColor(const std::array<float, 3>& color)
 void HorusMaterial::SetCoatingColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -719,7 +719,7 @@ void HorusMaterial::SetCoatingWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetCoatingWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -762,7 +762,7 @@ void HorusMaterial::SetCoatingRoughness(const std::array<float, 3>& color)
 void HorusMaterial::SetCoatingRoughness(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -805,7 +805,7 @@ void HorusMaterial::SetSheen(const std::array<float, 3>& color)
 void HorusMaterial::SetSheen(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -848,7 +848,7 @@ void HorusMaterial::SetSheenTint(const std::array<float, 3>& color)
 void HorusMaterial::SetSheenTint(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -891,7 +891,7 @@ void HorusMaterial::SetEmissionWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetEmissionWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -934,7 +934,7 @@ void HorusMaterial::SetTransparency(const std::array<float, 3>& color)
 void HorusMaterial::SetTransparency(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -978,7 +978,7 @@ void HorusMaterial::SetSssScatterColor(const std::array<float, 3>& color)
 void HorusMaterial::SetSssScatterColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -1022,7 +1022,7 @@ void HorusMaterial::SetSssScatterDistance(const std::array<float, 3>& color)
 void HorusMaterial::SetSssScatterDistance(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -1066,7 +1066,7 @@ void HorusMaterial::SetBackscatterWeight(const std::array<float, 3>& color)
 void HorusMaterial::SetBackscatterWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -1110,7 +1110,7 @@ void HorusMaterial::SetBackscatterColor(const std::array<float, 3>& color)
 void HorusMaterial::SetBackscatterColor(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -1152,7 +1152,7 @@ void HorusMaterial::SetSheenWeight(const std::array<float, 3>& weight)
 void HorusMaterial::SetSheenWeight(const std::string& texturePath)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	if (texturePath.empty())
 	{
@@ -1214,7 +1214,7 @@ void HorusMaterial::SetCoatingMode(int mode)
 rpr_image HorusMaterial::LoadTexture(std::string path)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	rpr_image Image = nullptr;
@@ -1240,7 +1240,7 @@ rpr_image HorusMaterial::LoadTexture(std::string path)
 void HorusMaterial::SetBackgroundImage(const std::string& texturePath)
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	if (texturePath.empty())

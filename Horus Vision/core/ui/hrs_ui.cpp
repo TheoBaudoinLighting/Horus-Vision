@@ -105,7 +105,7 @@ void HorusUI::MainMenuBar()
 
 			if (ImGui::MenuItem("Open"))
 			{
-
+				ObjectManager.ShowLookdevScene();
 			}
 
 			if (ImGui::MenuItem("Save scene"))

@@ -2,21 +2,21 @@
 // Projects Include
 #include "hrs_engine.h" 
 
-void main()
+int main()
 {
-	HorusEngine& engine = HorusEngine::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 
-	engine.Init(800, 600, "Horus Vision", "DefaultUserSave.json");
+	Engine.Init(1200, 850, "Horus Vision", "DefaultUserSave.json");
 
-	while (engine.IsRunning())
+	while (Engine.IsRunning())
 	{
-		engine.PreRender();
-		engine.Render();
-		engine.PostRender();
+		Engine.PreRender();
+		Engine.Render();
+		Engine.PostRender();
 	}
 
 	spdlog::info("Exiting...");
-	return exit(0);
+	return 0;
 }
 
 

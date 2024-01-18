@@ -37,44 +37,48 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Text("Debug Options");
 
-		if (ImGui::Button("Show Property panel"))
+		if (ImGui::CollapsingHeader("Debug Tools"))
 		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
-		}
 
-		if (ImGui::Button("Show Render panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::RENDER);
-		}
+			if (ImGui::Button("Show Property panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
+			}
 
-		if (ImGui::Button("Show Scene panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::SCENE);
-		}
+			if (ImGui::Button("Show Render panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::RENDER);
+			}
 
-		if (ImGui::Button("Show Mesh panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
-		}
+			if (ImGui::Button("Show Scene panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::SCENE);
+			}
 
-		if (ImGui::Button("Show Material panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
-		}
+			if (ImGui::Button("Show Mesh panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
+			}
 
-		if (ImGui::Button("Show Camera panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
-		}
+			if (ImGui::Button("Show Material panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
+			}
 
-		if (ImGui::Button("Show Light panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
-		}
+			if (ImGui::Button("Show Camera panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
+			}
 
-		if (ImGui::Button("Show Texture panel"))
-		{
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::TEXTURE);
+			if (ImGui::Button("Show Light panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
+			}
+
+			if (ImGui::Button("Show Texture panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::TEXTURE);
+			}
 		}
 
 		ImGui::Spacing();
@@ -181,6 +185,7 @@ void HorusOutliner::Outliner(bool* p_open)
 					Console.AddLog(" [info] Light id : %d ", Id);
 
 					ObjectManager.SetActualSelectedId(Id);
+					ObjectManager.SetActiveLightId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
 				}
 				ImGui::PopStyleColor();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RadeonProRender_v2.h>
+#include <thread>
 #include <vector>
 #include <assimp/scene.h>
 
@@ -22,7 +23,7 @@ public:
 	//-------------------------------------------------------------
 
 	// Import mesh with assimp
-	rpr_shape LoadMesh(const std::string& pFile);
+	rpr_shape LoadMesh(const std::string& MeshPath);
 
 private:
 
@@ -43,6 +44,8 @@ private:
 
 	std::vector<std::vector<rpr_float>> m_AllTexCoords_;
 	std::vector<rpr_float> m_UdimTexCoords_;
+
+	std::thread m_LoadMeshThread_;
 
 	rpr_shape m_Shape_;
 	rpr_shape m_ImportedShape_;

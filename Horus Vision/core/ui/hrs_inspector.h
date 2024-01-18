@@ -3,6 +3,8 @@
 // Project includes
 #include "hrs_reset_buffers.h" // nothing
 
+
+
 class HorusInspector
 {
 public:
@@ -31,7 +33,7 @@ public:
 	void Inspector(bool* p_open);
 	InspectorType GetInspectorType();
 
-	void SetInspectorType(InspectorType type);
+	void SetInspectorType(InspectorType Type);
 
 	//void InspectorTransform();
 	void InspectorCamera();
@@ -80,6 +82,41 @@ private:
 	float m_Heading_ = 0.0f;
 
 	// Light inspector
+	int m_LightType_ = 0;
+
+	bool m_IsLightVisible_ = true;
+
+	glm::vec3 m_LightIntensity_ = { 10.0f, 10.0f, 10.0f };
+	glm::vec3 m_LightPosition_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_LightRotation_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_LightScale_ = { 1.0f, 1.0f, 1.0f };
+	glm::vec3 m_LightDirection_ = { 0.0f, 1.0f, 0.0f };
+
+	// Directional light
+	float m_DirectionalLightShadowSoftnessAngle_ = 1.0f;
+
+	// Spot light
+	glm::vec2 m_SpotLightCone_ = { 0.20f, 1.0f };
+	std::string m_SpotLightImage_ = "";
+
+	// Environment light
+
+	// Sky light
+	float m_SkyLightTurbidity_ = 0.0f;
+	glm::vec3 m_SkyLightAlbedo_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_SkyLightScale_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_SkyLightDirection_ = { 0.0f, 0.0f, 0.0f };
+
+	// IES light
+	std::string m_IesLightImage_ = "";
+
+	// Sphere light
+	float m_SphereLightRadius_ = 0.0f;
+
+	// Disk light
+	float m_DiskLightRadius_ = 1.0f;
+	float m_DiskLightAngle = 1.0f;
+	float m_DiskLightInnerAngle_ = 0.6f;
 
 	// Material inspector
 

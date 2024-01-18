@@ -28,7 +28,7 @@ T Clamp(T x, T a, T b)
 rpr_image load_texture(std::string path)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	rpr_image image = nullptr;
 
@@ -247,7 +247,7 @@ void HorusMaterialEditor::init()
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusEngine& Engine = HorusEngine::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 
 	CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_UBERV2, &m_out_node_));
 	gc.Add(m_out_node_);

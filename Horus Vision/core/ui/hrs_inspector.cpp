@@ -46,9 +46,9 @@ void HorusInspector::Inspector(bool* p_open)
 	}
 }
 
-void HorusInspector::SetInspectorType(InspectorType type)
+void HorusInspector::SetInspectorType(InspectorType Type)
 {
-	m_SelectionType_ = type;
+	m_SelectionType_ = Type;
 }
 
 void HorusInspector::InspectorCamera()
@@ -66,7 +66,7 @@ void HorusInspector::InspectorCamera()
 	glm::vec3 CamRotation = GetCameraRotation();
 	glm::vec3 CamScale = GetCameraScale();
 
-	float fov = GetFov();
+	float Fov = GetFov();
 
 	// Camera Inspector
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
@@ -209,12 +209,12 @@ void HorusInspector::InspectorCamera()
 			CallResetBuffer();
 		}
 
-		if (ImGui::InputFloat3("Scale", &CamScale[0])) 
+		if (ImGui::InputFloat3("Scale", &CamScale[0]))
 		{
-			float avg_scale = (CamScale[0] + CamScale[1] + CamScale[2]) / 3.0f; // Average scale for link the 3 scale
-			CamScale[0] = avg_scale;
-			CamScale[1] = avg_scale;
-			CamScale[2] = avg_scale;
+			float AvgScale = (CamScale[0] + CamScale[1] + CamScale[2]) / 3.0f; // Average scale for link the 3 scale
+			CamScale[0] = AvgScale;
+			CamScale[1] = AvgScale;
+			CamScale[2] = AvgScale;
 
 			SetCameraScale(CamScale);
 			CallResetBuffer();
@@ -222,7 +222,7 @@ void HorusInspector::InspectorCamera()
 
 		ImGui::EndDisabled();
 
-		
+
 	}
 
 	ImGui::Spacing();
@@ -236,19 +236,19 @@ void HorusInspector::InspectorCamera()
 
 	ImGui::Separator();
 
-	if (ImGui::SliderFloat("FOV", &fov, 1.0f, 180.0f))
+	if (ImGui::SliderFloat("FOV", &Fov, 1.0f, 180.0f))
 	{
-		SetFov(fov);
+		SetFov(Fov);
 
 		CallResetBuffer();
 	}
 	ImGui::SameLine(); ShowHelpMarker("Focal length of the camera lens.");
 
-	static float nearClip = 0.1f;
-	static float farClip = 1000.0f;
-	ImGui::InputFloat("Near Clip", &nearClip);
+	static float NearClip = 0.1f;
+	static float FarClip = 1000.0f;
+	ImGui::InputFloat("Near Clip", &NearClip);
 	ImGui::SameLine(); ShowHelpMarker("Near clip plane of the camera.");
-	ImGui::InputFloat("Far Clip", &farClip);
+	ImGui::InputFloat("Far Clip", &FarClip);
 	ImGui::SameLine(); ShowHelpMarker("Far clip plane of the camera.");
 
 	ImGui::Spacing();
@@ -258,17 +258,17 @@ void HorusInspector::InspectorCamera()
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Depth of Field");
 	ImGui::PopStyleColor();
-	static bool enableDOF = false;
-	ImGui::Checkbox("Enable DOF", &enableDOF);
+	static bool EnableDof = false;
+	ImGui::Checkbox("Enable DOF", &EnableDof);
 
-	if (enableDOF) 
+	if (EnableDof)
 	{
-		static float aperture = 2.8f;
-		ImGui::SliderFloat("Aperture", &aperture, 1.0f, 22.0f);
+		static float Aperture = 2.8f;
+		ImGui::SliderFloat("Aperture", &Aperture, 1.0f, 22.0f);
 		ImGui::SameLine(); ShowHelpMarker("Aperture setting for DOF effect.");
 
-		static float focusDistance = 10.0f;
-		ImGui::SliderFloat("Focus Distance", &focusDistance, 0.1f, 100.0f); 
+		static float FocusDistance = 10.0f;
+		ImGui::SliderFloat("Focus Distance", &FocusDistance, 0.1f, 100.0f);
 		ImGui::SameLine(); ShowHelpMarker("Focus distance for DOF effect.");
 	}
 
@@ -288,50 +288,540 @@ void HorusInspector::InspectorCamera()
 	ImGui::Text("Camera position: %.2f %.2f %.2f ", CamPosition.x, CamPosition.y, CamPosition.z);
 	ImGui::Text("Camera rotation: %.2f %.2f %.2f ", CamRotation.x, CamRotation.y, CamRotation.z);
 	ImGui::Text("Camera scale: %.2f %.2f %.2f ", CamScale.x, CamScale.y, CamScale.z);
-	ImGui::Text("Camera FOV: %.2f ", fov);
-	ImGui::Text("Camera near clip: %.2f ", nearClip);
-	ImGui::Text("Camera far clip: %.2f ", farClip);
+	ImGui::Text("Camera FOV: %.2f ", Fov);
+	ImGui::Text("Camera near clip: %.2f ", NearClip);
+	ImGui::Text("Camera far clip: %.2f ", FarClip);
 
 	ImGui::Separator();
 }
 
 void HorusInspector::InspectorLight()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Get Light info from ObjectManager
+	std::string& LightName = ObjectManager.GetLightName(ObjectManager.GetActiveLightId());
+	m_LightPosition_ = ObjectManager.GetLightPosition(ObjectManager.GetActiveLightId());
+	m_LightRotation_ = ObjectManager.GetLightRotation(ObjectManager.GetActiveLightId());
+	m_LightScale_ = ObjectManager.GetLightScale(ObjectManager.GetActiveLightId());
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Light Inspector");
+	ImGui::PopStyleColor();
 	ImGui::Separator();
 
-	// Type de Lumière
-	static int lightType = 0; // 0 = Point, 1 = Spot, 2 = Directional
-	ImGui::Combo("Light Type", &lightType, "Point\0Spot\0Directional\0\0");
+	// Combo box light type
+	m_LightType_ = ObjectManager.GetLightType(ObjectManager.GetActiveLightId()); // 0 to 7 (8 types) -> 0 = point, 1 = directional, 2 = spot, 3 = environment(hdri), 4 = sky, 5 = ies, 6 = sphere, 7 = disk
 
-	// Couleur
-	static float color[3] = { 1.0f, 1.0f, 1.0f };
-	ImGui::ColorEdit3("Color", color);
+	/*if (ImGui::Combo("Light Type", &m_LightType_, "Point\0Directional\0Spot\0Environment\0Sky\0IES\0Sphere\0Disk\0"))
+	{
+		ObjectManager.SetLightType(ObjectManager.GetActiveLightId(), m_LightType_);
+		CallResetBuffer();
+	}*/
 
-	// Intensité
-	static float intensity = 1.0f;
-	ImGui::SliderFloat("Intensity", &intensity, 0.0f, 10.0f);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("General Informations");
+	ImGui::PopStyleColor();
 
-	// Position et Direction (si nécessaire)
-	static float position[3] = { 0.0f, 0.0f, 0.0f };
-	static float direction[3] = { 0.0f, -1.0f, 0.0f };
-	if (lightType == 1 || lightType == 2) { // Pour Spot et Directionnelle
-		ImGui::InputFloat3("Position", position);
-		ImGui::InputFloat3("Direction", direction);
+	ImGui::Separator();
+
+	if (ImGui::Checkbox("Visible", &m_IsLightVisible_))
+	{
+		ObjectManager.SetLightVisibility(ObjectManager.GetActiveLightId(), m_IsLightVisible_);
+
+		CallResetBuffer();
 	}
 
-	// Paramètres Spécifiques
-	if (lightType == 1) { // Pour Spot
-		static float spotAngle = 45.0f;
-		ImGui::SliderFloat("Spot Angle", &spotAngle, 0.0f, 180.0f);
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	// show correct ui depending on the light type
+	switch (m_LightType_)
+	{
+	case 0: // Point Light
+
+		if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			static bool IsRgbMode = false;
+
+			static float GlobalIntensity = 10.0f;
+			if (!IsRgbMode)
+			{
+				if (ImGui::SliderFloat("Global Intensity", &GlobalIntensity, 0.0f, 10.0f, "%.1f"))
+				{
+					m_LightIntensity_ = glm::vec3(GlobalIntensity, GlobalIntensity, GlobalIntensity);
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("-> RGB"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+			}
+
+			if (IsRgbMode)
+			{
+				if (ImGui::SliderFloat3("Intensity", &m_LightIntensity_[0], 0.0f, 10.0f, "%.1f"))
+				{
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("-> Global"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+				ImGui::SameLine();
+				ShowHelpMarker("Intensity of the light in Watts. Horus Vision measures radiant power in Watts, with a close approximation to real-world illuminative powers. Note, the RGB values can go beyond the range of [0;1].");
+			}
+
+			ImGui::Separator();
+			ImGui::Spacing();
+		}
+
+		break;
+	case 1: // Directional Light
+
+		if (ImGui::CollapsingHeader("Directionnal Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			static bool IsRgbMode = false;
+
+			static float GlobalIntensity = 10.0f;
+			if (!IsRgbMode)
+			{
+				if (ImGui::SliderFloat("Global Intensity", &GlobalIntensity, 0.0f, 10.0f, "%.1f"))
+				{
+					m_LightIntensity_ = glm::vec3(GlobalIntensity, GlobalIntensity, GlobalIntensity);
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("-> RGB"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+			}
+
+			if (IsRgbMode)
+			{
+				if (ImGui::SliderFloat3("Intensity", &m_LightIntensity_[0], 0.0f, 10.0f, "%.1f"))
+				{
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("-> Global"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+				ImGui::SameLine();
+				ShowHelpMarker("Intensity of the light in Watts. Horus Vision measures radiant power in Watts, with a close approximation to real-world illuminative powers. Note, the RGB values can go beyond the range of [0;1].");
+			}
+
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			// Set Shadow Softness Angle
+
+			if (ImGui::SliderFloat("Shadow Softness Angle", &m_DirectionalLightShadowSoftnessAngle_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetDirectionalLightShadowSoftnessAngle(ObjectManager.GetActiveLightId(), m_DirectionalLightShadowSoftnessAngle_);
+
+				CallResetBuffer();
+			}
+		}
+
+		break;
+	case 2: // Spot Light
+
+		if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			static bool IsRgbMode = false;
+
+			static float GlobalIntensity = 10.0f;
+			if (!IsRgbMode)
+			{
+				if (ImGui::SliderFloat("Global Intensity", &GlobalIntensity, 0.0f, 10.0f, "%.1f"))
+				{
+					m_LightIntensity_ = glm::vec3(GlobalIntensity, GlobalIntensity, GlobalIntensity);
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("-> RGB"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+			}
+
+			if (IsRgbMode)
+			{
+				if (ImGui::SliderFloat3("Intensity", &m_LightIntensity_[0], 0.0f, 10.0f, "%.1f"))
+				{
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("-> Global"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+				ImGui::SameLine();
+				ShowHelpMarker("Intensity of the light in Watts. Horus Vision measures radiant power in Watts, with a close approximation to real-world illuminative powers. Note, the RGB values can go beyond the range of [0;1].");
+			}
+
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			// Spot light shape
+			if (ImGui::SliderFloat2("Cone Shape", &m_SpotLightCone_[0], 0.0f, 1.0f))
+			{
+				// Control the angle of the inner and outer circles of the spot light
+				if (m_SpotLightCone_.x > m_SpotLightCone_.y)
+				{
+					m_SpotLightCone_.y = m_SpotLightCone_.x;
+				}
+
+				ObjectManager.SetConeShape(ObjectManager.GetActiveLightId(), m_SpotLightCone_.x, m_SpotLightCone_.y);
+
+				CallResetBuffer();
+			}
+			ImGui::SameLine(); ShowHelpMarker("Spot lights produce a smooth penumbra in the region between their inner and outer circles. The area inside the inner circle receives full power while the area beyond the outer one is fully in shadow. The angle creating the outer circle should be greater than or equal to the angle of the inner circle.");
+
+			// Spot light image
+			// TODO : Implement spot light image
+
+		}
+
+		break;
+	case 3: // Environment Light
+
+		if (ImGui::CollapsingHeader("HDRI", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (ImGui::SliderFloat("Intensity", &m_LightIntensity_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+
+				CallResetBuffer();
+			}
+
+			// TODO : Implement backplate
+
+			// TODO : Implement HDRI Image selection
+
+			// TODO : Implement HDRI Image rotation
+		}
+
+		break;
+	case 4: // Sky Light
+
+		if (ImGui::CollapsingHeader("Sky Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (ImGui::SliderFloat("Intensity", &m_LightIntensity_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+
+				CallResetBuffer();
+			}
+
+			if (ImGui::SliderFloat("Turbidity", &m_SkyLightTurbidity_, 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetSkyLightTurbidity(ObjectManager.GetActiveLightId(), m_SkyLightTurbidity_);
+
+				CallResetBuffer();
+			}
+
+			if (ImGui::SliderFloat("Albedo", &m_SkyLightAlbedo_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetSkyLightAlbedo(ObjectManager.GetActiveLightId(), m_SkyLightAlbedo_);
+
+				CallResetBuffer();
+			}
+
+			if (ImGui::SliderFloat("Scale", &m_SkyLightScale_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetLightScale(ObjectManager.GetActiveLightId(), m_SkyLightScale_);
+
+				CallResetBuffer();
+			}
+
+			if (ImGui::SliderFloat3("Direction", &m_SkyLightDirection_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetSkyLightDirection(ObjectManager.GetActiveLightId(), m_SkyLightDirection_);
+
+				CallResetBuffer();
+			}
+		}
+
+		break;
+	case 5: // IES Light
+
+		if (ImGui::CollapsingHeader("IES Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (ImGui::SliderFloat("Intensity", &m_LightIntensity_[0], 0.0f, 1.0f, "%.1f"))
+			{
+				ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+
+				CallResetBuffer();
+			}
+
+			// TODO : Implement IES Image Import between IES data and image
+		}
+
+		break;
+	case 6: // Sphere Light
+
+		if (ImGui::CollapsingHeader("Sphere Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			static bool IsRgbMode = false;
+
+			static float GlobalIntensity = 10.0f;
+			if (!IsRgbMode)
+			{
+				if (ImGui::SliderFloat("Global Intensity", &GlobalIntensity, 0.0f, 10.0f, "%.1f"))
+				{
+					m_LightIntensity_ = glm::vec3(GlobalIntensity, GlobalIntensity, GlobalIntensity);
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("-> RGB"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+			}
+
+			if (IsRgbMode)
+			{
+				if (ImGui::SliderFloat3("Intensity", &m_LightIntensity_[0], 0.0f, 10.0f, "%.1f"))
+				{
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("-> Global"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+				ImGui::SameLine();
+				ShowHelpMarker("Intensity of the light in Watts. Horus Vision measures radiant power in Watts, with a close approximation to real-world illuminative powers. Note, the RGB values can go beyond the range of [0;1].");
+			}
+
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::SliderFloat("Radius", &m_SphereLightRadius_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetSphereLightRadius(ObjectManager.GetActiveLightId(), m_SphereLightRadius_);
+
+				CallResetBuffer();
+			}
+		}
+
+		break;
+	case 7: // Disk Light
+
+		if (ImGui::CollapsingHeader("Disk Light", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			static bool IsRgbMode = false;
+
+			static float GlobalIntensity = 10.0f;
+			if (!IsRgbMode)
+			{
+				if (ImGui::SliderFloat("Global Intensity", &GlobalIntensity, 0.0f, 10.0f, "%.1f"))
+				{
+					m_LightIntensity_ = glm::vec3(GlobalIntensity, GlobalIntensity, GlobalIntensity);
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("-> RGB"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+			}
+
+			if (IsRgbMode)
+			{
+				if (ImGui::SliderFloat3("Intensity", &m_LightIntensity_[0], 0.0f, 10.0f, "%.1f"))
+				{
+					ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
+					CallResetBuffer();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("-> Global"))
+				{
+					IsRgbMode = !IsRgbMode;
+				}
+				ImGui::SameLine();
+				ShowHelpMarker("Intensity of the light in Watts. Horus Vision measures radiant power in Watts, with a close approximation to real-world illuminative powers. Note, the RGB values can go beyond the range of [0;1].");
+			}
+
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::SliderFloat("Radius", &m_DiskLightRadius_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetSphereLightRadius(ObjectManager.GetActiveLightId(), m_DiskLightRadius_);
+
+				CallResetBuffer();
+			}
+			ImGui::SameLine(); ShowHelpMarker("The radius of the disk light.");
+
+			ImGui::Separator();
+
+			if (ImGui::SliderFloat("Inner disk angle", &m_DiskLightInnerAngle_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetDiskLightInnerAngle(ObjectManager.GetActiveLightId(), m_DiskLightInnerAngle_);
+
+				CallResetBuffer();
+			}
+			ImGui::SameLine(); ShowHelpMarker("The area inside the inner circle receives full power while the area beyond the outer one is fully in shadow.");
+
+			if (ImGui::SliderFloat("Outer disk angle", &m_DiskLightAngle, 0.0f, 1.0f))
+			{
+				ObjectManager.SetDiskLightAngle(ObjectManager.GetActiveLightId(), m_DiskLightAngle);
+
+				CallResetBuffer();
+			}
+		}
+
+		break;
 	}
 
-	// Activation/Désactivation
-	static bool isEnabled = true;
-	ImGui::Checkbox("Enabled", &isEnabled);
+	ImGui::Separator();
 
-	// Autres paramètres spécifiques peuvent être ajoutés ici
+	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Reset Transform"))
+		{
+			ObjectManager.SetLightPosition(ObjectManager.GetActiveLightId(), glm::vec3(0.0f, 0.0f, 0.0f));
+			ObjectManager.SetLightRotation(ObjectManager.GetActiveLightId(), glm::vec3(0.0f, 0.0f, 0.0f));
+			ObjectManager.SetLightScale(ObjectManager.GetActiveLightId(), glm::vec3(1.0f, 1.0f, 1.0f));
 
+			CallResetBuffer();
+		}
+
+		if (m_LightType_ == 3)
+		{
+			ImGui::BeginDisabled(true);
+			if (ImGui::InputFloat3("Position", &m_LightPosition_[0]))
+			{
+				ObjectManager.SetLightPosition(ObjectManager.GetActiveLightId(), m_LightPosition_);
+
+				CallResetBuffer();
+			}
+			ImGui::EndDisabled();
+		}
+		else
+		{
+			if (ImGui::InputFloat3("Position", &m_LightPosition_[0]))
+			{
+				ObjectManager.SetLightPosition(ObjectManager.GetActiveLightId(), m_LightPosition_);
+
+				CallResetBuffer();
+			}
+		}
+
+		if (ImGui::InputFloat3("Rotation", &m_LightRotation_[0]))
+		{
+			ObjectManager.SetLightRotation(ObjectManager.GetActiveLightId(), m_LightRotation_);
+
+			CallResetBuffer();
+		}
+
+		if (m_LightType_ == 3)
+		{
+			ImGui::BeginDisabled(true);
+			if (ImGui::InputFloat3("Scale", &m_LightScale_[0]))
+			{
+				ObjectManager.SetLightScale(ObjectManager.GetActiveLightId(), m_LightScale_);
+
+				CallResetBuffer();
+			}
+			ImGui::EndDisabled();
+		}
+		else
+		{
+			if (ImGui::InputFloat3("Scale", &m_LightScale_[0]))
+			{
+				ObjectManager.SetLightScale(ObjectManager.GetActiveLightId(), m_LightScale_);
+
+				CallResetBuffer();
+			}
+		}
+	}
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Light Infos");
+	ImGui::PopStyleColor();
+
+	ImGui::Separator();
+
+	ImGui::Text("Light id: %d ", ObjectManager.GetActiveLightId());
+	ImGui::Text("Light name: %s ", LightName.c_str());
+	ImGui::Text("Light type: %d ", m_LightType_);
+
+	ImGui::Separator();
+
+	ImGui::Text("Light position: %.2f %.2f %.2f ", m_LightPosition_.x, m_LightPosition_.y, m_LightPosition_.z);
+	ImGui::Text("Light rotation: %.2f %.2f %.2f ", m_LightRotation_.x, m_LightRotation_.y, m_LightRotation_.z);
+	ImGui::Text("Light scale: %.2f %.2f %.2f ", m_LightScale_.x, m_LightScale_.y, m_LightScale_.z);
+
+	if (m_LightType_ == 3)
+	{
+		ImGui::Text("Light intensity: %.2f ", m_LightIntensity_.x);
+	}
+	else
+	{
+		ImGui::Text("Light intensity: %.2f %.2f %.2f ", m_LightIntensity_.x, m_LightIntensity_.y, m_LightIntensity_.z);
+	}
+
+	// Special characteristics depending on the light type
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	if (m_LightType_ == 1)
+	{
+		ImGui::Text("Shadow Softness Angle: %.2f ", m_DirectionalLightShadowSoftnessAngle_);
+	}
+	else if (m_LightType_ == 2)
+	{
+		ImGui::Text("Spot Light Cone: %.2f %.2f ", m_SpotLightCone_.x, m_SpotLightCone_.y);
+	}
+	else if (m_LightType_ == 3)
+	{
+
+	}
+	else if (m_LightType_ == 4)
+	{
+		ImGui::Text("Sky Light Turbidity: %.2f ", m_SkyLightTurbidity_);
+		ImGui::Text("Sky Light Albedo: %.2f %.2f %.2f ", m_SkyLightAlbedo_.x, m_SkyLightAlbedo_.y, m_SkyLightAlbedo_.z);
+		ImGui::Text("Sky Light Scale: %.2f %.2f %.2f ", m_SkyLightScale_.x, m_SkyLightScale_.y, m_SkyLightScale_.z);
+		ImGui::Text("Sky Light Direction: %.2f %.2f %.2f ", m_SkyLightDirection_.x, m_SkyLightDirection_.y, m_SkyLightDirection_.z);
+	}
+	else if (m_LightType_ == 5)
+	{
+
+	}
+	else if (m_LightType_ == 6)
+	{
+		ImGui::Text("Sphere Light Radius: %.2f ", m_SphereLightRadius_);
+	}
+	else if (m_LightType_ == 7)
+	{
+		ImGui::Text("Disk Light Radius: %.2f ", m_DiskLightRadius_);
+		ImGui::Text("Disk Light Inner Angle: %.2f ", m_DiskLightInnerAngle_);
+		ImGui::Text("Disk Light Angle: %.2f ", m_DiskLightAngle);
+	}
 
 }
 
@@ -340,18 +830,15 @@ void HorusInspector::InspectorMaterial()
 	ImGui::Text("Material Inspector");
 	ImGui::Separator();
 
-	// Nom du Matériau
 	static char materialName[128] = "New Material";
 	ImGui::InputText("Name", materialName, IM_ARRAYSIZE(materialName));
 
-	// Propriétés de Couleur
 	static float diffuseColor[3] = { 1.0f, 1.0f, 1.0f };
 	ImGui::ColorEdit3("Diffuse Color", diffuseColor);
 
 	static float specularColor[3] = { 1.0f, 1.0f, 1.0f };
 	ImGui::ColorEdit3("Specular Color", specularColor);
 
-	// Textures (exemples)
 	ImGui::Text("Textures");
 	static char diffuseTexture[128] = "path/to/texture.png";
 	ImGui::InputText("Diffuse Texture", diffuseTexture, IM_ARRAYSIZE(diffuseTexture));
@@ -359,18 +846,14 @@ void HorusInspector::InspectorMaterial()
 	static char normalTexture[128] = "path/to/normal.png";
 	ImGui::InputText("Normal Map", normalTexture, IM_ARRAYSIZE(normalTexture));
 
-	// Propriétés Physiques
 	static float opacity = 1.0f;
 	ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f);
 
 	static float roughness = 0.5f;
 	ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f);
 
-	// Autres Paramètres
 	static bool isDoubleSided = false;
 	ImGui::Checkbox("Double Sided", &isDoubleSided);
-
-	// Ajoutez ici d'autres paramètres selon les besoins
 
 	ImGui::Spacing();
 
@@ -487,24 +970,20 @@ void HorusInspector::InspectorMesh()
 	glm::vec3 MeshRotation = ObjectManager.GetMeshRotation(ObjectManager.GetActiveMeshId());
 	glm::vec3 MeshScale = ObjectManager.GetMeshScale(ObjectManager.GetActiveMeshId());
 
-
-	// Mesh Inspector
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Mesh Inspector");
 	ImGui::PopStyleColor();
 	ImGui::Separator();
 
-	// Informations Générales
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("General Information");
+	ImGui::Text("General Informations");
 	ImGui::PopStyleColor();
 
-	int vertexCount = 0; 
-	int faceCount = 0; 
+	int vertexCount = 0;
+	int faceCount = 0;
 	ImGui::Text("Vertices: %d", vertexCount);
 	ImGui::Text("Faces: %d", faceCount);
 
-	// Propriétés de Transformation
 	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Button("Reset Transform"))
@@ -540,11 +1019,11 @@ void HorusInspector::InspectorMesh()
 	}
 
 	ImGui::Text("Materials");
-	
 
-	if (ImGui::Button("Recalculate Normals")) 
+
+	if (ImGui::Button("Recalculate Normals"))
 	{
-		
+
 	}
 	ImGui::SameLine(); ShowHelpMarker("Recalculate the normals of the mesh.");
 
@@ -574,7 +1053,7 @@ void HorusInspector::InspectorMesh()
 	ImGui::Separator();
 }
 
-void HorusInspector::InspectorTexture() 
+void HorusInspector::InspectorTexture()
 {
 	ImGui::Text("Texture Inspector");
 	ImGui::Separator();
@@ -586,7 +1065,7 @@ void HorusInspector::InspectorTexture()
 	ImGui::InputText("Path", texturePath, IM_ARRAYSIZE(texturePath));
 
 	int width = 0;
-	int height = 0; 
+	int height = 0;
 	ImGui::Text("Resolution: %dx%d", width, height);
 
 	static bool repeat = true;
@@ -599,10 +1078,10 @@ void HorusInspector::InspectorTexture()
 	ImGui::Checkbox("Use Mipmaps", &useMipmaps);
 
 	if (ImGui::Button("Reload Texture")) {
-		
+
 	}
 	if (ImGui::Button("Save Changes")) {
-		
+
 	}
 
 	ImGui::Spacing();
@@ -1247,14 +1726,14 @@ void HorusInspector::InspectorProjectProperty()
 				// Log and feedback
 				if (ImGui::CollapsingHeader("Log and Feedback", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					
+
 
 				}
 
 				// Tile rendering
 				if (ImGui::CollapsingHeader("Tile Rendering", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					
+
 
 				}
 
@@ -1292,7 +1771,7 @@ void HorusInspector::InspectorProjectProperty()
 				// Global preferences
 				if (ImGui::CollapsingHeader("Global Preferences", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					
+
 
 				}
 
@@ -1456,7 +1935,7 @@ glm::vec3 HorusInspector::GetCameraLookAt()
 	}
 	else
 	{
-		return {0.0f, 0.0f, 0.0f};
+		return { 0.0f, 0.0f, 0.0f };
 	}
 }
 glm::vec3 HorusInspector::GetCameraPosition()
@@ -1471,7 +1950,7 @@ glm::vec3 HorusInspector::GetCameraPosition()
 	}
 	else
 	{
-		return {0.0f, 0.0f, 0.0f};
+		return { 0.0f, 0.0f, 0.0f };
 	}
 
 }
@@ -1487,7 +1966,7 @@ glm::vec3 HorusInspector::GetCameraRotation()
 	}
 	else
 	{
-		return {0.0f, 0.0f, 0.0f};
+		return { 0.0f, 0.0f, 0.0f };
 	}
 }
 glm::vec3 HorusInspector::GetCameraScale()
@@ -1502,7 +1981,7 @@ glm::vec3 HorusInspector::GetCameraScale()
 	}
 	else
 	{
-		return {0.0f, 0.0f, 0.0f};
+		return { 0.0f, 0.0f, 0.0f };
 	}
 }
 float HorusInspector::GetFov()

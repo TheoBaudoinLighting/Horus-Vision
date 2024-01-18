@@ -10,7 +10,6 @@
 #include "hrs_material_editor.h" // nothing
 
 #include <string>
-#include <variant>
 #include <queue>
 #include <map>
 #include <ranges>
@@ -64,9 +63,9 @@ public:
 	HorusObjectManager(const HorusObjectManager&) = delete;
 	void operator=(const HorusObjectManager&) = delete;
 
-	int GetIdByName(const std::string& name)
+	int GetIdByName(const std::string& Name)
 	{
-		if (auto It = m_ObjectNameToIdMap_.find(name); It != m_ObjectNameToIdMap_.end())
+		if (auto It = m_ObjectNameToIdMap_.find(Name); It != m_ObjectNameToIdMap_.end())
 		{
 			return It->second;
 		}
@@ -136,7 +135,6 @@ public:
 	int CreateCamera(int SceneID, std::string Name);
 
 	void DestroyCamera(int id);
-
 	void DestroyAllCameras()
 	{
 		for (auto& Val : m_Cameras_ | std::views::values)
@@ -474,17 +472,64 @@ public:
 	// ----------------------------------------------
 	// Light object ---------------------------------
 
-	int CreateLight(const std::string& name, const std::string& light_type, const std::string& hdri_image = "");
+	int CreateLight(const std::string& Name, const std::string& LightType, const std::string& ImagePath = "");
 
-	void DestroyLight(int id);
+	void DestroyLight(int Id);
 
 	void DestroyAllLights();
 
+	std::string& GetLightName(int id);
+	int GetLightType(int id);
+	HorusLight& GetLight(int Id);
+	glm::vec3 GetLightPosition(int id);
+	glm::vec3 GetLightRotation(int id);
+	glm::vec3 GetLightScale(int id);
+	glm::vec3 GetLightIntensity(int id);
+	int GetActiveLightId();
+	glm::vec3 GetLightColor(int id);
+	glm::vec3 GetLightDirection(int id);
+
+	void SetActiveLightId(int id);
+	void SetLightName(int id, const std::string& name);
+	void SetLightIntensity(int id, glm::vec3 Intensity);
+	void SetLightType(int id, int type);
+	void SetLightVisibility(int id, bool visibility);
 	void SetLightPosition(int id, const glm::vec3& position);
-	void SetLightRotation(int id, const glm::vec3& rotation, float rotation_angle);
+	void SetLightRotation(int id, const glm::vec3& rotation);
 	void SetLightScale(int id, const glm::vec3& scale);
 
-	void SetLightIntensity(int id, glm::vec3& intensity);
+	// Directional light
+	void SetDirectionalLightShadowSoftnessAngle(int id, float Coef);
+
+	// Spot light
+	void SetConeShape(int id, float InAngle, float OutAngle);
+	void SetSpotLightImage(int id, const std::string& ImagePath);
+
+	// Environment light
+	void SetEnvironmentLightSetImage(int id, const std::string& ImagePath);
+	void SetShapeEnvironmentLight(int id, rpr_shape Shape, bool IsEnvLight);
+	void SetEnvironmentLightAttachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape);
+	void SetEnvironmentLightDetachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape);
+
+	// Sky light
+	void SetSkyLightTurbidity(int id, float Turbidity);
+	void SetSkyLightAlbedo(int id, const glm::vec3& Albedo);
+	void SetSkyLightScale(int id, const glm::vec3& Scale);
+	void SetSkyLightDirection(int id, const glm::vec3& Direction);
+	void SetSkyLightAttachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape);
+	void SetSkyLightDetachPortal(int id, rpr_scene Scene, rpr_light Light, rpr_shape Shape);
+
+	// Ies
+	void SetIesLightImage(int id, const std::string& ImagePath, int ImgSizeX, int ImgSizeY);
+	void SetIesLightImage(int id, const char* ImagePath, int ImgSizeX, int ImgSizeY);
+
+	// Sphere light
+	void SetSphereLightRadius(int id, float Radius);
+
+	// Disk light
+	void SetDiskLightRadius(int id, const float& Radius);
+	void SetDiskLightAngle(int id, const float& Angle);
+	void SetDiskLightInnerAngle(int id, const float& InnerAngle);
 
 	// ----------------------------------------------
 	// Scene object ----------------------------------
@@ -537,6 +582,7 @@ private:
 
 	std::map<int, HorusMaterial> m_Materials_;
 	std::unordered_map<int, HorusMaterialParameters> m_TempMatParams_;
+	int m_ActiveMaterialId_ = 0;
 	int m_MaterialIndex_ = 0;
 	int m_MaterialCount_ = 0;
 	std::map<int, std::string> m_MaterialNames_;
@@ -561,6 +607,7 @@ private:
 	// Light object -----------------
 
 	std::map<int, HorusLight> m_Lights_;
+	int m_ActiveLightId_ = 0;
 	int m_LightIndex_ = 0;
 	int m_LightCount_ = 0;
 	std::map<int, std::string> m_LightNames_;

@@ -33,7 +33,7 @@ public:
 	int ContextInfo(rpr_context& Context);
 
 	void Init(int Width, int Height, const std::string& Title, const std::string& SaveFilename);
-	void InitContexts(int width, int height, HorusWindow* window);
+	void InitContexts(int Width, int Height, HorusWindow* Window);
 	void PreRender();
 	void Render();
 	void PostRender();
@@ -47,8 +47,13 @@ public:
 		m_CurrentFrame_++;
 	}
 
-	bool GetIsClosing() { return m_is_closing_; }
-	void SetIsClosing(bool closing) { m_is_closing_ = closing; }
+	bool GetIsClosing() { return m_IsClosing_; }
+	bool GetIsFirstLaunch() { return m_IsFirstLaunch_; }
+	bool GetEngineIsReady() { return m_EngineIsReady_; }
+	bool GetIsOptionsChanged() { return m_IsOptionsChanged_; }
+
+	void SetIsClosing(bool closing) { m_IsClosing_ = closing; }
+	void SetEngineIsReady(bool ready) { m_EngineIsReady_ = ready; }
 
 	ImVec2 GetImageSize() { return m_ImgSize_; }
 	float GetImageAspectRatio() { return m_AspectRatioViewer_; }
@@ -57,7 +62,8 @@ public:
 
 private:
 
-	HorusEngine(): m_NumFrames_(0), m_RenderStatistics_(), m_Gpu00N_{}, m_Gpu01N_{}, m_AspectRatioViewer_(0), m_ChronoTime_(0),
+	HorusEngine(): m_Status_(), m_NumFrames_(0), m_RenderStatistics_(), m_Gpu00N_{}, m_Gpu01N_{},
+	               m_AspectRatioViewer_(0), m_ChronoTime_(0),
 	               m_TotalSeconds_(0), m_Hours_(0),
 	               m_Minutes_(0),
 	               m_Seconds_(0),
@@ -68,8 +74,13 @@ private:
 	std::unique_ptr<HorusWindow> m_Window_;
 	std::string m_SaveFilename_;
 
+	bool m_EngineIsReady_ = false;
 	bool m_IsRunning_ = true;
 	bool m_IsClosing_ = false;
+	bool m_IsFirstLaunch_ = true;
+
+	std::future<bool> m_LoadingThread_ = async(std::launch::async, []() { return true; });
+	std::future_status m_Status_;
 
 	const float m_DesiredWidth_ = 800.0f;
 	char m_UserInput_[256] = "";
@@ -105,8 +116,6 @@ private:
 
 	std::vector<float> m_Frame_;
 	std::vector<float> m_SamplesMkr_;
-
-	bool m_is_closing_ = false;
 
 	glm::vec2 m_Size_{};
 

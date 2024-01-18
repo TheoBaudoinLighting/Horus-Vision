@@ -131,7 +131,7 @@ bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
 void HorusRadeon::QuitRender()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::get_instance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	spdlog::info("Unload Radeon..");
 	spdlog::info("Release memory..");
@@ -169,6 +169,7 @@ void HorusRadeon::QuitRender()
 bool HorusRadeon::InitGraphics()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusEngine& Engine = HorusEngine::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	spdlog::info("Init Radeon graphics..");
@@ -200,26 +201,9 @@ bool HorusRadeon::InitGraphics()
 	Console.AddLog(" [info] Rpr context successfully set active plugin");
 	Console.AddLog(" [info] Rpr context successfully created");
 
-
-	ObjectManager.CreateDefaultScene(); // Create Default Engine Scene
-	/*ObjectManager.create_scene("DefaultScene");
-	ObjectManager.create_camera("DefaultCamera");
-	ObjectManager.create_light("Default_HDRI", "hdri", "resources/Textures/resting_place_2_2k.exr");*/
+	ObjectManager.CreateDefaultScene(); // Create Default Engine Scene (Plane, Dragon, Light, Camera)
 
 	m_SampleCount_ = 1;
-
-	// Create Scene --------------------------------------------------------------------------------------------------------
-
-
-
-	ObjectManager.ShowDummyDragon();
-	ObjectManager.ShowDummyPlane();
-	//ObjectManager.show_LookdevScene();
-
-
-
-
-	// ---------------------------------------------------------------------------------------------------------------------
 
 	CHECK(rprContextSetParameterByKey1f(m_Context_, RPR_CONTEXT_DISPLAY_GAMMA, 2.2f))
 
@@ -247,6 +231,8 @@ bool HorusRadeon::InitGraphics()
 
 	spdlog::info("Radeon graphics successfully initialized..");
 	Console.AddLog(" [info] Radeon graphics successfully initialized");
+
+	Engine.SetEngineIsReady(true);
 
 	return true;
 }

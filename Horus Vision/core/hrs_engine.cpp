@@ -6,11 +6,12 @@
 #include <filesystem>
 #include <regex>
 #include <vector>
+#include <future>
+#include <chrono>
 
 // Project includes
 #include "hrs_engine.h" // glad.h
 #include "hrs_object_manager.h" // glfw3.h
-#include "hrs_logger.h" // nothing
 #include "hrs_ui.h" // nothing
 #include "hrs_reset_buffers.h" // glfw3.h
 
@@ -18,7 +19,36 @@
 #include "ImGuizmo.h"
 #include <hrs_console.h>
 
-bool OptionsChanged = false;
+bool LoadSetupEngineData()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
+	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//int DirectionnalLight = ObjectManager.CreateLight("Lgt_Dir01", "directional");
+
+	//int SkyLight = ObjectManager.CreateLight("Lgt_Sky01", "sky");
+
+	int PointLight01 = ObjectManager.CreateLight("Lgt_Point01", "point");
+	ObjectManager.SetLightPosition(PointLight01, glm::vec3(3.5f, 2.0f, 0.0f));
+
+	//int Directionnal01 = ObjectManager.CreateLight("Lgt_Dir01", "directional");
+
+	int Spotlight = ObjectManager.CreateLight("Lgt_Spot01", "spot");
+	ObjectManager.SetLightPosition(Spotlight, glm::vec3(-5.0f, 1.0f, 0.0f));
+	ObjectManager.SetLightRotation(Spotlight, glm::vec3(-45.0f, 0.0f, 0.0f));
+
+	int SphereLight = ObjectManager.CreateLight("Lgt_Sphere01", "sphere");
+	ObjectManager.SetLightPosition(SphereLight, glm::vec3(8.0f, 1.0f, 0.0f));
+
+	int DiskLight = ObjectManager.CreateLight("Lgt_Disk01", "disk");
+
+
+	return true;
+}
 
 int HorusEngine::ContextInfo(rpr_context& Context)
 {
@@ -163,7 +193,7 @@ void HorusEngine::Init(int Width, int Height, const std::string& Title, const st
 	m_Window_->InitWindow(Width, Height, Title);
 }
 
-void HorusEngine::InitContexts(int width, int height, HorusWindow* window)
+void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 	HorusImGui& ImGui = HorusImGui::GetInstance();
@@ -172,10 +202,13 @@ void HorusEngine::InitContexts(int width, int height, HorusWindow* window)
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	UI.Init();
-	OpenGL.Init(width, height, window);
-	ImGui.Init(width, height, window);
-	Radeon.Init(width, height, window);
-	
+	OpenGL.Init(Width, Height, Window);
+	ImGui.Init(Width, Height, Window);
+	Radeon.Init(Width, Height, Window);
+
+	// Artificial delay
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
 	Console.AddLog(" [info] OpenGL, ImGui and Radeon contexts initialized.");
 }
@@ -185,7 +218,7 @@ void HorusEngine::PreRender()
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 	HorusImGui& ImGui = HorusImGui::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	
+
 	m_IsClosing_ = GetIsClosing();
 
 	OpenGL.InitRender();
@@ -221,7 +254,28 @@ void HorusEngine::PostRender()
 	OpenGL.PostRender();
 	Radeon.PostRender();
 
-	//process_input();
+	if (m_LoadingThread_.valid())
+	{
+		if (std::future_status Status = m_LoadingThread_.wait_for(std::chrono::seconds(20)); Status == std::future_status::ready)
+		{
+			m_LoadingThread_.get();
+			spdlog::warn("Loading Engine data finished.");
+		}
+	}
+
+	if (m_EngineIsReady_)
+	{
+		if (m_IsFirstLaunch_)
+		{
+			m_LoadingThread_ = std::async(std::launch::async, ::LoadSetupEngineData);
+		}
+	}
+
+	if (m_IsFirstLaunch_)
+	{
+
+		m_IsFirstLaunch_ = false;
+	}
 
 	if (m_IsClosing_)
 	{
