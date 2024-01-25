@@ -3,6 +3,7 @@
 #include "hrs_window.h" // glad.h
 #include "hrs_viewport.h" // glad.h
 #include "hrs_engine.h" // glad.h
+#include "hrs_platform.h" // glad.h
 #include "hrs_reset_buffers.h" // nothing
 #include "hrs_ui.h" // nothing
 #include "hrs_object_manager.h" // glfw3.h
@@ -14,11 +15,11 @@
 #include "hrs_imgui.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "..\scene\hrs_importer_manager.h"
 #include "imgui_internal.h"
 #include "stb_image.h"
 
 // TODO : Move this to HorusUI
-
 
 bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -35,7 +36,7 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -50,14 +51,9 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 	return true;
 }
 
-void reset_buffer()
+void Reset_Buffer()
 {
-	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-
-	HorusUI::GetInstance().SetOptionsChanged(true);
-	Radeon.SetIsDirty(true);
-	Radeon.SetSampleCount(1);
-	CHECK(rprFrameBufferClear(Radeon.GetFrameBuffer()));
+	HorusResetBuffers::GetInstance().CallResetBuffers();
 }
 
 void HorusUI::Init()
@@ -67,18 +63,8 @@ void HorusUI::Init()
 
 void HorusUI::MainMenuBar()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
 	if (ImGui::BeginMainMenuBar())
 	{
-		HorusImGui& ImGui = HorusImGui::GetInstance();
-
-		/*ImGui::PushFont(ImGui.get_icon_font());
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f));
-		ImGui::Text(ICON_FA_CANNABIS);
-		ImGui::PopStyleColor();
-		ImGui::PopFont();*/
-
 		if (m_LoadLogoTexture_ == true)
 		{
 			bool Ret = LoadTextureFromFile("resources/Icons/Horus_Logo_100x20.png", &m_LogoTexture_, &m_LogoWidth_, &m_LogoHeight_);
@@ -87,10 +73,7 @@ void HorusUI::MainMenuBar()
 			m_LoadLogoTexture_ = false;
 		}
 
-		ImGui::Image((void*)intptr_t(m_LogoTexture_), ImVec2(m_LogoWidth_, m_LogoHeight_));
-
-		/*ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Horus Vision");*/
+		ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(m_LogoTexture_)), ImVec2(m_LogoWidth_, m_LogoHeight_));
 
 		ImGui::SameLine();
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -98,25 +81,93 @@ void HorusUI::MainMenuBar()
 
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New"))
+			if (ImGui::MenuItem("New", "Ctrl+N"))
 			{
-				ObjectManager.DestroyScene(ObjectManager.GetActiveSceneId());
+				//ObjectManager.DestroyScene(ObjectManager.GetActiveSceneId());
 			}
 
-			if (ImGui::MenuItem("Open"))
+			if (ImGui::MenuItem("Open scene..", "Ctrl+O"))
 			{
-				ObjectManager.ShowLookdevScene();
+				if (std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus Scene (*.hrs)\0*.hrs\0"); !FilePath.empty())
+				{
+					spdlog::info("Open file : {}", FilePath);
+				}
 			}
 
-			if (ImGui::MenuItem("Save scene"))
+			if (ImGui::MenuItem("Save scene", "Ctrl+S"))
+			{
+				if (std::string FilePath = Utils::HorusFileDialog::SaveFile("Horus Scene (*.hrs)\0*.hrs\0"); !FilePath.empty())
+				{
+					spdlog::info("Save file : {}.hrs", FilePath);
+				}
+			}
+
+			if (ImGui::MenuItem("Save scene as..", "Ctrl+Alt+S"))
 			{
 
 			}
 
-			if (ImGui::MenuItem("Save scene as.."))
+			if (ImGui::MenuItem("Load test scene", "Ctrl+L"))
 			{
-
+				HorusObjectManager::GetInstance().ShowLookdevScene();
 			}
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Import mesh.."))
+			{
+				std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus Scene (*.hrs)\0*.hrs\0");
+
+				if (!FilePath.empty())
+				{
+					spdlog::info("Import mesh : {}", FilePath);
+				}
+			}
+
+			if (ImGui::MenuItem("Export mesh.."))
+			{
+				std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus Scene (*.hrs)\0*.hrs\0");
+
+				if (!FilePath.empty())
+				{
+					spdlog::info("Export mesh : {}", FilePath);
+				}
+			}
+
+			ImGui::Separator();
+
+			// Export GLTF file
+			if (ImGui::MenuItem("Export GLTF Scene"))
+			{
+				if (std::string FilePath = Utils::HorusFileDialog::SaveFile("Horus GLTF Scene (*.gltf)\0*.*\0"); !FilePath.empty())
+				{
+					// Adding .glft extension if not present at the end of the file name
+					if (FilePath.find(".gltf") == std::string::npos)
+					{
+						FilePath += ".gltf";
+					}
+
+					HorusImporterManager::GetInstance().ExportGltf(FilePath, HorusRadeon::GetInstance().GetContext(), &HorusObjectManager::GetInstance().GetScene());
+				}
+			}
+
+			// Import GLTF file
+			if (ImGui::MenuItem("Import GLTF Scene"))
+			{
+				HorusImporterManager::GetInstance().ImportGltf("C:/Users/WS_THEO/Desktop/gltf/exporttest.gltf", HorusRadeon::GetInstance().GetContext(), HorusRadeon::GetInstance().GetMatsys() ,&HorusObjectManager::GetInstance().GetScene());
+
+				/*if (std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus GLTF Scene (*.gltf)\0*.gltf\0"); !FilePath.empty())
+				{
+
+
+					spdlog::info("Import GLTF : {}", FilePath);
+				}*/
+			}
+
+
+
+
+			ImGui::Separator();
 
 			if (ImGui::MenuItem("Quit"))
 			{
@@ -179,8 +230,8 @@ void HorusUI::MainMenuBar()
 			ImGui::EndMenu();
 		}
 
-		float WindowWidth = ImGui::GetWindowWidth();
-		float TextWidth = ImGui::CalcTextSize("Version 1.0.0").x;
+		const float WindowWidth = ImGui::GetWindowWidth();
+		const float TextWidth = ImGui::CalcTextSize("Version 1.0.0").x;
 		ImGui::SetCursorPosX(WindowWidth - TextWidth - ImGui::GetStyle().ItemSpacing.x);
 		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Version 1.0.0");
 
@@ -190,8 +241,6 @@ void HorusUI::MainMenuBar()
 
 void HorusUI::RenderUI()
 {
-	//ImGui::ShowDemoWindow();
-
 	MainMenuBar();
 
 	if (m_ShowOpenGLViewport_)
@@ -208,7 +257,7 @@ void HorusUI::RenderUI()
 	{
 		HorusInspector::GetInstance().Inspector(&m_ShowInspector_);
 	}
-	
+
 	if (m_ShowOutliner_)
 	{
 		HorusOutliner::GetInstance().Outliner(&m_ShowOutliner_);
@@ -218,23 +267,6 @@ void HorusUI::RenderUI()
 	{
 		HorusConsole::GetInstance().Console(&m_ShowConsole_);
 	}
-
-	// Create and load logo 
-	/*if (m_LoadUILogoTexture_ == true)
-	{
-		bool ret = LoadTextureFromFile("resources/Icons/Horus_Logo_100x41.png", &m_UILogoTexture_, &m_UILogoWidth_, &m_UILogoHeight_);
-		IM_ASSERT(ret);
-		spdlog::info("Horus UI logo loaded.");
-		m_LoadUILogoTexture_ = false;
-	}
-
-	ImVec2 windowPos = ImGui::GetWindowPos();
-	ImVec2 windowSize = ImGui::GetWindowSize();
-	ImVec2 logoSize(m_UILogoWidth_, m_UILogoHeight_);
-	ImVec2 logoPosition = ImVec2(windowPos.x + windowSize.x - logoSize.x - 10, windowPos.y + windowSize.y - logoSize.y - 10);
-
-	ImGui::SetCursorScreenPos(logoPosition);
-	ImGui::Image((void*)(intptr_t)m_UILogoTexture_, ImVec2(m_UILogoWidth_, m_UILogoHeight_));*/
 }
 
 void HorusUI::ResetBuffers()

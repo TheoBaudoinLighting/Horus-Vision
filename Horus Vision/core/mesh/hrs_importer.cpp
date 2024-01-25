@@ -1,6 +1,6 @@
 #include "hrs_importer.h"
 
-#include <RadeonProRender_v2.h>
+#include <RadeonProRender.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -12,6 +12,8 @@
 #include "hrs_radeon.h"
 #include <hrs_console.h>
 #include <mutex>
+
+#include "common.h"
 
 inline std::mutex LoadMeshMutex;
 

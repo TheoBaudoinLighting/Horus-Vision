@@ -1,8 +1,12 @@
 #pragma once
+#pragma warning(disable : 4996)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4005)
 
-
+#include "hrs_opengl_camera.h" // nothing -> Maybe glad later
 #include "hrs_scene.h" // nothing
-#include "hrs_camera.h" // nothing
+#include "hrs_radeon_camera.h"// nothing
 #include "hrs_importer.h" // nothing
 #include "hrs_mesh.h" // nothing
 #include "hrs_light.h" // nothing
@@ -13,6 +17,7 @@
 #include <queue>
 #include <map>
 #include <ranges>
+
 
 class IDManager
 {
@@ -54,6 +59,7 @@ private:
 class HorusObjectManager
 {
 public:
+
 	static HorusObjectManager& GetInstance()
 	{
 		static HorusObjectManager Instance;
@@ -83,7 +89,6 @@ public:
 	// Other -----------------------------------------
 
 	void SetBackgroundImage(const std::string& path);
-
 	void UnsetBackgroundImage();
 
 	// ----------------------------------------------
@@ -98,7 +103,6 @@ public:
 			Meshes.push_back(Name);
 		}
 	}
-
 	void GetOutlinerMaterials(std::vector<std::string>& Materials)
 	{
 		for (const auto& Key : m_Materials_ | std::views::keys)
@@ -108,17 +112,15 @@ public:
 			Materials.push_back(Name);
 		}
 	}
-
 	void GetOutlinerCameras(std::vector<std::string>& Cameras)
 	{
-		for (const auto& Key : m_Cameras_ | std::views::keys)
+		for (const auto& Key : m_RadeonCameras_ | std::views::keys)
 		{
 			int Id = Key;
-			std::string Name = m_CameraNames_[Id];
+			std::string Name = m_RadeonCameraNames_[Id];
 			Cameras.push_back(Name);
 		}
 	}
-
 	void GetOutlinerLights(std::vector<std::string>& Lights)
 	{
 		for (const auto& Key : m_Lights_ | std::views::keys)
@@ -132,27 +134,35 @@ public:
 	// ----------------------------------------------
 	// Camera object ----------------------------------
 
-	int CreateCamera(int SceneID, std::string Name);
+	void CameraExtractor(rpr_camera& Camera);
+
+	int CreateOpenGlCamera(std::string Name); // One unique camera for OpenGL
+	int CreateRadeonCamera(int SceneID, std::string Name);
+
+	int CreateRadeonCameraFromGLTF(int SceneID, std::string Name, rpr_camera Camera);
+
+	void TransfertDataBetwweenCamera(int id, int id2);
 
 	void DestroyCamera(int id);
 	void DestroyAllCameras()
 	{
-		for (auto& Val : m_Cameras_ | std::views::values)
+		for (auto& Val : m_RadeonCameras_ | std::views::values)
 		{
 			Val.Destroy();
 		}
-		m_Cameras_.clear();
+		m_RadeonCameras_.clear();
 	}
 
-	HorusCamera& GetCamera(int id)
-	{
-		return m_Cameras_[id];
-	}
+	HorusRadeonCamera& GetRadeonCamera(int id) { return m_RadeonCameras_[id]; }
+	HorusOpenGLCamera& GetOpenGlCamera(int id) { return m_OpenGlCameras_[id]; }
 
 	void BindCamera(int id);
 	void UnbindCamera(int id);
 
-	void UpdateCamera(int id);
+	void UpdateRadeonCamera(int id);
+	void UpdateOpenGLCamera(int id);
+	void SendToShaderOpenGLCamera(int id, const HorusShaderManager& Shader);
+	void GetOpenGLCameraMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
 	void GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
 
 	void PrintCameraInfo(int id);
@@ -160,8 +170,10 @@ public:
 
 	void SetViewport(int id, int x, int y, int width, int height);
 
-	int GetActiveCameraId();
-	void SetActiveCamera(int id);
+	int GetActiveRadeonCameraId();
+	int GetActiveOpenGLCameraId();
+	void SetActiveRadeonCamera(int id);
+	void SetActiveOpenGLCamera(int id);
 
 	int GetCameraIdByName(const char* name);
 	std::string& GetCameraNameById(int id);
@@ -194,14 +206,19 @@ public:
 	float GetCameraAspectRatio(int id);
 	float GetCameraNearPlane(int id);
 	float GetCameraFarPlane(int id);
+	float GetCameraFocusDistance(int id);
+	float GetCameraFStop(int id);
+	int GetCameraApertureBlades(int id);
 
 	// Setters for inspector
 
 	void SetCameraFov(int id, float fov);
 	void SetCameraAspectRatio(int id, float aspect_ratio);
-	void SetCameraNear(int id, float near_plane);
-	void SetCameraFar(int id, float far_plane);
-	void SetAperture(int id, float aperture);
+	void SetCameraNear(int id, float NearPlane);
+	void SetCameraFar(int id, float FarPlane);
+	void SetFocusDistance(int id, float focus_distance);
+	void SetFStop(int id, float fstop);
+	void SetApertureBlades(int id, int blades);
 
 	void SetCameraLookAt(int id, glm::vec3 lookat);
 	void SetCameraPosition(int id, glm::vec3 position);
@@ -248,137 +265,91 @@ public:
 	// ----------------------------------------------
 	// Material object ------------------------------
 
-	int CreateMaterial(std::string name)
-	{
-		std::string material_name = name;
+	int GetActiveMaterialId();
+	std::string& GetMaterialName(int Id);
+	int CreateMaterial(std::string Name);
 
-		int suffix = 0;
+	HorusMaterial& GetMaterial(int Id);
 
-		while (m_ObjectNameToIdMap_.contains(material_name))
-		{
-			material_name = name + "_" + std::to_string(suffix);
-			suffix++;
-
-			spdlog::info("Material with name {} already exists", name);
-		}
-
-		int id = IDManager::GetInstance().GetNewId();
-
-		HorusMaterial new_material;
-		new_material.Init();
-		m_Materials_[id] = new_material;
-		m_MaterialNames_[id] = material_name;
-		m_ObjectNameToIdMap_[material_name] = id;
-
-		spdlog::info("Creating {} material with id {}", material_name, id);
-
-		return id;
-	}
-
-	void DestroyMaterial(int id)
-	{
-		auto it = m_Materials_.find(id);
-		if (it != m_Materials_.end())
-		{
-			it->second.DestroyMaterial();
-			m_Materials_.erase(it);
-			m_MaterialNames_.erase(id);
-		}
-		else
-		{
-			spdlog::error("Material with id {} does not exist", id);
-		}
-
-		for (auto it = m_ObjectNameToIdMap_.begin(); it != m_ObjectNameToIdMap_.end(); ++it)
-		{
-			if (it->second == id)
-			{
-				m_ObjectNameToIdMap_.erase(it);
-				break;
-			}
-		}
-
-		IDManager::GetInstance().ReleaseId(id);
-	}
-
+	void DestroyMaterial(int Id);
 	void DestroyAllMaterial();
 
+	// Getters for inspector
+	glm::vec4 GetBaseColor(int id);
+	glm::vec4 GetMetallic(int id);
+	glm::vec4 GetRoughness(int id);
+	glm::vec4 GetNormal(int id);
+	glm::vec4 GetOpacity(int id);
+	glm::vec4 GetEmissive(int id);
+
+
+	// Setters for inspector
+	void SetActiveMaterialId(int id);
 	void AssignMaterial(int mesh_id, int mat_id);
 
 	void SetBaseColor(int id, const std::string& texturePath);
-	void SetBaseColor(int id, const std::array<float, 3>& color);
+	void SetBaseColor(int id, glm::vec4 color);
 
 	void SetMetallic(int id, const std::string& texturePath);
-	void SetMetallic(int id, const std::array<float, 3>& color);
+	void SetMetallic(int id, glm::vec4 color);
 
 	void SetRoughness(int id, const std::string& texturePath);
-	void SetRoughness(int id, const std::array<float, 3>& color);
+	void SetRoughness(int id, glm::vec4 color);
 
 	void SetNormal(int id, const std::string& texturePath);
-	void SetNormal(int id, const std::array<float, 3>& color);
+	void SetNormal(int id, glm::vec4 color);
 
 	void SetOpacity(int id, const std::string& texturePath);
-	void SetOpacity(int id, const std::array<float, 3>& color);
+	void SetOpacity(int id, glm::vec4 color);
 
 	void SetEmissive(int id, const std::string& texturePath);
-	void SetEmissive(int id, const std::array<float, 3>& color);
-
-	void SetReflectionColor(int id, const std::array<float, 3>& color);
-	void SetReflectionColor(int id, const std::string& texturePath);
-
-	void SetReflectionWeight(int id, const std::array<float, 3>& color);
-	void SetReflectionWeight(int id, const std::string& texturePath);
-
-	void SetReflectionRoughness(int id, const std::array<float, 3>& color);
-	void SetReflectionRoughness(int id, const std::string& texturePath);
-
-	void SetRefractionColor(int id, const std::array<float, 3>& color);
-	void SetRefractionColor(int id, const std::string& texturePath);
-
-	void SetCoatingColor(int id, const std::array<float, 3>& color);
-	void SetCoatingColor(int id, const std::string& texturePath);
-
-	void SetSheen(int id, const std::array<float, 3>& color);
-	void SetSheen(int id, const std::string& texturePath);
-
-	void SetSssScatterColor(int id, const std::array<float, 3>& color);
-	void SetSssScatterColor(int id, const std::string& texturePath);
-
-	void SetBackscatterColor(int id, const std::array<float, 3>& color);
-	void SetBackscatterColor(int id, const std::string& texturePath);
-
-	void SetIor(int id, float ior);
-
-	void SetRefractionWeight(int id, const std::array<float, 3>& weight);
-	void SetRefractionWeight(int id, const std::string& texturePath);
-
-	void SetRefractionRoughness(int id, const std::array<float, 3>& roughness);
-	void SetRefractionRoughness(int id, const std::string& texturePath);
-
-	void SetCoatingWeight(int id, const std::array<float, 3>& weight);
-	void SetCoatingWeight(int id, const std::string& texturePath);
-
-	void SetCoatingRoughness(int id, const std::array<float, 3>& roughness);
-	void SetCoatingRoughness(int id, const std::string& texturePath);
-
-	void SetSheenWeight(int id, const std::array<float, 3>& weight);
-	void SetSheenWeight(int id, const std::string& texturePath);
-
-	void SetBackscatterWeight(int id, const std::array<float, 3>& weight);
-	void SetBackscatterWeight(int id, const std::string& texturePath);
-
-	void SetDiffuseWeight(int id, const std::array<float, 3>& color);
-	void SetDiffuseWeight(int id, const std::string& texturePath);
-
-	void SetEmissionWeight(int id, const std::array<float, 3>& color);
+	void SetEmissive(int id, glm::vec4 color);
+	void SetEmissionWeight(int id, glm::vec4 color);
 	void SetEmissionWeight(int id, const std::string& texturePath);
 
-	void SetTransparency(int id, const std::array<float, 3>& color);
-	void SetTransparency(int id, const std::string& texturePath);
+	void SetReflectionColor(int id, glm::vec4 color);
+	void SetReflectionColor(int id, const std::string& texturePath);
+	void SetReflectionWeight(int id, glm::vec4 color);
+	void SetReflectionWeight(int id, const std::string& texturePath);
+	void SetReflectionRoughness(int id, glm::vec4 color);
+	void SetReflectionRoughness(int id, const std::string& texturePath);
 
-	void SetSssScatterDistance(int id, const std::array<float, 3>& color);
+	void SetRefractionColor(int id, glm::vec4 color);
+	void SetRefractionColor(int id, const std::string& texturePath);
+	void SetRefractionWeight(int id, glm::vec4 weight);
+	void SetRefractionWeight(int id, const std::string& texturePath);
+	void SetRefractionRoughness(int id, glm::vec4 roughness);
+	void SetRefractionRoughness(int id, const std::string& texturePath);
+
+	void SetCoatingColor(int id, glm::vec4 color);
+	void SetCoatingColor(int id, const std::string& texturePath);
+	void SetCoatingWeight(int id, glm::vec4 weight);
+	void SetCoatingWeight(int id, const std::string& texturePath);
+	void SetCoatingRoughness(int id, glm::vec4 roughness);
+	void SetCoatingRoughness(int id, const std::string& texturePath);
+
+	void SetSheen(int id, glm::vec4 color);
+	void SetSheen(int id, const std::string& texturePath);
+	void SetSheenWeight(int id, glm::vec4 weight);
+	void SetSheenWeight(int id, const std::string& texturePath);
+
+	void SetSssScatterColor(int id, glm::vec4 color);
+	void SetSssScatterColor(int id, const std::string& texturePath);
+	void SetSssScatterDistance(int id, glm::vec4 color);
 	void SetSssScatterDistance(int id, const std::string& texturePath);
 
+	void SetBackscatterColor(int id, glm::vec4 color);
+	void SetBackscatterColor(int id, const std::string& texturePath);
+	void SetBackscatterWeight(int id, glm::vec4 weight);
+	void SetBackscatterWeight(int id, const std::string& texturePath);
+
+	void SetDiffuseWeight(int id, glm::vec4 color);
+	void SetDiffuseWeight(int id, const std::string& texturePath);
+
+	void SetTransparency(int id, glm::vec4 color);
+	void SetTransparency(int id, const std::string& texturePath);
+
+	void SetIor(int id, float ior);
 	void SetReflectionMode(int id, int mode);
 	void SetCoatingMode(int id, int mode);
 
@@ -535,8 +506,10 @@ public:
 	// Scene object ----------------------------------
 
 	int CreateScene(const std::string& name);
+	void ImportGltfScene();
+
 	void SetScene(int id);
-	rpr_scene GetScene();
+	rpr_scene& GetScene();
 	int GetSceneIdByName(const char* name);
 	int GetActiveSceneId();
 	std::string& GetSceneNameById(int id);
@@ -563,10 +536,15 @@ private:
 
 	// Camera object ----------------
 
-	std::map<int, HorusCamera> m_Cameras_;
-	int m_ActiveCameraId_ = 0;
-	int m_NextCameraId_ = 0;
-	std::map<int, std::string> m_CameraNames_;
+	std::map<int, HorusOpenGLCamera> m_OpenGlCameras_;
+	int m_ActiveOpenGLCameraId_ = 0;
+	int m_NextOpenGLCameraId_ = 0;
+	std::map<int, std::string> m_OpenGlCameraNames_;
+
+	std::map<int, HorusRadeonCamera> m_RadeonCameras_;
+	int m_ActiveRadeonCameraId_ = 0;
+	int m_NextRadeonCameraId_ = 0;
+	std::map<int, std::string> m_RadeonCameraNames_;
 
 	// ------------------------------
 	// Mesh object ------------------

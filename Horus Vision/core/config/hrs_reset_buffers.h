@@ -1,7 +1,9 @@
 #pragma once
 
+#include "common.h"
 #include "hrs_ui.h" // nothing
 #include "hrs_radeon.h" // glfw3.h
+#include "hrs_timer.h"
 
 class HorusResetBuffers
 {
@@ -19,11 +21,22 @@ public:
 	{
 		HorusRadeon& Radeon = HorusRadeon::GetInstance();
 		HorusUI& Ui = HorusUI::GetInstance();
+		HorusTimerManager::GetInstance().ResetTimer("RenderTimer");
 
-		Ui.SetOptionsChanged(true);
-		Radeon.SetIsDirty(true);
-		Radeon.SetSampleCount(1);
-		CHECK(rprFrameBufferClear(Radeon.GetFrameBuffer()));
+		if (Radeon.GetIsAdaptiveRender())
+		{
+			Ui.SetOptionsChanged(true);
+			Radeon.SetIsDirty(true);
+			Radeon.SetActivePixelRemains(Radeon.GetWindowSize().x / Radeon.GetWindowSize().y);
+			CHECK(rprFrameBufferClear(Radeon.GetAdaptiveRenderFrameBuffer()));
+		}
+		else
+		{
+			Ui.SetOptionsChanged(true);
+			Radeon.SetIsDirty(true);
+			Radeon.SetSampleCount(1);
+			CHECK(rprFrameBufferClear(Radeon.GetClassicRenderFrameBuffer()));
+		}
 	}
 
 private:

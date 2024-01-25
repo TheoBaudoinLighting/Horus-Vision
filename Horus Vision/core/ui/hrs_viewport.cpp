@@ -2,6 +2,10 @@
 #include <hrs_object_manager.h>
 
 #include <Windows.h>
+
+#include "hrs_inspector.h"
+#include "hrs_timer.h"
+#include "imgui_internal.h"
 using namespace std;
 
 //---------------------------------------RADEON SECTION---------------------------------------//
@@ -9,6 +13,7 @@ using namespace std;
 void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusTimerManager& TimerManager = HorusTimerManager::GetInstance();
 
 	ImVec4 GreenColor = ImVec4(0.6f, 1.0f, 0.6f, 1.0f);
 	ImVec4 PinkColor = ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
@@ -40,7 +45,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 	const char* Items[] = { "800x600", "1024x768", "1280x536", "1280x720", "1920x1080", "1920x803", "2048x858" };
 	static int ItemCurrent = 0;
 
-	if (ImGui::Begin("Viewer", p_open, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | WindowFlags))
+	if (ImGui::Begin("Render view", p_open, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | WindowFlags))
 	{
 		int ElementsNumber = 8;
 		float AvailableWidth = ImGui::GetContentRegionAvail().x;
@@ -48,42 +53,66 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 
 		if (ImGui::BeginMenuBar())
 		{
-			ImGui::SetNextItemWidth(WidthPerItems);
+			if (ImGui::Checkbox("Stop", &m_RenderIsLocked_))
+			{
+				if (m_RenderIsLocked_ == true)
+				{
+					Radeon.SetLockingRender(true);
+				}
+				else if (m_RenderIsLocked_ == false)
+				{
+					Radeon.SetLockingRender(false);
+				}
+			}
+
+			// Vertical separator
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+
+			ImGui::SetNextItemWidth(WidthPerItems-30);
 			ImGui::Text("Size : ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems);
+			ImGui::SetNextItemWidth(WidthPerItems-30);
 			ImGui::DragInt("", &CustomX);
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems);
+			ImGui::SetNextItemWidth(WidthPerItems-30);
 			ImGui::Text(" x ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems);
+			ImGui::SetNextItemWidth(WidthPerItems-30);
 			ImGui::DragInt("", &CustomY);
 			ImGui::SameLine();
 
 			ImGui::SameLine(); ShowHelpMarker("Resize the viewport to the desired size. The render will be automatically resized to fit the viewport. Ctrl + Click to edit directly the size.");
 
-			ImGui::SetNextItemWidth(WidthPerItems);
+			ImGui::SetNextItemWidth(WidthPerItems-30);
 			if (ImGui::Combo("Predefined Sizes", &ItemCurrent, Items, IM_ARRAYSIZE(Items)))
 			{
 				sscanf_s(Items[ItemCurrent], "%dx%d", &CustomX, &CustomY);
 			}
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 			ImGui::SameLine();
 			ImGui::Checkbox("Resizable", &IsResizable);
 			ImGui::SameLine(); ShowHelpMarker("Resize automatically the render to fit the viewport.");
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 			ImGui::Checkbox("Zooming", &IsZooming);
 			ImGui::SameLine(); ShowHelpMarker("Zoom on the render when you rest the mouse on it.");
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 			// Create popup to confirm the full render
 			if (ImGui::Button("Full Render"))
 			{
 				m_IsFullRender_ = true;
 			}
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 			ImGui::EndMenuBar();
 		}
@@ -276,7 +305,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 		ImGui::BeginGroup();
 
 		// progress bar
-		float Progress = Radeon.GetRenderProgress();
+		float Progress = Radeon.GetClassicRenderProgress();
 		bool IsRenderComplete = (Progress >= 100.0f);
 
 		int MaxSamples = Radeon.GetMaxSamples();
@@ -311,21 +340,21 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 
 		if (Progress <= m_MinSamples_ && !m_HasStartedRender_)
 		{
-			m_StartTime_ = std::chrono::high_resolution_clock::now();
+			TimerManager.StartTimer("RenderTimer");
+
 			m_HasStartedRender_ = true;
 			HorusUI::GetInstance().SetOptionsChanged(false);
 		}
 
 		if (Progress >= 99.f && m_HasStartedRender_)
 		{
-			auto end_time = std::chrono::high_resolution_clock::now();
-			auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - m_StartTime_).count();
+			auto TimerEnd = TimerManager.StopTimer("RenderTimer");
 
-			m_TotalSeconds_ = duration_ms / 1000;
+			m_TotalSeconds_ = TimerEnd / 1000;
 			m_Hours_ = m_TotalSeconds_ / 3600;
 			m_Minutes_ = (m_TotalSeconds_ % 3600) / 60;
 			m_Seconds_ = m_TotalSeconds_ % 60;
-			m_Milliseconds_ = duration_ms % 1000;
+			m_Milliseconds_ = TimerEnd % 1000;
 
 			m_ChronoTime_ = m_Duration_;
 			m_HasStartedRender_ = false;
@@ -501,17 +530,12 @@ void HorusViewportRadeon::ShowHelpMarker(const char* desc)
 
 void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 {
-	static bool IsZooming = false;
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 
-	static bool IsResizable = false;
-	static ImVec2 LastSize = ImVec2(0, 0);
 	static int CustomX = 800;
 	static int CustomY = 600;
 	static int LastCustomX = CustomX;
 	static int LastCustomY = CustomY;
-
-	static ImVec2 ViewerWindowPos;
-	static ImVec2 ViewerWindowSize;
 
 	ImGuiIO& io = ImGui::GetIO();
 	bool IsLeftAltPressed = io.KeyAlt;
@@ -522,9 +546,6 @@ void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 		WindowFlags |= ImGuiWindowFlags_NoMove;
 	}
 
-	const char* Items[] = { "800x600", "1024x768", "1280x536", "1280x720", "1920x1080", "1920x803", "2048x858" };
-	static int ItemCurrent = 0;
-
 	if (ImGui::Begin("Viewer", p_open, ImGuiWindowFlags_MenuBar | WindowFlags))
 	{
 		int ElementsNumber = 8;
@@ -534,35 +555,6 @@ void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 
 		if (ImGui::BeginMenuBar())
 		{
-			ImGui::SetNextItemWidth(WidthPerItems);
-			ImGui::Text("Size : ");
-			ImGui::SameLine();
-
-			ImGui::SetNextItemWidth(WidthPerItems);
-			ImGui::DragInt("", &CustomX);
-			ImGui::SameLine();
-
-			ImGui::SetNextItemWidth(WidthPerItems);
-			ImGui::Text(" x ");
-			ImGui::SameLine();
-
-			ImGui::SetNextItemWidth(WidthPerItems);
-			ImGui::DragInt("", &CustomY);
-			ImGui::SameLine();
-
-			ImGui::SetNextItemWidth(WidthPerItems);
-			if (ImGui::Combo("Predefined Sizes", &ItemCurrent, Items, IM_ARRAYSIZE(Items)))
-			{
-				sscanf_s(Items[ItemCurrent], "%dx%d", &CustomX, &CustomY);
-			}
-			ImGui::SameLine();
-
-			ImGui::Checkbox("Resizable", &IsResizable);
-			ImGui::SameLine();
-
-			ImGui::Checkbox("Zooming", &IsZooming);
-			ImGui::SameLine();
-
 			ImGui::SetNextItemWidth(WidthPerItems);
 			if (ImGui::BeginCombo("##Options de Zone de Rendu", nullptr, ImGuiComboFlags_NoArrowButton))
 			{
@@ -591,54 +583,32 @@ void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 			LastCustomY = CustomY;
 		}
 
-		GLuint TextureId = 0; //Radeon.get_texture_buffer();
+		GLuint TextureId = OpenGL.GetOpenGlTextureBuffer();
 		ImVec2 ViewerSize = ImGui::GetContentRegionAvail();
 
-		if (IsResizable)
-		{
-			if (ViewerSize.x != LastSize.x || ViewerSize.y != LastSize.y)
-			{
-				//Radeon.resize_render(static_cast<int>(m_viewer_size.x), static_cast<int>(m_viewer_size.y));
-				LastSize = ViewerSize;
-			}
+		float AspectRatioImage = static_cast<float>(CustomX) / static_cast<float>(CustomY);
+		m_AspectRationRender_ = AspectRatioImage;
 
-			ImGui::Image((void*)intptr_t(TextureId), ImVec2(ViewerSize.x, ViewerSize.y));
+		if (ViewerSize.x / ViewerSize.y > AspectRatioImage)
+		{
+			m_ImageSize_.y = ViewerSize.y;
+			m_ImageSize_.x = ViewerSize.y * AspectRatioImage;
 		}
 		else
 		{
-			float AspectRatioImage = static_cast<float>(CustomX) / static_cast<float>(CustomY);
-			m_AspectRationRender_ = AspectRatioImage;
-
-			if (ViewerSize.x / ViewerSize.y > AspectRatioImage)
-			{
-				m_ImageSize_.y = ViewerSize.y;
-				m_ImageSize_.x = ViewerSize.y * AspectRatioImage;
-			}
-			else
-			{
-				m_ImageSize_.x = ViewerSize.x;
-				m_ImageSize_.y = ViewerSize.x / AspectRatioImage;
-			}
-
-			float OffsetX = (ViewerSize.x - m_ImageSize_.x - 60) * 0.5f;
-			float OffsetY = (ViewerSize.y - m_ImageSize_.y) * 0.5f;
-
-			//offsetY += offsetTop;
-
-			ImGui::SetCursorPos(ImVec2(OffsetX + 30, OffsetY + 30));
-
-			ImVec2 UvMin = ImVec2(0.0f, 0.0f);
-			ImVec2 UvMax = ImVec2(1.0f, 1.0f);
-
-			ImGui::Image((void*)intptr_t(TextureId), m_ImageSize_, UvMin, UvMax);
-
-			float MiddleX = OffsetX + 30 + m_ImageSize_.x / 2.0f;
-			float MiddleY = OffsetY + 60 + m_ImageSize_.y / 2.0f;
-
-			m_StoreImagePosition_ = ImVec2(MiddleX, MiddleY);
+			m_ImageSize_.x = ViewerSize.x;
+			m_ImageSize_.y = ViewerSize.x / AspectRatioImage;
 		}
-		ViewerWindowPos = ImGui::GetWindowPos();
-		ViewerWindowSize = ImGui::GetWindowSize();
+
+		float OffsetX = (ViewerSize.x - m_ImageSize_.x) * 0.5f;
+		float OffsetY = (ViewerSize.y - m_ImageSize_.y) * 0.5f;
+
+		ImGui::SetCursorPos(ImVec2(OffsetX, OffsetY));
+
+		ImVec2 UvMin = ImVec2(0.0f, 0.0f);
+		ImVec2 UvMax = ImVec2(1.0f, 1.0f);
+
+		ImGui::Image((void*)static_cast<intptr_t>(TextureId), m_ImageSize_, UvMin, UvMax);
 	}
 
 	//----------------------------- BOTTOM BAR -----------------------------------------
@@ -650,9 +620,9 @@ void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 		ImGui::BeginGroup();
 
 		float WindowWidth = ImGui::GetWindowWidth();
-		float TextWidth = ImGui::CalcTextSize("Renderer 5.1.1    ").x;
+		float TextWidth = ImGui::CalcTextSize("Viewer 5.1.1    ").x;
 		ImGui::SetCursorPosX(WindowWidth - TextWidth - ImGui::GetStyle().ItemSpacing.x);
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Renderer 5.1.1");
+		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Viewer 5.1.1");
 
 		ImGui::EndGroup();
 	}
@@ -678,7 +648,7 @@ void HorusViewportInput::ProcessInput()
 	{
 		IsCameraMove = true;
 		glm::vec3 Pivot = { 0.f, 0.f, 0.f };
-		ObjectManager.SetCameraLookat(ObjectManager.GetActiveCameraId(), Pivot);
+		ObjectManager.SetCameraLookat(ObjectManager.GetActiveRadeonCameraId(), Pivot);
 	}
 
 	if (io.KeyAlt)
@@ -693,7 +663,7 @@ void HorusViewportInput::ProcessInput()
 			MouseDelta.x /= WindowSize.x;
 			MouseDelta.y /= WindowSize.y;
 
-			ObjectManager.TumbleCamera(ObjectManager.GetActiveCameraId(), MouseDelta.x, MouseDelta.y);
+			ObjectManager.TumbleCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y);
 			ImGui::ResetMouseDragDelta(0);
 		}
 
@@ -703,7 +673,7 @@ void HorusViewportInput::ProcessInput()
 			float CameraSpeed = 0.1f;
 			ImVec2 MouseDelta = ImGui::GetMouseDragDelta(1, 0);
 
-			ObjectManager.ZoomCamera(ObjectManager.GetActiveCameraId(), CameraSpeed * MouseDelta.y);
+			ObjectManager.ZoomCamera(ObjectManager.GetActiveRadeonCameraId(), CameraSpeed * MouseDelta.y);
 
 			ImGui::ResetMouseDragDelta(1);
 		}
@@ -713,7 +683,7 @@ void HorusViewportInput::ProcessInput()
 			IsCameraMove = true;
 			ImVec2 MouseDelta = ImGui::GetMouseDragDelta(2, 0);
 
-			ObjectManager.PanCamera(ObjectManager.GetActiveCameraId(), MouseDelta.x, MouseDelta.y);
+			ObjectManager.PanCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y);
 
 			ImGui::ResetMouseDragDelta(2);
 		}
@@ -722,12 +692,14 @@ void HorusViewportInput::ProcessInput()
 		{
 			IsCameraMove = true;
 			float ScrollDelta = io.MouseWheel;
-			ObjectManager.ScrollCamera(ObjectManager.GetActiveCameraId(), ScrollDelta);
+			ObjectManager.ScrollCamera(ObjectManager.GetActiveRadeonCameraId(), ScrollDelta);
 		}
 	}
 
 	if (IsCameraMove)
 	{
+		HorusInspector::GetInstance().CallSetFocusPlaneToFocusPosition();
+		HorusInspector::GetInstance().PopulateCameraInfos();
 		HorusResetBuffers::GetInstance().CallResetBuffers();
 	}
 }

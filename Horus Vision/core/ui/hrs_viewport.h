@@ -62,6 +62,7 @@ private:
 	bool m_OptionsChanged_ = false;
 	bool m_ResetBuffer_ = false;
 	bool m_IsFirstLaunch_ = true;
+	
 
 	inline static std::chrono::high_resolution_clock::time_point m_StartTime_;
 	inline static std::chrono::high_resolution_clock::time_point m_EndTime_;
@@ -132,6 +133,7 @@ private:
 	bool m_IsFullRender_ = false;
 	bool m_IsFullRenderLaunched_ = false;
 	bool m_CallToRenderFullImage_ = false;
+	bool m_RenderIsLocked_ = false;
 
 	inline static std::chrono::high_resolution_clock::time_point m_StartTime_;
 	inline static std::chrono::high_resolution_clock::time_point m_EndTime_;

@@ -21,7 +21,7 @@ public:
 	HorusImGui(const HorusImGui&) = delete;
 	void operator=(const HorusImGui&) = delete;
 
-	bool Init(int width, int height, HorusWindowConfig* window) override;
+	bool Init(int Width, int Height, HorusWindowConfig* Window) override;
 
 	void InitRender() override;
 	void PostRender() override;

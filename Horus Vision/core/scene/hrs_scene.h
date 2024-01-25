@@ -1,5 +1,5 @@
 #pragma once
-#include <RadeonProRender_v2.h>
+#include <RadeonProRender.hpp>
 
 class HorusScene
 {
@@ -25,7 +25,7 @@ public:
 	void ShowDummyPlane();
 	void ShowLookdevScene();
 
-	rpr_scene GetScene() { return m_Scene_; }
+	rpr_scene& GetScene() { return m_Scene_; }
 
 private:
 

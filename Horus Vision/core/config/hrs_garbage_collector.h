@@ -2,7 +2,6 @@
 
 // External includes
 #include "RadeonProRender_V2.h"
-#include "common.h"
 
 // Basic includes
 #include <vector>
@@ -29,8 +28,9 @@ public:
 	void Add(rpr_light Light) { m_NodesCollector_.push_back(Light); }
 	void Add(rpr_framebuffer Framebuffer) { m_NodesCollector_.push_back(Framebuffer); }
 	void Add(rpr_camera Camera) { m_NodesCollector_.push_back(Camera); }
+	void Add(rpr_scene Scene) { m_NodesCollector_.push_back(Scene); }
 
-	void Clean() // TODO : add mutex
+	void Clean()
 	{
 		std::lock_guard Guard(CleanMutex);
 		for (const auto& i : m_NodesCollector_)

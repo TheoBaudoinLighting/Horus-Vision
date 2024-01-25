@@ -69,7 +69,7 @@
     <ClCompile Include="core\config\hrs_logger.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\camera\hrs_camera.cpp">
+    <ClCompile Include="core\camera\hrs_radeon_camera.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\mesh\hrs_importer.cpp">
@@ -118,6 +118,24 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\ui\hrs_outliner.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\scene\hrs_grid.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\camera\hrs_opengl_camera.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\scene\hrs_scene_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\scene\hrs_importer_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\RadeonProRender\inc\Math\half.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="external\RadeonProRender\rprTools\RadeonProRenderCpp.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1367,7 +1385,7 @@
     <ClInclude Include="external\spdlog\include\spdlog\version.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\camera\hrs_camera.h">
+    <ClInclude Include="core\camera\hrs_radeon_camera.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\mesh\hrs_importer.h">
@@ -1464,6 +1482,75 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\implementations\imgui\hrs_icons.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_platform.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_grid.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\camera\hrs_opengl_camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_timer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_scene_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_importer_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\ProRenderGLTF.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\eLut.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float4.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\half.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\int2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\int3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\mathutils.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\matrix.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\quaternion.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\toFloat.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender_v2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_utils.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1888,10 +1975,13 @@
     </None>
     <None Include="core\shaders\shader.frag" />
     <None Include="core\shaders\shader.vert" />
+    <None Include="core\shaders\light.frag" />
+    <None Include="core\shaders\light.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\glfw\lib-vc2022\glfw3.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
+    <Library Include="external\RadeonProRender\libWin64\ProRenderGLTF.lib" />
   </ItemGroup>
 </Project>

@@ -13,11 +13,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-bool HorusImGui::Init(int width, int height, HorusWindowConfig* window)
+bool HorusImGui::Init(const int Width, const int Height, HorusWindowConfig* Window)
 {
 	spdlog::info("Initialize ImGui..");
 
-	__super::Init(width, height, window);
+	__super::Init(Width, Height, Window);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -25,20 +25,20 @@ bool HorusImGui::Init(int width, int height, HorusWindowConfig* window)
 
 	ImGui::SetCurrentContext(ImGui::GetCurrentContext());
 
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& Io = ImGui::GetIO(); (void)Io;
 
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
+	Io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	Io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	Io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	Io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	Io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
 
 	ImGui::StyleColorsDark();               // Apply the dark theme
 
 	ImGuiStyle& Style = ImGui::GetStyle();  // Get the style structure
 	ImVec4* Colors = Style.Colors;          // Get the colors array
 
-	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	if (Io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		// Background
 
@@ -114,17 +114,17 @@ bool HorusImGui::Init(int width, int height, HorusWindowConfig* window)
 		//style->WindowRounding = 0.0f;
 	}
 
-	ImFontConfig font_cfg;
-	font_cfg.FontDataOwnedByAtlas = false;
-	font_cfg.PixelSnapH = false;
-	font_cfg.OversampleH = 5;
-	font_cfg.OversampleV = 5;
-	font_cfg.RasterizerMultiply = 1.7f;
+	ImFontConfig FontCfg;
+	FontCfg.FontDataOwnedByAtlas = false;
+	FontCfg.PixelSnapH = false;
+	FontCfg.OversampleH = 5;
+	FontCfg.OversampleV = 5;
+	FontCfg.RasterizerMultiply = 1.7f;
 
 	//io.Fonts->AddFontFromFileTTF(m_font_SemiBold_path_.c_str(), 16.0f, &font_cfg);
-	io.Fonts->AddFontFromMemoryTTF(Montserrat_SemiBold, sizeof(Montserrat_SemiBold), 16.0f, &font_cfg);
+	Io.Fonts->AddFontFromMemoryTTF(Montserrat_SemiBold, sizeof(Montserrat_SemiBold), 16.0f, &FontCfg);
 
-	static const ImWchar IconsRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+	static constexpr ImWchar IconsRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 	ImFontConfig IconsConfig;
 	IconsConfig.MergeMode = true;
 	IconsConfig.PixelSnapH = true;
@@ -132,7 +132,7 @@ bool HorusImGui::Init(int width, int height, HorusWindowConfig* window)
 	IconsConfig.OversampleV = 5;
 	IconsConfig.RasterizerMultiply = 1.7f;
 
-	m_IconFont_ = io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_data, font_awesome_size, 19.5f, &IconsConfig, IconsRanges);
+	m_IconFont_ = Io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_data, font_awesome_size, 19.5f, &IconsConfig, IconsRanges);
 
 	ImGui_ImplGlfw_InitForOpenGL(m_Window_->get_window(), true);
 	ImGui_ImplOpenGL3_Init(m_GlslVersion_);
@@ -150,12 +150,12 @@ void HorusImGui::InitRender()
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::BeginFrame();
 
-	ImGuiWindowFlags WindowFlags =
+	const ImGuiWindowFlags WindowFlags =
 		ImGuiWindowFlags_NoBringToFrontOnFocus |
 		ImGuiWindowFlags_MenuBar |
 		ImGuiWindowFlags_AlwaysAutoResize;
 
-	ImGuiViewport* Viewport = ImGui::GetMainViewport();
+	const ImGuiViewport* Viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(Viewport->Pos);
 	ImGui::SetNextWindowSize(Viewport->Size);
 	ImGui::SetNextWindowViewport(Viewport->ID);
@@ -167,7 +167,7 @@ void HorusImGui::InitRender()
 	ImGui::Begin("Horus_MainDockspace", nullptr, WindowFlags);
 
 	ImGui::PopStyleVar(3);
-	ImGuiID DockspaceId = ImGui::GetID("Horus_MainDockspace");
+	const ImGuiID DockspaceId = ImGui::GetID("Horus_MainDockspace");
 	ImGui::DockSpace(DockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
 	ImGui::End();

@@ -114,7 +114,7 @@ private:
 	// General light
 	rpr_light m_Light_ = nullptr;
 	rpr_light_type m_LightType_;
-	bool m_IsLightVisible_ = true;
+	bool m_IsLightVisible_ = false;
 	bool m_IsLightHdri_ = false;
 	glm::mat4 m_Transform_;
 	glm::vec3 m_Translation_ = { 0.0f, 0.0f, 0.0f };

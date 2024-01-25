@@ -28,10 +28,10 @@ public:
 	void ResetBuffers();
 
 	// Getters
-	bool GetOptionsChanged() { return m_OptionsChanged_; }
+	bool GetOptionsChanged() const { return m_OptionsChanged_; }
 
 	// Setters
-	void SetOptionsChanged(bool value) { m_OptionsChanged_ = value; }
+	void SetOptionsChanged(bool Value) { m_OptionsChanged_ = Value; }
 
 private:
 
@@ -41,7 +41,7 @@ private:
 	inline static bool m_ShowOpenGLViewport_ = false;
 	inline static bool m_ShowRadeonViewport_ = true;
 	inline static bool m_ShowOutliner_ = true;
-	inline static bool m_ShowConsole_ = false;
+	inline static bool m_ShowConsole_ = true;
 	inline static bool m_ShowScene_ = false;
 	inline static bool m_ShowInspector_ = true;
 

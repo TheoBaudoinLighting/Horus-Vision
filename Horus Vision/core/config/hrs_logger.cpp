@@ -14,7 +14,7 @@ void HorusLogger::Init()
 
 	Logger = std::make_shared<spdlog::logger>("Horus Vision Logs",
 	                                             spdlog::sinks_init_list({ConsoleSink, FileSink}));
-	Logger->set_level(spdlog::level::info);
+	Logger->set_level(spdlog::level::debug); // Set global log level to debug -> spdlog::level::info for release
 
 	set_default_logger(Logger);
 }

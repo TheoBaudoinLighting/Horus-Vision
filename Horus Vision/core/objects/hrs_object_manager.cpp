@@ -1,16 +1,8 @@
 
+#include "hrs_opengl_camera.h"
 #include "hrs_object_manager.h"
 
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
+#include "ProRenderGLTF.h"
 #include "spdlog/spdlog.h"
 
 // Camera management ------------------------------------------------------------------------------
@@ -24,7 +16,37 @@ void HorusObjectManager::UnsetBackgroundImage()
 	m_BackgroundMaterial_.UnsetBackgroundImage();
 }
 
-int HorusObjectManager::CreateCamera(int SceneID, const std::string Name)
+void HorusObjectManager::CameraExtractor(rpr_camera& Camera)
+{
+	if (Camera == nullptr)
+	{
+		std::cerr << "Camera is null" << '\n';
+		return;
+	}
+
+	glm::mat4 Transform = glm::mat4(0.0f);
+	rprCameraGetInfo(Camera, RPR_CAMERA_TRANSFORM, sizeof(glm::mat4), &Transform, nullptr);
+	std::cout << "Transform: (" << Transform[0][0] << ", " << Transform[0][1] << ", " << Transform[0][2] << ", " << Transform[0][3] << ")" << '\n';
+
+	// Extract matricies from the camera
+	// Position in matrix
+	std::cout << "Position: (" << Transform[3][0] << ", " << Transform[3][1] << ", " << Transform[3][2] << ")" << '\n';
+	// Lookat in matrix
+	std::cout << "Lookat: (" << Transform[2][0] << ", " << Transform[2][1] << ", " << Transform[2][2] << ")" << '\n';
+	// Up in matrix
+	std::cout << "Up: (" << Transform[1][0] << ", " << Transform[1][1] << ", " << Transform[1][2] << ")" << '\n';
+
+
+
+
+
+
+	rpr_float fov = 0.0f;
+	rprCameraGetInfo(Camera, RPR_CAMERA_FSTOP, sizeof(fov), &fov, nullptr);
+	std::cout << "FOV: " << fov << " degrees" << '\n';
+}
+
+int HorusObjectManager::CreateOpenGlCamera(std::string Name)
 {
 	std::string CameraName = Name;
 
@@ -40,37 +62,104 @@ int HorusObjectManager::CreateCamera(int SceneID, const std::string Name)
 
 	int Id = IDManager::GetInstance().GetNewId();
 
-	HorusCamera& NewCamera = m_Cameras_[Id];
+	HorusOpenGLCamera& NewCamera = m_OpenGlCameras_[Id];
 	NewCamera.Init();
-	//m_cameras_[id] = new_camera;
-	m_CameraNames_[Id] = CameraName;
+	m_OpenGlCameraNames_[Id] = CameraName;
 	m_ObjectNameToIdMap_[CameraName] = Id;
-	m_ActiveCameraId_ = Id;
+	m_ActiveRadeonCameraId_ = Id;
+
+	spdlog::info("Camera {} created with id: {}", CameraName, Id);
+
+	return Id;
+}
+int HorusObjectManager::CreateRadeonCamera(int SceneID, const std::string Name)
+{
+	std::string CameraName = Name;
+
+	int Suffix = 001;
+
+	while (m_ObjectNameToIdMap_.contains(CameraName))
+	{
+		CameraName = Name + std::to_string(Suffix);
+		Suffix++;
+
+		spdlog::info("Camera name already exists, trying {} instead", CameraName);
+	}
+
+	int Id = IDManager::GetInstance().GetNewId();
+
+	HorusRadeonCamera& NewCamera = m_RadeonCameras_[Id];
+	NewCamera.Init(CameraName);
+	//m_cameras_[id] = new_camera;
+	m_RadeonCameraNames_[Id] = CameraName;
+	m_ObjectNameToIdMap_[CameraName] = Id;
+	m_ActiveRadeonCameraId_ = Id;
 
 	spdlog::info("Camera {} created with id: {}", CameraName, Id);
 
 	return Id;
 }
 
+int HorusObjectManager::CreateRadeonCameraFromGLTF(int SceneID, std::string Name, rpr_camera Camera)
+{
+	std::string CameraName = Name;
+
+	int Suffix = 001;
+
+	while (m_ObjectNameToIdMap_.contains(CameraName))
+	{
+		CameraName = Name + std::to_string(Suffix);
+		Suffix++;
+
+		spdlog::info("Camera name already exists, trying {} instead", CameraName);
+	}
+
+	int Id = IDManager::GetInstance().GetNewId();
+
+	HorusRadeonCamera& NewCamera = m_RadeonCameras_[Id];
+	NewCamera.Init(CameraName);
+	m_RadeonCameraNames_[Id] = CameraName;
+	m_ObjectNameToIdMap_[CameraName] = Id;
+	m_ActiveRadeonCameraId_ = Id;
+
+	spdlog::info("Camera {} created with id: {}", CameraName, Id);
+
+	return Id;
+}
+
+void HorusObjectManager::TransfertDataBetwweenCamera(int id, int id2)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+	HorusOpenGLCamera& Camera2 = GetOpenGlCamera(id2);
+
+	Camera2.SetLookAt(Camera.GetLookAt());
+	Camera2.SetPosition(Camera.GetPosition());
+	Camera2.SetCameraRotation(Camera.GetRotation());
+	Camera2.SetCameraScale(Camera.GetCameraScale());
+	Camera2.SetFov(Camera.GetFov());
+	Camera2.SetAspectRatio(Camera.GetAspect());
+	Camera2.SetClipping(Camera.GetNear(), Camera.GetFar());
+}
+
 void HorusObjectManager::DestroyCamera(int id)
 {
-	if (id == m_ActiveCameraId_)
+	if (id == m_ActiveRadeonCameraId_)
 	{
-		if (!m_Cameras_.empty())
+		if (!m_RadeonCameras_.empty())
 		{
-			m_ActiveCameraId_ = m_Cameras_.begin()->first;
+			m_ActiveRadeonCameraId_ = m_RadeonCameras_.begin()->first;
 		}
 		else
 		{
-			CreateCamera(GetActiveSceneId(), "DefaultCamera");
+			CreateRadeonCamera(GetActiveSceneId(), "DefaultCamera");
 		}
 	}
 
-	if (auto It = m_Cameras_.find(id); It != m_Cameras_.end())
+	if (auto It = m_RadeonCameras_.find(id); It != m_RadeonCameras_.end())
 	{
 		It->second.Destroy();
-		m_Cameras_.erase(It);
-		m_CameraNames_.erase(id);
+		m_RadeonCameras_.erase(It);
+		m_RadeonCameraNames_.erase(id);
 	}
 	else
 	{
@@ -79,57 +168,85 @@ void HorusObjectManager::DestroyCamera(int id)
 
 	IDManager::GetInstance().ReleaseId(id);
 
-	if (m_Cameras_.empty())
+	if (m_RadeonCameras_.empty())
 	{
-		CreateCamera(GetActiveSceneId(), "DefaultCamera");
+		CreateRadeonCamera(GetActiveSceneId(), "DefaultCamera");
 	}
 }
 
 void HorusObjectManager::BindCamera(int id)
 {
-	m_Cameras_[id].Bind();
+	m_RadeonCameras_[id].Bind();
 }
 void HorusObjectManager::UnbindCamera(int id)
 {
-	m_Cameras_[id].Unbind();
+	m_RadeonCameras_[id].Unbind();
 }
 
-void HorusObjectManager::UpdateCamera(int id)
+void HorusObjectManager::UpdateRadeonCamera(int id)
 {
-	m_Cameras_[id].UpdateCamera();
+	m_RadeonCameras_[id].UpdateCamera();
+}
+
+void HorusObjectManager::UpdateOpenGLCamera(int id)
+{
+	m_OpenGlCameras_[id].UpdateCamera();
+}
+
+void HorusObjectManager::SendToShaderOpenGLCamera(int id, const HorusShaderManager& Shader)
+{
+	m_OpenGlCameras_[id].SendToShader(Shader);
+}
+
+void HorusObjectManager::GetOpenGLCameraMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model)
+{
+	m_OpenGlCameras_[id].GetMatricies(view, projection, model);
 }
 
 void HorusObjectManager::GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model)
 {
-	m_Cameras_[id].GetMatrices(projection, view, model);
+	m_RadeonCameras_[id].GetMatrices(projection, view, model);
 }
 
 void HorusObjectManager::PrintCameraInfo(int id)
 {
-	m_Cameras_[id].VariableCheckers("Manual Check");
+	m_RadeonCameras_[id].VariableCheckers("Manual Check");
 }
 void HorusObjectManager::ResetCamera(int id)
 {
-	m_Cameras_[id].Reset();
+	m_RadeonCameras_[id].Reset();
 }
 
-int HorusObjectManager::GetActiveCameraId()
+int HorusObjectManager::GetActiveRadeonCameraId()
 {
-	return m_ActiveCameraId_;
+	return m_ActiveRadeonCameraId_;
+}
+int HorusObjectManager::GetActiveOpenGLCameraId()
+{
+	return m_ActiveOpenGLCameraId_;
 }
 
 void HorusObjectManager::SetViewport(int id, int x, int y, int width, int height)
 {
-	m_Cameras_[id].SetViewport(x, y, width, height);
+	m_RadeonCameras_[id].SetViewport(x, y, width, height);
 }
-void HorusObjectManager::SetActiveCamera(int id)
+void HorusObjectManager::SetActiveRadeonCamera(int id)
 {
-	if (!m_Cameras_.contains(id))
+	if (!m_RadeonCameras_.contains(id))
 	{
 		spdlog::error("no camera with this id exists. ");
 	}
 
-	m_ActiveCameraId_ = id;
+	m_ActiveRadeonCameraId_ = id;
+}
+void HorusObjectManager::SetActiveOpenGLCamera(int id)
+{
+	if (!m_OpenGlCameras_.contains(id))
+	{
+		spdlog::error("no camera with this id exists. ");
+	}
+
+	m_ActiveOpenGLCameraId_ = id;
 }
 
 int HorusObjectManager::GetCameraIdByName(const char* name)
@@ -144,57 +261,57 @@ int HorusObjectManager::GetCameraIdByName(const char* name)
 
 std::string& HorusObjectManager::GetCameraNameById(int id)
 {
-	std::string& Name = m_CameraNames_[id];
+	std::string& Name = m_RadeonCameraNames_[id];
 
 	return Name;
 }
 
 void HorusObjectManager::MoveCameraForward(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Forward);
 }
 void HorusObjectManager::MoveCameraBackward(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Backward);
 }
 void HorusObjectManager::MoveCameraLeft(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Left);
 }
 void HorusObjectManager::MoveCameraRight(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Right);
 }
 void HorusObjectManager::MoveCameraUp(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Up);
 }
 void HorusObjectManager::MoveCameraDown(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.MoveCamera(Down);
 }
 
 void HorusObjectManager::ScrollCamera(int id, float delta)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.Zoom(delta);
 }
 void HorusObjectManager::SetPitch(int id, float pitch)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	spdlog::info("Camera ID: {} Pitch: {}", id, pitch);
 
@@ -202,7 +319,7 @@ void HorusObjectManager::SetPitch(int id, float pitch)
 }
 void HorusObjectManager::SetHeading(int id, float heading)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	spdlog::info("Camera ID: {} Heading: {}", id, heading);
 
@@ -210,115 +327,148 @@ void HorusObjectManager::SetHeading(int id, float heading)
 }
 void HorusObjectManager::SetCameraLookat(int id, glm::vec3& pivot)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.SetLookAt(pivot);
 }
 
 void HorusObjectManager::TumbleCamera(int id, float x, float y)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.Tumbling(x, y);
 }
 void HorusObjectManager::PanCamera(int id, float x, float y)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.Pan(x, y);
 }
 void HorusObjectManager::ZoomCamera(int id, float distance)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.Zoom(distance);
 }
 
 glm::vec3 HorusObjectManager::GetCameraLookAt(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetLookAt();
 }
 glm::vec3 HorusObjectManager::GetCameraPosition(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetPosition();
 }
 glm::vec3 HorusObjectManager::GetCameraTranslation(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetTranslation();
 }
 glm::vec3 HorusObjectManager::GetCameraRotation(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetRotation();
 }
 glm::vec3 HorusObjectManager::GetCameraScale(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetCameraScale();
 }
 
 float HorusObjectManager::GetCameraFov(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	return Camera.GetFOV();
+	return Camera.GetFov();
 }
 float HorusObjectManager::GetCameraAspectRatio(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetAspect();
 }
 float HorusObjectManager::GetCameraNearPlane(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetNear();
 }
 float HorusObjectManager::GetCameraFarPlane(int id)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	return Camera.GetFar();
 }
 
+float HorusObjectManager::GetCameraFocusDistance(int id)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+
+	return Camera.GetFocusPlane();
+}
+
+float HorusObjectManager::GetCameraFStop(int id)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+
+	return Camera.GetFStop();
+}
+
+int HorusObjectManager::GetCameraApertureBlades(int id)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+
+	return Camera.GetApertureBlades();
+}
+
 void HorusObjectManager::SetCameraFov(int id, float fov)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	Camera.SetFOV(fov);
+	Camera.SetFov(fov);
 }
 void HorusObjectManager::SetCameraAspectRatio(int id, float aspect_ratio)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
 	Camera.SetAspect(aspect_ratio);
 }
-void HorusObjectManager::SetCameraNear(int id, float near_plane)
+void HorusObjectManager::SetCameraNear(int id, float NearPlane)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	Camera.SetClipping(near_plane, Camera.GetFar());
+	Camera.SetClipping(NearPlane, NearPlane);
 }
-void HorusObjectManager::SetCameraFar(int id, float far_plane)
+void HorusObjectManager::SetCameraFar(int id, float FarPlane)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	Camera.SetClipping(Camera.GetNear(), far_plane);
+	Camera.SetClipping(FarPlane, FarPlane);
 }
-void HorusObjectManager::SetAperture(int id, float aperture)
+void HorusObjectManager::SetFocusDistance(int id, float focus_distance)
 {
-	HorusCamera& Camera = GetCamera(id);
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	//Camera.SetAperture(aperture);
+	Camera.SetFocusPlane(focus_distance);
+}
+void HorusObjectManager::SetFStop(int id, float fstop)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+
+	Camera.SetFStop(fstop);
+}
+void HorusObjectManager::SetApertureBlades(int id, int blades)
+{
+	HorusRadeonCamera& Camera = GetRadeonCamera(id);
+
+	Camera.SetApertureBlades(blades);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -326,25 +476,25 @@ void HorusObjectManager::SetAperture(int id, float aperture)
 
 void HorusObjectManager::SetCameraLookAt(int id, glm::vec3 lookat)
 {
-	HorusCamera& camera = GetCamera(id);
+	HorusRadeonCamera& camera = GetRadeonCamera(id);
 
 	camera.SetLookAt(lookat);
 }
 void HorusObjectManager::SetCameraPosition(int id, glm::vec3 position)
 {
-	HorusCamera& camera = GetCamera(id);
+	HorusRadeonCamera& camera = GetRadeonCamera(id);
 
 	camera.SetPosition(position);
 }
 void HorusObjectManager::SetCameraRotation(int id, glm::vec3 rotation_axis)
 {
-	HorusCamera& camera = GetCamera(id);
+	HorusRadeonCamera& camera = GetRadeonCamera(id);
 
 	camera.SetCameraRotation(rotation_axis.x, rotation_axis.y, rotation_axis.z);
 }
 void HorusObjectManager::SetCameraScale(int id, glm::vec3 scale)
 {
-	HorusCamera& camera = GetCamera(id);
+	HorusRadeonCamera& camera = GetRadeonCamera(id);
 
 	camera.SetCameraScale(scale);
 }
@@ -541,6 +691,71 @@ void HorusObjectManager::SetShapeScale(int id, glm::vec3 scale)
 // -----------------------------------------------------------------------------------------------
 // Material management ---------------------------------------------------------------------------
 
+int HorusObjectManager::GetActiveMaterialId()
+{
+	return m_ActiveMaterialId_;
+}
+std::string& HorusObjectManager::GetMaterialName(int Id)
+{
+	std::string& Name = m_MaterialNames_[Id];
+
+	return Name;
+}
+HorusMaterial& HorusObjectManager::GetMaterial(int Id)
+{
+	return m_Materials_[Id];
+}
+int HorusObjectManager::CreateMaterial(std::string Name)
+{
+	std::string material_name = Name;
+
+	int Suffix = 0;
+
+	while (m_ObjectNameToIdMap_.contains(material_name))
+	{
+		material_name = Name + "_" + std::to_string(Suffix);
+		Suffix++;
+
+		spdlog::info("Material with name {} already exists", Name);
+	}
+
+	int Id = IDManager::GetInstance().GetNewId();
+
+	HorusMaterial NewMaterial;
+	NewMaterial.Init();
+	m_Materials_[Id] = NewMaterial;
+	m_MaterialNames_[Id] = material_name;
+	m_ObjectNameToIdMap_[material_name] = Id;
+	m_ActiveMaterialId_ = Id;
+
+	spdlog::info("Creating {} material with id {}", material_name, Id);
+
+	return Id;
+}
+void HorusObjectManager::DestroyMaterial(int Id)
+{
+	if (auto It = m_Materials_.find(Id); It != m_Materials_.end())
+	{
+		It->second.DestroyMaterial();
+		m_Materials_.erase(It);
+		m_MaterialNames_.erase(Id);
+	}
+	else
+	{
+		spdlog::error("Material with id {} does not exist", Id);
+	}
+
+	for (auto It = m_ObjectNameToIdMap_.begin(); It != m_ObjectNameToIdMap_.end(); ++It)
+	{
+		if (It->second == Id)
+		{
+			m_ObjectNameToIdMap_.erase(It);
+			break;
+		}
+	}
+
+	IDManager::GetInstance().ReleaseId(Id);
+}
 void HorusObjectManager::DestroyAllMaterial()
 {
 	for (auto& material : m_Materials_)
@@ -549,6 +764,52 @@ void HorusObjectManager::DestroyAllMaterial()
 	}
 }
 
+glm::vec4 HorusObjectManager::GetBaseColor(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetBaseColor();
+}
+
+glm::vec4 HorusObjectManager::GetMetallic(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetMetallic();
+}
+
+glm::vec4 HorusObjectManager::GetRoughness(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetRoughness();
+}
+
+glm::vec4 HorusObjectManager::GetNormal(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetNormal();
+}
+
+glm::vec4 HorusObjectManager::GetOpacity(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetOpacity();
+}
+
+glm::vec4 HorusObjectManager::GetEmissive(int id)
+{
+	HorusMaterial& Material = GetMaterial(id);
+
+	return Material.GetEmissive();
+}
+
+void HorusObjectManager::SetActiveMaterialId(int id)
+{
+	m_ActiveMaterialId_ = id;
+}
 void HorusObjectManager::AssignMaterial(int mesh_id, int mat_id)
 {
 	if (!m_Meshes_.contains(mesh_id))
@@ -573,8 +834,7 @@ void HorusObjectManager::SetBaseColor(int id, const std::string& texturePath)
 	}
 	m_Materials_[id].SetBaseColor(texturePath);
 }
-
-void HorusObjectManager::SetBaseColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetBaseColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -594,8 +854,7 @@ void HorusObjectManager::SetMetallic(int id, const std::string& texturePath)
 
 	m_Materials_[id].SetMetallic(texturePath);
 }
-
-void HorusObjectManager::SetMetallic(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetMetallic(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -616,8 +875,7 @@ void HorusObjectManager::SetRoughness(int id, const std::string& texturePath)
 
 	m_Materials_[id].SetRoughness(texturePath);
 }
-
-void HorusObjectManager::SetRoughness(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetRoughness(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -638,8 +896,7 @@ void HorusObjectManager::SetNormal(int id, const std::string& texturePath)
 
 	m_Materials_[id].SetNormal(texturePath);
 }
-
-void HorusObjectManager::SetNormal(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetNormal(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -660,8 +917,7 @@ void HorusObjectManager::SetOpacity(int id, const std::string& texturePath)
 
 	m_Materials_[id].SetOpacity(texturePath);
 }
-
-void HorusObjectManager::SetOpacity(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetOpacity(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -682,8 +938,7 @@ void HorusObjectManager::SetEmissive(int id, const std::string& texturePath)
 
 	m_Materials_[id].SetEmissive(texturePath);
 }
-
-void HorusObjectManager::SetEmissive(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetEmissive(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -694,7 +949,7 @@ void HorusObjectManager::SetEmissive(int id, const std::array<float, 3>& color)
 	m_Materials_[id].SetEmissive(color);
 }
 
-void HorusObjectManager::SetReflectionColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetReflectionColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -704,7 +959,6 @@ void HorusObjectManager::SetReflectionColor(int id, const std::array<float, 3>& 
 
 	m_Materials_[id].SetReflectionColor(color);
 }
-
 void HorusObjectManager::SetReflectionColor(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -716,7 +970,7 @@ void HorusObjectManager::SetReflectionColor(int id, const std::string& texturePa
 	m_Materials_[id].SetReflectionColor(texturePath);
 }
 
-void HorusObjectManager::SetReflectionWeight(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetReflectionWeight(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -726,7 +980,6 @@ void HorusObjectManager::SetReflectionWeight(int id, const std::array<float, 3>&
 
 	m_Materials_[id].SetReflectionWeight(color);
 }
-
 void HorusObjectManager::SetReflectionWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -738,7 +991,7 @@ void HorusObjectManager::SetReflectionWeight(int id, const std::string& textureP
 	m_Materials_[id].SetReflectionWeight(texturePath);
 }
 
-void HorusObjectManager::SetReflectionRoughness(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetReflectionRoughness(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -749,7 +1002,6 @@ void HorusObjectManager::SetReflectionRoughness(int id, const std::array<float, 
 	m_Materials_[id].SetReflectionRoughness(color);
 
 }
-
 void HorusObjectManager::SetReflectionRoughness(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -762,7 +1014,7 @@ void HorusObjectManager::SetReflectionRoughness(int id, const std::string& textu
 
 }
 
-void HorusObjectManager::SetRefractionColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetRefractionColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -772,7 +1024,6 @@ void HorusObjectManager::SetRefractionColor(int id, const std::array<float, 3>& 
 
 	m_Materials_[id].SetRefractionColor(color);
 }
-
 void HorusObjectManager::SetRefractionColor(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -785,7 +1036,49 @@ void HorusObjectManager::SetRefractionColor(int id, const std::string& texturePa
 
 }
 
-void HorusObjectManager::SetCoatingColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetRefractionWeight(int id, glm::vec4 weight)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material whith this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetRefractionWeight(weight);
+}
+void HorusObjectManager::SetRefractionWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material whith this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetRefractionWeight(texturePath);
+}
+
+void HorusObjectManager::SetRefractionRoughness(int id, glm::vec4 roughness)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material whith this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetRefractionRoughness(roughness);
+}
+void HorusObjectManager::SetRefractionRoughness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material whith this id exist.");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetRefractionRoughness(texturePath);
+}
+
+void HorusObjectManager::SetCoatingColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -795,7 +1088,6 @@ void HorusObjectManager::SetCoatingColor(int id, const std::array<float, 3>& col
 
 	m_Materials_[id].SetCoatingColor(color);
 }
-
 void HorusObjectManager::SetCoatingColor(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -807,7 +1099,7 @@ void HorusObjectManager::SetCoatingColor(int id, const std::string& texturePath)
 	m_Materials_[id].SetCoatingColor(texturePath);
 }
 
-void HorusObjectManager::SetSheen(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetSheen(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -817,7 +1109,6 @@ void HorusObjectManager::SetSheen(int id, const std::array<float, 3>& color)
 
 	m_Materials_[id].SetSheen(color);
 }
-
 void HorusObjectManager::SetSheen(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -829,7 +1120,7 @@ void HorusObjectManager::SetSheen(int id, const std::string& texturePath)
 	m_Materials_[id].SetSheen(texturePath);
 }
 
-void HorusObjectManager::SetSssScatterColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetSssScatterColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -839,7 +1130,6 @@ void HorusObjectManager::SetSssScatterColor(int id, const std::array<float, 3>& 
 
 	m_Materials_[id].SetSssScatterColor(color);
 }
-
 void HorusObjectManager::SetSssScatterColor(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -851,7 +1141,7 @@ void HorusObjectManager::SetSssScatterColor(int id, const std::string& texturePa
 	m_Materials_[id].SetSssScatterColor(texturePath);
 }
 
-void HorusObjectManager::SetBackscatterColor(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetBackscatterColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -861,7 +1151,6 @@ void HorusObjectManager::SetBackscatterColor(int id, const std::array<float, 3>&
 
 	m_Materials_[id].SetBackscatterColor(color);
 }
-
 void HorusObjectManager::SetBackscatterColor(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -884,51 +1173,7 @@ void HorusObjectManager::SetIor(int id, float ior)
 	m_Materials_[id].SetIor(ior);
 }
 
-void HorusObjectManager::SetRefractionWeight(int id, const std::array<float, 3>& weight)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionWeight(weight);
-}
-
-void HorusObjectManager::SetRefractionWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionWeight(texturePath);
-}
-
-void HorusObjectManager::SetRefractionRoughness(int id, const std::array<float, 3>& roughness)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionRoughness(roughness);
-}
-
-void HorusObjectManager::SetRefractionRoughness(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionRoughness(texturePath);
-}
-
-void HorusObjectManager::SetCoatingWeight(int id, const std::array<float, 3>& weight)
+void HorusObjectManager::SetCoatingWeight(int id, glm::vec4 weight)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -938,7 +1183,6 @@ void HorusObjectManager::SetCoatingWeight(int id, const std::array<float, 3>& we
 
 	m_Materials_[id].SetCoatingWeight(weight);
 }
-
 void HorusObjectManager::SetCoatingWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -950,7 +1194,7 @@ void HorusObjectManager::SetCoatingWeight(int id, const std::string& texturePath
 	m_Materials_[id].SetCoatingWeight(texturePath);
 }
 
-void HorusObjectManager::SetCoatingRoughness(int id, const std::array<float, 3>& roughness)
+void HorusObjectManager::SetCoatingRoughness(int id, glm::vec4 roughness)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -960,7 +1204,6 @@ void HorusObjectManager::SetCoatingRoughness(int id, const std::array<float, 3>&
 
 	m_Materials_[id].SetCoatingRoughness(roughness);
 }
-
 void HorusObjectManager::SetCoatingRoughness(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -972,7 +1215,7 @@ void HorusObjectManager::SetCoatingRoughness(int id, const std::string& textureP
 	m_Materials_[id].SetCoatingRoughness(texturePath);
 }
 
-void HorusObjectManager::SetSheenWeight(int id, const std::array<float, 3>& weight)
+void HorusObjectManager::SetSheenWeight(int id, glm::vec4 weight)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -982,7 +1225,6 @@ void HorusObjectManager::SetSheenWeight(int id, const std::array<float, 3>& weig
 
 	m_Materials_[id].SetSheenWeight(weight);
 }
-
 void HorusObjectManager::SetSheenWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -994,7 +1236,7 @@ void HorusObjectManager::SetSheenWeight(int id, const std::string& texturePath)
 	m_Materials_[id].SetSheenWeight(texturePath);
 }
 
-void HorusObjectManager::SetBackscatterWeight(int id, const std::array<float, 3>& weight)
+void HorusObjectManager::SetBackscatterWeight(int id, glm::vec4 weight)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1004,7 +1246,6 @@ void HorusObjectManager::SetBackscatterWeight(int id, const std::array<float, 3>
 
 	m_Materials_[id].SetBackscatterWeight(weight);
 }
-
 void HorusObjectManager::SetBackscatterWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1016,7 +1257,7 @@ void HorusObjectManager::SetBackscatterWeight(int id, const std::string& texture
 	m_Materials_[id].SetBackscatterWeight(texturePath);
 }
 
-void HorusObjectManager::SetDiffuseWeight(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetDiffuseWeight(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1026,7 +1267,6 @@ void HorusObjectManager::SetDiffuseWeight(int id, const std::array<float, 3>& co
 
 	m_Materials_[id].SetDiffuseWeight(color);
 }
-
 void HorusObjectManager::SetDiffuseWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1038,7 +1278,7 @@ void HorusObjectManager::SetDiffuseWeight(int id, const std::string& texturePath
 	m_Materials_[id].SetDiffuseWeight(texturePath);
 }
 
-void HorusObjectManager::SetEmissionWeight(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetEmissionWeight(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1048,7 +1288,6 @@ void HorusObjectManager::SetEmissionWeight(int id, const std::array<float, 3>& c
 
 	m_Materials_[id].SetEmissionWeight(color);
 }
-
 void HorusObjectManager::SetEmissionWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1060,7 +1299,7 @@ void HorusObjectManager::SetEmissionWeight(int id, const std::string& texturePat
 	m_Materials_[id].SetEmissionWeight(texturePath);
 }
 
-void HorusObjectManager::SetTransparency(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetTransparency(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1070,7 +1309,6 @@ void HorusObjectManager::SetTransparency(int id, const std::array<float, 3>& col
 
 	m_Materials_[id].SetTransparency(color);
 }
-
 void HorusObjectManager::SetTransparency(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1082,7 +1320,7 @@ void HorusObjectManager::SetTransparency(int id, const std::string& texturePath)
 	m_Materials_[id].SetTransparency(texturePath);
 }
 
-void HorusObjectManager::SetSssScatterDistance(int id, const std::array<float, 3>& color)
+void HorusObjectManager::SetSssScatterDistance(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1092,7 +1330,6 @@ void HorusObjectManager::SetSssScatterDistance(int id, const std::array<float, 3
 
 	m_Materials_[id].SetSssScatterDistance(color);
 }
-
 void HorusObjectManager::SetSssScatterDistance(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1114,7 +1351,6 @@ void HorusObjectManager::SetReflectionMode(int id, int mode)
 
 	m_Materials_[id].SetReflectionMode(mode);
 }
-
 void HorusObjectManager::SetCoatingMode(int id, int mode)
 {
 	if (!m_Materials_.contains(id))
@@ -1209,8 +1445,6 @@ void HorusObjectManager::CloseMaterialEditorCreateMenu()
 	//material_editor_create_menu_ImpM.quit();
 }
 
-
-
 void HorusObjectManager::QuitMaterialEditor(int id)
 {
 	m_MaterialEditors_[id].quit();
@@ -1223,7 +1457,6 @@ void HorusObjectManager::DestroyAllMaterialEditors()
 		material_editor.second.quit();
 	}
 }
-
 
 // -----------------------------------------------------------------------------------------------
 // Light management ------------------------------------------------------------------------------
@@ -1709,9 +1942,9 @@ void HorusObjectManager::SetDiskLightAngle(int id, const float& Angle)
 }
 void HorusObjectManager::SetDiskLightInnerAngle(int id, const float& InnerAngle)
 {
-		if (!m_Lights_.contains(id))
-		{
-					spdlog::error("no light with this id : {} exists.");
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id : {} exists.");
 		spdlog::error("Unable to set disk light inner angle");
 
 		return;
@@ -1742,6 +1975,11 @@ int HorusObjectManager::CreateScene(const std::string& name)
 
 	return Id;
 }
+void HorusObjectManager::ImportGltfScene()
+{
+
+}
+
 void HorusObjectManager::SetScene(int id)
 {
 	if (!m_Scenes_.contains(id))
@@ -1758,7 +1996,7 @@ void HorusObjectManager::SetScene(int id)
 	spdlog::info("Scene {} set as active scene", id);
 
 }
-rpr_scene HorusObjectManager::GetScene()
+rpr_scene& HorusObjectManager::GetScene()
 {
 	return  m_Scenes_[m_ActiveSceneId_].GetScene();
 }
@@ -1830,7 +2068,7 @@ int HorusObjectManager::CreateDefaultScene()
 {
 	int Id = CreateScene("DefaultScene");
 
-	CreateCamera(GetActiveSceneId(), "DefaultCamera");
+	CreateRadeonCamera(Id, "DefaultCamera");
 
 	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
 	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");

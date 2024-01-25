@@ -8,6 +8,10 @@
 #include <cassert>
 #include <chrono>
 
+#include "hrs_grid.h"
+#include "hrs_object_manager.h"
+#include "hrs_timer.h"
+
 void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam) 
 {
 	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
@@ -15,6 +19,7 @@ void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum 
 		type, severity, message);
 }
 
+// Callbacks
 void KeyCallbacks(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	HorusInput::GetInstance().OnKey(window, key, scancode, action, mods);
@@ -42,11 +47,13 @@ void WindowCloseCallback(GLFWwindow* window)
 
 bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 {
-	HorusShaderManager& ShaderManager = HorusShaderManager::GetInstance();
 	[[maybe_unused]] HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
+	HorusTimerManager& Timer = HorusTimerManager::GetInstance();
 
-	m_logger_.Init();
+	Timer.StartTimer("OpenGL");
+
+	m_Logger_.Init();
 
 	spdlog::info("Horus Engine initialization");
 	Console.AddLog(" [info] Horus Engine initialization");
@@ -62,6 +69,9 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 		spdlog::error("Failed to initialize GLFW");
 		return false;
 	}
+
+	/*GLFWmonitor* PrimaryMonitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* Mode = glfwGetVideoMode(PrimaryMonitor);*/
 
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -83,6 +93,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 
 	glfwSetWindowUserPointer(m_HorusWindow_, &window);
 	glfwMakeContextCurrent(m_HorusWindow_);
+	glfwMaximizeWindow(m_HorusWindow_);
 
 	// Set callbacks
 	glfwSetKeyCallback(m_HorusWindow_, KeyCallbacks);
@@ -104,8 +115,11 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 
 	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
 
-	m_ProgramId_ = ShaderManager.GetProgram("core/shaders/shader");
-	GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
+	/*m_ProgramId_ = ShaderManager.GetProgram("core/shaders/shader");
+	GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");*/
+
+	m_DefaultShader_.CreateShader("core/shaders/shader");
+	m_LightShader_.CreateShader("core/shaders/light");
 
 	InitBuffers(m_WindowWidth_, m_WindowHeight_);
 
@@ -116,9 +130,14 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	Console.AddLog(" [info] OpenGL version: %d.%d", GLVersion.major, GLVersion.minor);
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	/*glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);*/
+
+	auto TimerEnd = Timer.StopTimer("OpenGL");
+	spdlog::info("OpenGL initialization took {} ms", TimerEnd);
 
 	return true;
 }
@@ -126,6 +145,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 void HorusOpenGL::InitBuffers(int Width, int Height)
 {
 	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
+	HorusGrid& Grid = HorusGrid::GetInstance();
 
 	m_WindowWidth_ = Width;
 	m_WindowHeight_ = Height;
@@ -146,9 +166,9 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 	OpenGLManager.UnbindVBO(0);
 	OpenGLManager.UnbindEBO(0);
 
-	// TODO : Move this to a opengl manager
-	glGenTextures(1, &m_TextureBufferID_);
-	glBindTexture(GL_TEXTURE_2D, m_TextureBufferID_);
+	// Texture specially for the Radeon View, to be able to render the image
+	glGenTextures(1, &m_RadeonTextureBufferId_);
+	glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBufferId_);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
@@ -157,28 +177,43 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	glGenTextures(1, &m_OpenGlTextureBufferId_);
+	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_WindowWidth_, m_WindowHeight_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	Grid.Grid();
 }
 
 void HorusOpenGL::InitRender()
 {
 	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
-	glClearColor(0.298f, 0.384f, 0.419f, 1.0f); // green - blue pastel
-	//glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // sky blue
-	glEnable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
 
-	OpenGLManager.BindVAO(0);
-	OpenGLManager.BindVBO(0);
+	//glClearColor(0.298f, 0.384f, 0.419f, 1.0f); // green - blue pastel
+	////glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // sky blue
 
-	auto [texture_location, position_location, texcoord_location] = GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
+	//glEnable(GL_BLEND);
+	//glEnable(GL_CULL_FACE);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUseProgram(m_ProgramId_);
+	/*OpenGLManager.BindVAO(0);
+	OpenGLManager.BindVBO(0);*/
 
-	glUniform1i(m_TextureLocation_, 0);
+	//auto [texture_location, position_location, texcoord_location] = GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
+
+	//glUseProgram(m_ProgramId_);
+
+	/*glUniform1i(m_TextureLocation_, 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_TextureBufferID_);
+	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
 
 	glVertexAttribPointer(m_PositionLocation_, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
 	glVertexAttribPointer(m_TexcoordLocation_, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
@@ -193,8 +228,59 @@ void HorusOpenGL::InitRender()
 
 	OpenGLManager.UnbindVAO(0);
 	OpenGLManager.UnbindVBO(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glUseProgram(0);
+	glBindTexture(GL_TEXTURE_2D, 0);*/
+	/*glUseProgram(0);
+	glBindTexture(GL_TEXTURE_2D, 0);*/
+
+	
+}
+
+void HorusOpenGL::Render()
+{
+	HorusGrid& Grid = HorusGrid::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	glGenFramebuffers(1, &m_FramebufferObject_);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
+
+	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		spdlog::error("Framebuffer is not complete!");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
+
+	glClearColor(0.35f, 0.4f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
+
+	// Render here
+
+	/*glm::mat4 model, view, projection;
+	
+	m_DefaultShader_.Use();
+	ObjectManager.SendToShaderOpenGLCamera(ObjectManager.GetActiveOpenGLCameraId(), m_DefaultShader_);
+
+	ObjectManager.UpdateOpenGLCamera(ObjectManager.GetActiveOpenGLCameraId());
+	ObjectManager.GetOpenGLCameraMatrices(ObjectManager.GetActiveOpenGLCameraId(), projection, view, model);
+
+	glm::mat4 mvp = projection * view * model;
+
+	glLoadMatrixf(glm::value_ptr(mvp));
+
+	Grid.Render(m_DefaultShader_);*/
+
+
+
+
+
+
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDeleteFramebuffers(1, &m_FramebufferObject_);
 }
 
 void HorusOpenGL::PostRender()

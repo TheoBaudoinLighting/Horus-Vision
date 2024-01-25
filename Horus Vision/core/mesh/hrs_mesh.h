@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RadeonProRender_v2.h>
+#include <RadeonProRender.hpp>
 
 #include <glm/glm.hpp>
 

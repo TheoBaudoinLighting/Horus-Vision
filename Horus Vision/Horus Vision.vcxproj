@@ -114,13 +114,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CONSOLE;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\RadeonProRender\inc;$(ProjectDir)external\RadeonProRender\common;$(ProjectDir)external;$(ProjectDir)external\glad\include;$(ProjectDir)external\imgui;$(ProjectDir)external\imgui\backends;$(ProjectDir)external\glfw;$(ProjectDir)external\glfw\include;C:\opencv\build\include;$(TBB_DIR);$(ASSIMP_DIR);$(ProjectDir)core;$(ProjectDir)core\config;$(ProjectDir)core\implementations;$(ProjectDir)core\shaders;$(ProjectDir)core\window;$(ProjectDir)external\spdlog\include;$(ProjectDir)core\camera;$(ProjectDir)core\light;$(ProjectDir)core\material;$(ProjectDir)core\mesh;$(ProjectDir)core\texture;$(ProjectDir)external\ImGuizmo;$(ProjectDir)external\imnodes;$(ProjectDir)core\scene;$(ProjectDir)external\nlohmann;$(ProjectDir)external\stbi;$(ProjectDir)core\objects;$(ProjectDir)core\inputs;$(ProjectDir)core\implementations\opengl;$(ProjectDir)core\implementations\radeon;$(ProjectDir)core\implementations\imgui;$(ProjectDir)core\ui;$(ProjectDir)external\HorusEngine\bin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\RadeonProRender\inc;$(ProjectDir)external\RadeonProRender\common;$(ProjectDir)external;$(ProjectDir)external\glad\include;$(ProjectDir)external\imgui;$(ProjectDir)external\imgui\backends;$(ProjectDir)external\glfw;$(ProjectDir)external\glfw\include;C:\opencv\build\include;$(TBB_DIR);$(ASSIMP_DIR);$(ProjectDir)core;$(ProjectDir)core\config;$(ProjectDir)core\implementations;$(ProjectDir)core\shaders;$(ProjectDir)core\window;$(ProjectDir)external\spdlog\include;$(ProjectDir)core\camera;$(ProjectDir)core\light;$(ProjectDir)core\material;$(ProjectDir)core\mesh;$(ProjectDir)core\texture;$(ProjectDir)external\ImGuizmo;$(ProjectDir)external\imnodes;$(ProjectDir)core\scene;$(ProjectDir)external\nlohmann;$(ProjectDir)external\stbi;$(ProjectDir)core\objects;$(ProjectDir)core\inputs;$(ProjectDir)core\implementations\opengl;$(ProjectDir)core\implementations\radeon;$(ProjectDir)core\implementations\imgui;$(ProjectDir)core\ui;$(ProjectDir)external\HorusEngine\bin;$(ProjectDir)external\RadeonProRender;$(ProjectDir)external\RadeonProRender\rprTools;$(ProjectDir)external\RadeonProRender\libWin64;$(ProjectDir)external\OpenColorIO;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)external\glfw\include\lib-vc2022;C:\opencv\build\x64\vc16\lib;$(ProjectDir)external\RadeonProRender\libWin64;$(TBB_X64_LIB);$(ASSIMP_LIB_X64);$(ASSIMP_DLL_X64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RadeonProRender64.lib;RprLoadStore64.lib;opencv_world481d.lib;d3d9.lib;opengl32.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RadeonProRender64.lib;ProRenderGLTF.lib;RprLoadStore64.lib;opencv_world481d.lib;d3d9.lib;opengl32.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -163,7 +163,7 @@
     <ClCompile Include="core\hrs_engine.cpp" />
     <ClCompile Include="core\window\hrs_window.cpp" />
     <ClCompile Include="core\config\hrs_logger.cpp" />
-    <ClCompile Include="core\camera\hrs_camera.cpp" />
+    <ClCompile Include="core\camera\hrs_radeon_camera.cpp" />
     <ClCompile Include="core\mesh\hrs_importer.cpp" />
     <ClCompile Include="core\mesh\hrs_mesh.cpp" />
     <ClCompile Include="core\material\hrs_material.cpp" />
@@ -178,11 +178,20 @@
     <ClCompile Include="core\ui\hrs_console.cpp" />
     <ClCompile Include="core\ui\hrs_viewport.cpp" />
     <ClCompile Include="core\ui\hrs_outliner.cpp" />
+    <ClCompile Include="core\scene\hrs_grid.cpp" />
+    <ClCompile Include="core\camera\hrs_opengl_camera.cpp" />
+    <ClCompile Include="core\scene\hrs_scene_manager.cpp" />
+    <ClCompile Include="core\scene\hrs_importer_manager.cpp" />
+    <ClCompile Include="external\RadeonProRender\inc\Math\half.cpp" />
+    <ClCompile Include="external\RadeonProRender\rprTools\RadeonProRenderCpp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\config\hrs_config.h" />
     <ClInclude Include="core\config\hrs_context.h" />
+    <ClInclude Include="core\config\hrs_platform.h" />
     <ClInclude Include="core\config\hrs_reset_buffers.h" />
+    <ClInclude Include="core\config\hrs_timer.h" />
+    <ClInclude Include="core\config\hrs_utils.h" />
     <ClInclude Include="core\implementations\imgui\hrs_fonts.h" />
     <ClInclude Include="core\implementations\imgui\hrs_icons.h" />
     <ClInclude Include="core\implementations\imgui\hrs_icons_fa.h" />
@@ -506,6 +515,22 @@
     <ClInclude Include="core\hrs_engine.h" />
     <ClInclude Include="core\window\hrs_window.h" />
     <ClInclude Include="core\config\hrs_logger.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\eLut.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\float2.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\float3.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\float4.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\half.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\int2.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\int3.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\mathutils.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\matrix.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\quaternion.h" />
+    <ClInclude Include="external\RadeonProRender\inc\Math\toFloat.h" />
+    <ClInclude Include="external\RadeonProRender\inc\ProRenderGLTF.h" />
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender.h" />
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender_v2.h" />
+    <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h" />
+    <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp" />
     <ClInclude Include="external\spdlog\include\spdlog\async.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger.h" />
@@ -609,7 +634,7 @@
     <ClInclude Include="external\spdlog\include\spdlog\stopwatch.h" />
     <ClInclude Include="external\spdlog\include\spdlog\tweakme.h" />
     <ClInclude Include="external\spdlog\include\spdlog\version.h" />
-    <ClInclude Include="core\camera\hrs_camera.h" />
+    <ClInclude Include="core\camera\hrs_radeon_camera.h" />
     <ClInclude Include="core\mesh\hrs_importer.h" />
     <ClInclude Include="core\mesh\hrs_mesh.h" />
     <ClInclude Include="core\material\hrs_material.h" />
@@ -628,8 +653,14 @@
     <ClInclude Include="core\ui\hrs_console.h" />
     <ClInclude Include="core\ui\hrs_viewport.h" />
     <ClInclude Include="core\ui\hrs_outliner.h" />
+    <ClInclude Include="core\scene\hrs_grid.h" />
+    <ClInclude Include="core\camera\hrs_opengl_camera.h" />
+    <ClInclude Include="core\scene\hrs_scene_manager.h" />
+    <ClInclude Include="core\scene\hrs_importer_manager.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="core\shaders\light.frag" />
+    <None Include="core\shaders\light.vert" />
     <None Include="core\shaders\shader.frag" />
     <None Include="core\shaders\shader.vert" />
     <None Include="external\GLFW\LIB-VC2022\glfw3.dll" />
@@ -777,6 +808,7 @@
     <Library Include="external\glfw\lib-vc2022\glfw3.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
+    <Library Include="external\RadeonProRender\libWin64\ProRenderGLTF.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

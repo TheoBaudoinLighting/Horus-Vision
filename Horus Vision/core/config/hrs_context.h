@@ -2,7 +2,7 @@
 
 #include "hrs_config.h" // glfw3.h
 
-#include <RadeonProRender_v2.h>
+#include <RadeonProRender.hpp>
 #include <string>
 
 

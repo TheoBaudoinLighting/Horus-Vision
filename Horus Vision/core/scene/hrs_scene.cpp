@@ -3,6 +3,7 @@
 #include "hrs_engine.h" // glad.h
 #include "hrs_radeon.h" // glfw3.h
 #include "hrs_object_manager.h" // glfw3.h
+#include "hrs_importer_manager.h"
 
 void HorusScene::Init()
 {
@@ -63,7 +64,7 @@ void HorusScene::ShowDummyDragon()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	std::array<float, 3> Roughness = { 0.45f, 0.45f, 0.45f };
+	glm::vec4 Roughness = { 0.45f, 0.45f, 0.45f, 0.45f };
 
 	int Dragon = ObjectManager.CreateMesh("resources/Meshes/dragon/dragon_clean_low_Scale.obj", "dragon_low_msh");
 	int DragonMat = ObjectManager.CreateMaterial("M_Dragon");
@@ -101,49 +102,59 @@ void HorusScene::ShowDummyPlane()
 void HorusScene::ShowLookdevScene()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusImporterManager& GltfImporter = HorusImporterManager::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	std::array<float, 3> Color = { 1, 1, 1 };
-	std::array<float, 3> Roughness = { 1, 1, 1 };
-	std::array<float, 3> Specular = { 1, 1, 1 };
-	std::array<float, 3> TransmissionColor = { 0.996078f, 0.858824f, 0.639216f };
-	std::array<float, 3> RefractionWeight = { 1.f, 1.f, 1.f };
+	{
+		glm::vec4 Roughness = { 0.45f, 0.45f, 0.45f, 0.45f };
 
-	// Create Background
-	int BackgoundMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
-	int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
+		std::array<float, 3> Color = { 1, 1, 1 };
+		std::array<float, 3> Specular = { 1, 1, 1 };
+		std::array<float, 3> TransmissionColor = { 0.996078f, 0.858824f, 0.639216f };
+		std::array<float, 3> RefractionWeight = { 1.f, 1.f, 1.f };
 
-	ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
-	ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
-	//ObjectManager.create_material_editor_node(0, "M_Background");
+		// Create Background
+		int BackgoundMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
+		int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
 
-	ObjectManager.SetShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
+		ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
+		ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
+		ObjectManager.SetShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
 
-	// Create statue
-	//int Aretheuse =  ObjectManager.CreateMesh("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
-	//int AreMat = ObjectManager.CreateMaterial("M_aretheuse");
+		{
+			// Create statue
+			int Aretheuse =  ObjectManager.CreateMesh("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
+			int AreMat = ObjectManager.CreateMaterial("M_aretheuse");
 
-	//ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
-	//ObjectManager.SetReflectionMode(AreMat, 0); // 0 = PBR
-	//ObjectManager.SetRoughness(AreMat, Roughness);
-	//ObjectManager.AssignMaterial(Aretheuse, AreMat);
-	//
+			ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
+			ObjectManager.SetReflectionMode(AreMat, 0); // 0 = PBR
+			ObjectManager.SetRoughness(AreMat, Roughness);
+			ObjectManager.AssignMaterial(Aretheuse, AreMat);
+			
 
-	//ObjectManager.SetShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
-	//ObjectManager.SetShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
+			ObjectManager.SetShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
+			ObjectManager.SetShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
+		}
 
-	// Create Gold Sphere
-	int SphereMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
-	int Goldmat = ObjectManager.CreateMaterial("M_Sphere");
-	ObjectManager.SetBaseColor(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_COL_8K_METALNESS.png");
-	ObjectManager.SetNormal(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_NRM_8K_METALNESS.png");
-	ObjectManager.SetRoughness(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_ROUGHNESS_8K_METALNESS.png");
-	ObjectManager.SetMetallic(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_METALNESS_8K_METALNESS.png");
-	ObjectManager.SetReflectionMode(Goldmat, 1); // 1 = metalness
-	ObjectManager.AssignMaterial(SphereMesh, Goldmat);
-	//ObjectManager.create_material_editor_node(1, "M_Sphere");
+		// Create Gold Sphere
+		int SphereMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
+		int Goldmat = ObjectManager.CreateMaterial("M_Sphere");
+		ObjectManager.SetBaseColor(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_COL_8K_METALNESS.png");
+		ObjectManager.SetNormal(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_NRM_8K_METALNESS.png");
+		ObjectManager.SetRoughness(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_ROUGHNESS_8K_METALNESS.png");
+		ObjectManager.SetMetallic(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_METALNESS_8K_METALNESS.png");
+		ObjectManager.SetReflectionMode(Goldmat, 1); // 1 = metalness
+		ObjectManager.AssignMaterial(SphereMesh, Goldmat);
 
-	ObjectManager.SetShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
-	ObjectManager.SetShapeScale(SphereMesh, { 0.5f, 1.2f, 0.5f });
+		ObjectManager.SetShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
+		ObjectManager.SetShapeScale(SphereMesh, { 0.5f, 1.2f, 0.5f });
+	}
+
+	rpr_scene Scene = ObjectManager.GetScene();
+
+	// Test Scene
+	//auto ImportBarberChair = GltfImporter.ImportGltf("resources/Meshes/gltf_teapot/cube_floor.gltf", Radeon.GetContext(), Radeon.GetMatsys(), &ObjectManager.GetScene());
+	//auto ImportBarberChair = GltfImporter.ImportGltf("resources/Scene/gltf/BarberShopChair_01_4k.gltf", Radeon.GetContext(), Radeon.GetMatsys(), &ObjectManager.GetScene());
 
 
 

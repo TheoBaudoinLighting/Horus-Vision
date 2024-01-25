@@ -1,12 +1,13 @@
 
+#include "hrs_platform.h"
 #include "hrs_inspector.h"
 #include "hrs_radeon.h" // glfw3.h
 #include "hrs_object_manager.h" // glfw3.h
+#include "hrs_utils.h"
 
 #include <string>
 
-// External includes
-#include "L2DFileDialog.h"
+#include <filesystem>
 #include <hrs_console.h>
 
 void HorusInspector::Inspector(bool* p_open)
@@ -46,6 +47,37 @@ void HorusInspector::Inspector(bool* p_open)
 	}
 }
 
+void HorusInspector::Init()
+{
+	HorusGarbageCollector& GarbageCollector = HorusGarbageCollector::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+
+	// Init Focus Plane
+	m_FocusPlaneShape_ = CreateSquare(GarbageCollector, Radeon.GetContext(), ObjectManager.GetScene(), 0.0f, 0.0f, 2.0f, 0.1f);
+
+	rpr_material_node Emissive;
+	{
+		CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_EMISSIVE, &Emissive));
+		CHECK(rprMaterialNodeSetInputFByKey(Emissive, RPR_MATERIAL_INPUT_COLOR, 0.4f, 0.6f, 0.45f, 0.5f));
+		CHECK(rprShapeSetMaterial(m_FocusPlaneShape_, Emissive));
+	}
+	GarbageCollector.Add(Emissive);
+	spdlog::debug("Focus plane initialized.");
+	m_DrawFocusPlane_ = false;
+	CHECK(rprShapeSetVisibilityFlag(m_FocusPlaneShape_, RPR_SHAPE_VISIBILITY_PRIMARY_ONLY_FLAG, true));
+	CHECK(rprShapeSetVisibilityFlag(m_FocusPlaneShape_, RPR_SHAPE_VISIBILITY_RECEIVE_SHADOW, false));
+	CHECK(rprShapeSetVisibilityFlag(m_FocusPlaneShape_, RPR_SHAPE_VISIBILITY_LIGHT, false));
+	CHECK(rprShapeSetVisibilityFlag(m_FocusPlaneShape_, RPR_SHAPE_VISIBILITY_SHADOW, false));
+
+	m_CameraPosition_ = GetCameraPosition();
+	m_CameraLookAt_ = GetCameraLookAt();
+	m_FocusPlaneDistance_ = GetFocusDistance();
+
+	CHECK(rprShapeSetVisibility(m_FocusPlaneShape_, false));
+	SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
+}
+
 void HorusInspector::SetInspectorType(InspectorType Type)
 {
 	m_SelectionType_ = Type;
@@ -57,16 +89,6 @@ void HorusInspector::InspectorCamera()
 
 	//ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Green");
 	//ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Pink");
-
-	// Getters Camera
-	std::string& CameraName = ObjectManager.GetCameraNameById(ObjectManager.GetActiveCameraId());
-
-	glm::vec3 CamLookAt = GetCameraLookAt();
-	glm::vec3 CamPosition = GetCameraPosition();
-	glm::vec3 CamRotation = GetCameraRotation();
-	glm::vec3 CamScale = GetCameraScale();
-
-	float Fov = GetFov();
 
 	// Camera Inspector
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
@@ -84,12 +106,12 @@ void HorusInspector::InspectorCamera()
 	{
 		if (ImGui::Button("Print camera info"))
 		{
-			ObjectManager.PrintCameraInfo(ObjectManager.GetActiveCameraId());
+			ObjectManager.PrintCameraInfo(ObjectManager.GetActiveRadeonCameraId());
 		}
 
 		if (ImGui::Button("Reset camera"))
 		{
-			ObjectManager.ResetCamera(ObjectManager.GetActiveCameraId());
+			ObjectManager.ResetCamera(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -98,7 +120,7 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Forward"))
 		{
-			ObjectManager.MoveCameraForward(ObjectManager.GetActiveCameraId());
+			ObjectManager.MoveCameraForward(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -107,14 +129,14 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Backward"))
 		{
-			ObjectManager.MoveCameraBackward(ObjectManager.GetActiveCameraId());
+			ObjectManager.MoveCameraBackward(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
 
 		if (ImGui::Button("Move Camera Left"))
 		{
-			ObjectManager.MoveCameraLeft(ObjectManager.GetActiveCameraId());
+			ObjectManager.MoveCameraLeft(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -123,14 +145,14 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Right"))
 		{
-			ObjectManager.MoveCameraRight(ObjectManager.GetActiveCameraId());
+			ObjectManager.MoveCameraRight(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
 
 		if (ImGui::Button("Move Camera Up"))
 		{
-			ObjectManager.MoveCameraUp(ObjectManager.GetActiveCameraId());
+			ObjectManager.MoveCameraUp(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -139,45 +161,28 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Down"))
 		{
-			ObjectManager.MoveCameraDown(ObjectManager.GetActiveCameraId());
-
-			CallResetBuffer();
-		}
-
-		ImGui::Separator();
-
-		if (ImGui::SliderFloat("Changer Pitch Camera", &m_Pitch_, -1.0f, 1.0f))
-		{
-			ObjectManager.SetPitch(ObjectManager.GetActiveCameraId(), m_Pitch_);
-
-			CallResetBuffer();
-		}
-
-		if (ImGui::SliderFloat("Changer Heading Camera", &m_Heading_, -1.0f, 1.0f))
-		{
-			ObjectManager.SetHeading(ObjectManager.GetActiveCameraId(), m_Heading_);
+			ObjectManager.MoveCameraDown(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
 	}
+	// End Debug tools
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	// End Debug tools
-
 	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Button("Print camera info"))
 		{
-			ObjectManager.PrintCameraInfo(ObjectManager.GetActiveCameraId());
+			ObjectManager.PrintCameraInfo(ObjectManager.GetActiveRadeonCameraId());
 		}
 		ImGui::SameLine(); ShowHelpMarker("Print the camera info in the console.");
 
 		if (ImGui::Button("Reset camera"))
 		{
-			ObjectManager.ResetCamera(ObjectManager.GetActiveCameraId());
+			ObjectManager.ResetCamera(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -185,44 +190,35 @@ void HorusInspector::InspectorCamera()
 
 		ImGui::Separator();
 
-		if (ImGui::InputFloat3("Look At", &CamLookAt[0]))
+		if (ImGui::InputFloat3("Look At", &m_CameraLookAt_[0]))
 		{
-			SetCameraLookAt(CamLookAt);
+			SetCameraLookAt(m_CameraLookAt_);
 
 			CallResetBuffer();
 		}
 		ImGui::SameLine(); ShowHelpMarker("Point the camera is looking at.");
 
-		if (ImGui::InputFloat3("Position", &CamPosition[0]))
+		if (ImGui::InputFloat3("Position", &m_CameraPosition_[0]))
 		{
-			SetCameraPosition(CamPosition);
+			SetCameraPosition(m_CameraPosition_);
 
 			CallResetBuffer();
 		}
 
-		ImGui::BeginDisabled(true);
-
-		if (ImGui::InputFloat3("Rotation", &CamRotation[0]))
+		if (ImGui::InputFloat3("Rotation", &m_CameraRotation_[0]))
 		{
-			SetCameraRotation(CamRotation);
+			SetCameraRotation(m_CameraRotation_);
 
 			CallResetBuffer();
 		}
 
-		if (ImGui::InputFloat3("Scale", &CamScale[0]))
+		if (ImGui::SliderFloat("Uniform Scale", &m_UniformScale_, 0.1f, 1.0f, "%.1f"))
 		{
-			float AvgScale = (CamScale[0] + CamScale[1] + CamScale[2]) / 3.0f; // Average scale for link the 3 scale
-			CamScale[0] = AvgScale;
-			CamScale[1] = AvgScale;
-			CamScale[2] = AvgScale;
-
-			SetCameraScale(CamScale);
+			m_CameraScale_ = glm::vec3(m_UniformScale_);
+			SetCameraScale(m_CameraScale_);
 			CallResetBuffer();
 		}
-
-		ImGui::EndDisabled();
-
-
+		ImGui::SameLine(); ShowHelpMarker("Set uniform scale for the camera.");
 	}
 
 	ImGui::Spacing();
@@ -236,19 +232,17 @@ void HorusInspector::InspectorCamera()
 
 	ImGui::Separator();
 
-	if (ImGui::SliderFloat("FOV", &Fov, 1.0f, 180.0f))
+	if (ImGui::SliderFloat("FOV", &m_CameraFov_, 1.0f, 180.0f))
 	{
-		SetFov(Fov);
+		SetFov(m_CameraFov_);
 
 		CallResetBuffer();
 	}
 	ImGui::SameLine(); ShowHelpMarker("Focal length of the camera lens.");
 
-	static float NearClip = 0.1f;
-	static float FarClip = 1000.0f;
-	ImGui::InputFloat("Near Clip", &NearClip);
+	ImGui::InputFloat("Near Clip", &m_CameraNear_);
 	ImGui::SameLine(); ShowHelpMarker("Near clip plane of the camera.");
-	ImGui::InputFloat("Far Clip", &FarClip);
+	ImGui::InputFloat("Far Clip", &m_CameraFar_);
 	ImGui::SameLine(); ShowHelpMarker("Far clip plane of the camera.");
 
 	ImGui::Spacing();
@@ -258,18 +252,68 @@ void HorusInspector::InspectorCamera()
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Depth of Field");
 	ImGui::PopStyleColor();
-	static bool EnableDof = false;
-	ImGui::Checkbox("Enable DOF", &EnableDof);
 
-	if (EnableDof)
+	if (ImGui::Checkbox("Enable DOF", &m_EnableDof_))
 	{
-		static float Aperture = 2.8f;
-		ImGui::SliderFloat("Aperture", &Aperture, 1.0f, 22.0f);
-		ImGui::SameLine(); ShowHelpMarker("Aperture setting for DOF effect.");
+		if (m_EnableDof_)
+		{
+			PopulateCameraInfos();
+			ObjectManager.SetFStop(ObjectManager.GetActiveRadeonCameraId(), m_CameraFStop_);
+			SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
+			CallResetBuffer();
+		}
+		else
+		{
+			// Set FStop to 100 to disable DOF effect, because 100 is a very high value for FStop
+			// (not really disable but it will be very hard to see)
+			ObjectManager.SetFStop(ObjectManager.GetActiveRadeonCameraId(), 100);
+			CallResetBuffer();
+		}
+	}
 
-		static float FocusDistance = 10.0f;
-		ImGui::SliderFloat("Focus Distance", &FocusDistance, 0.1f, 100.0f);
-		ImGui::SameLine(); ShowHelpMarker("Focus distance for DOF effect.");
+	if (m_EnableDof_)
+	{
+		// Draw Focus Plane
+		if (ImGui::Checkbox("Draw Focus Plane", &m_DrawFocusPlane_))
+		{
+			SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
+			ShowHideFocusPlane(m_FocusPlaneShape_);
+
+			spdlog::debug("Draw Focus Plane : {}", m_DrawFocusPlane_);
+
+			CallResetBuffer();
+		}
+
+		if (ImGui::SliderFloat("Focus Distance", &m_FocusPlaneDistance_, 0.1f, 15.0f, "%.3f"))
+		{
+			ObjectManager.SetFocusDistance(ObjectManager.GetActiveRadeonCameraId(), m_FocusPlaneDistance_);
+			SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Set focal plane distance for DOF effect. The focal plane is the plane that is in focus. The distance is measured from the camera position along the camera look at vector.");
+
+		// Set FStop
+		if (ImGui::SliderFloat("FStop", &m_CameraFStop_, 0.001f, 10.0f, "%.3f"))
+		{
+			ObjectManager.SetFStop(ObjectManager.GetActiveRadeonCameraId(), m_CameraFStop_);
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Set FStop for DOF effect. FStop is the ratio of the lens focal length to the diameter of the entrance pupil.");
+
+		if (ImGui::SliderInt("Aperture Blades", &m_ApertureBlades_, 3, 20))
+		{
+			// Simple check to avoid irrealistic values
+			if (m_ApertureBlades_ < 3)
+			{
+				m_ApertureBlades_ = 3;
+			}
+
+			ObjectManager.SetApertureBlades(ObjectManager.GetActiveRadeonCameraId(), m_ApertureBlades_);
+
+			CallResetBuffer();
+		}
+
 	}
 
 	ImGui::Spacing();
@@ -282,15 +326,18 @@ void HorusInspector::InspectorCamera()
 
 	ImGui::Separator();
 
-	ImGui::Text("Camera id: %d ", ObjectManager.GetActiveCameraId());
-	ImGui::Text("Camera name: %s ", CameraName.c_str());
-	ImGui::Text("Camera look at: %.2f %.2f %.2f ", CamLookAt.x, CamLookAt.y, CamLookAt.z);
-	ImGui::Text("Camera position: %.2f %.2f %.2f ", CamPosition.x, CamPosition.y, CamPosition.z);
-	ImGui::Text("Camera rotation: %.2f %.2f %.2f ", CamRotation.x, CamRotation.y, CamRotation.z);
-	ImGui::Text("Camera scale: %.2f %.2f %.2f ", CamScale.x, CamScale.y, CamScale.z);
-	ImGui::Text("Camera FOV: %.2f ", Fov);
-	ImGui::Text("Camera near clip: %.2f ", NearClip);
-	ImGui::Text("Camera far clip: %.2f ", FarClip);
+	ImGui::Text("Camera id: %d ", ObjectManager.GetActiveRadeonCameraId());
+	ImGui::Text("Camera name: %s ", m_CameraName_.c_str());
+	ImGui::Text("Camera look at: %.2f %.2f %.2f ", m_CameraLookAt_.x, m_CameraLookAt_.y, m_CameraLookAt_.z);
+	ImGui::Text("Camera position: %.2f %.2f %.2f ", m_CameraPosition_.x, m_CameraPosition_.y, m_CameraPosition_.z);
+	ImGui::Text("Camera rotation: %.2f %.2f %.2f ", m_CameraRotation_.x, m_CameraRotation_.y, m_CameraRotation_.z);
+	ImGui::Text("Camera scale: %.2f %.2f %.2f ", m_CameraScale_.x, m_CameraScale_.y, m_CameraScale_.z);
+	ImGui::Text("Camera FOV: %.2f ", m_CameraFov_);
+	ImGui::Text("Camera near clip: %.2f ", m_CameraNear_);
+	ImGui::Text("Camera far clip: %.2f ", m_CameraFar_);
+	ImGui::Text("Camera FStop: %.2f ", m_CameraFStop_);
+	ImGui::Text("Camera Focus Distance: %.2f ", m_FocusPlaneDistance_);
+	ImGui::Text("Camera Aperture Blades: %d ", m_ApertureBlades_);
 
 	ImGui::Separator();
 }
@@ -827,133 +874,340 @@ void HorusInspector::InspectorLight()
 
 void HorusInspector::InspectorMaterial()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// TODO : Add a checkbox for freeze the value of the material
+
+	// Getters Material
+	std::string& MaterialName = ObjectManager.GetMaterialName(ObjectManager.GetActiveMaterialId());
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Material Inspector");
+	ImGui::PopStyleColor();
 	ImGui::Separator();
 
-	static char materialName[128] = "New Material";
-	ImGui::InputText("Name", materialName, IM_ARRAYSIZE(materialName));
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Presets");
+	ImGui::PopStyleColor();
+	// Preset system
+	if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Default"))
+		{
 
-	static float diffuseColor[3] = { 1.0f, 1.0f, 1.0f };
-	ImGui::ColorEdit3("Diffuse Color", diffuseColor);
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Default material preset.");
 
-	static float specularColor[3] = { 1.0f, 1.0f, 1.0f };
-	ImGui::ColorEdit3("Specular Color", specularColor);
+		if (ImGui::Button("Plastic"))
+		{
 
-	ImGui::Text("Textures");
-	static char diffuseTexture[128] = "path/to/texture.png";
-	ImGui::InputText("Diffuse Texture", diffuseTexture, IM_ARRAYSIZE(diffuseTexture));
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Plastic material preset.");
 
-	static char normalTexture[128] = "path/to/normal.png";
-	ImGui::InputText("Normal Map", normalTexture, IM_ARRAYSIZE(normalTexture));
+		if (ImGui::Button("Metal"))
+		{
 
-	static float opacity = 1.0f;
-	ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f);
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Metal material preset.");
 
-	static float roughness = 0.5f;
-	ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f);
+		if (ImGui::Button("Glass"))
+		{
 
-	static bool isDoubleSided = false;
-	ImGui::Checkbox("Double Sided", &isDoubleSided);
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Glass material preset.");
+
+		if (ImGui::Button("Fabric"))
+		{
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Fabric material preset.");
+
+		if (ImGui::Button("Skin"))
+		{
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Skin material preset.");
+
+		if (ImGui::Button("Hair"))
+		{
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Hair material preset.");
+
+		if (ImGui::Button("Emissive"))
+		{
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Emissive material preset.");
+
+		if (ImGui::Button("Car Paint"))
+		{
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Car Paint material preset.");
+	}
 
 	ImGui::Spacing();
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Diffuse");
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	//if (ImGui::CollapsingHeader("Diffuse", ImGuiTreeNodeFlags_DefaultOpen))
+	//{
+	//	if (ImGui::CollapsingHeader("Diffuse", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::ColorEdit3("Color", &m_DiffuseColor_[0]))
+	//		{
+	//			ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), m_DiffuseColor_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Weight"))
+	//		{
+	//			if (ImGui::SliderFloat("Weight", &m_DiffuseWeight_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetDiffuseWeight(ObjectManager.GetActiveMaterialId(), m_DiffuseWeight_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Roughness", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Roughness", &m_Roughness_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetRoughness(ObjectManager.GetActiveMaterialId(), m_Roughness_);
+
+	//			CallResetBuffer();
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Metallic", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Metallic", &m_Metallic_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetMetallic(ObjectManager.GetActiveMaterialId(), m_Metallic_);
+
+	//			CallResetBuffer();
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Normal", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Normal", &m_Normal_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetNormal(ObjectManager.GetActiveMaterialId(), m_Normal_);
+
+	//			CallResetBuffer();
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Opacity", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Height", &m_Opacity_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), m_Opacity_);
+
+	//			CallResetBuffer();
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Reflection", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::Checkbox("Reflection mode", &m_ReflectionMode_))
+	//		{
+	//			ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), m_ReflectionMode_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::SliderFloat("Reflection Color", &m_ReflectionColor_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), m_ReflectionColor_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Weight - Roughness"))
+	//		{
+	//			if (ImGui::SliderFloat("Reflection Weight", &m_ReflectionWeight_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), m_ReflectionWeight_);
+
+	//				CallResetBuffer();
+	//			}
+
+	//			if (ImGui::SliderFloat("Reflection Roughness", &m_ReflectionRoughness_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), m_ReflectionRoughness_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	// Refraction
+	//	if (ImGui::CollapsingHeader("Refraction", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Refraction Color", &m_RefractionColor_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), m_RefractionColor_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Weight - Roughness"))
+	//		{
+	//			if (ImGui::SliderFloat("Refraction Weight", &m_RefractionWeight_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), m_RefractionWeight_);
+
+	//				CallResetBuffer();
+	//			}
+
+	//			if (ImGui::SliderFloat("Refraction Roughness", &m_RefractionRoughness_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), m_RefractionRoughness_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	if (ImGui::CollapsingHeader("Clear Coat", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::Checkbox("Clearcoat mode", &m_CoatingMode_))
+	//		{
+	//			ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), m_CoatingMode_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::SliderFloat("Clear Coat Color", &m_CoatingColor_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), m_CoatingColor_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Weight - Roughness"))
+	//		{
+	//			if (ImGui::SliderFloat("Clear Coat Weight", &m_CoatingWeight_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), m_CoatingWeight_);
+
+	//				CallResetBuffer();
+	//			}
+
+	//			if (ImGui::SliderFloat("Clear Coat Roughness", &m_CoatingRoughness_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), m_CoatingRoughness_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	// Sheen
+	//	if (ImGui::CollapsingHeader("Sheen", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("Sheen Color", &m_Sheen_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetSheen(ObjectManager.GetActiveMaterialId(), m_Sheen_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Weight"))
+	//		{
+	//			if (ImGui::SliderFloat("Sheen Weight", &m_SheenWeight_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), m_SheenWeight_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
+
+	//	ImGui::Spacing();
+	//	ImGui::Separator();
+	//	ImGui::Spacing();
+
+	//	// SSS
+	//	if (ImGui::CollapsingHeader("SSS", ImGuiTreeNodeFlags_DefaultOpen))
+	//	{
+	//		if (ImGui::SliderFloat("SSS Color", &m_SssScatterColor_[0], 0.0f, 1.0f))
+	//		{
+	//			ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), m_SssScatterColor_);
+
+	//			CallResetBuffer();
+	//		}
+
+	//		if (ImGui::CollapsingHeader("Distance - Weight - Backscatter"))
+	//		{
+	//			if (ImGui::SliderFloat("SSS Distance", &m_SssScatterDistance_[0], 0.0f, 1.0f))
+	//			{
+	//				ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), m_SssScatterDistance_);
+
+	//				CallResetBuffer();
+	//			}
+	//		}
+	//	}
 
 
 
-	{
-
-		//void HorusEngine::ui_material_editor(bool* p_open)
-		//{
-		//	HorusObjectManager& ObjectManager = HorusObjectManager::get_instance();
-		//
-		//	//----------------------------------------------------------------------------------------------------------------------
-		//
-		//
-		//
-		//	ObjectManager.show_material_editor(ObjectManager.get_material_editor_to_show());
-		//
-		//	ObjectManager.open_material_editor_browser();
-		//
-		//	//----------------------------------------------------------------------------------------------------------------------
-		//
-		//	//ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
-		//
-		//	//if (!ImGui::Begin("Material editor", p_open))
-		//	//{
-		//
-		//	//	ImGui::End();
-		//	//	return;
-		//	//}
-		//
-		//	//if (ImGui::BeginMenuBar())
-		//	//{
-		//	//	if (ImGui::BeginMenu("File"))
-		//	//	{
-		//	//		if (ImGui::MenuItem("Ouvrir...")) { /* Fonctionnalit d'ouverture */ }
-		//	//		if (ImGui::MenuItem("Save")) { /* Fonctionnalit d'enregistrement */ }
-		//	//		if (ImGui::MenuItem("Quit")) { *p_open = false; }
-		//	//		ImGui::EndMenu();
-		//	//	}
-		//
-		//	//	ImGui::EndMenuBar();
-		//	//}
-		//
-		//
-		//	//ImGuiID dockspace_id = ImGui::GetID("MaterialEditorDockSpace");
-		//	//ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-		//
-		//
-		//	//if (ImGui::Begin("Create", p_open, ImGuiWindowFlags_NoCollapse))
-		//	//{
-		//
-		//	//	std::vector<std::string> m_node_names_ = { "Add", "Blend", "Multiply" };
-		//	//	std::vector<const char*> m_node_names_cstr;
-		//	//	for (const auto& str : m_node_names_) {
-		//	//		m_node_names_cstr.push_back(str.c_str());
-		//	//	}
-		//
-		//	//	int selectedItem = -1;
-		//
-		//
-		//	//	if (ImGui::ListBox("Create node", &selectedItem, m_node_names_cstr.data(), m_node_names_cstr.size()))
-		//	//	{
-		//	//		if (selectedItem != -1)
-		//	//		{
-		//	//			std::cout << "Selected item: " << m_node_names_[selectedItem] << std::endl;
-		//
-		//	//			HorusNodeType type = determineNodeTypeBasedOnSelection(selectedItem);
-		//	//			//g_material_editor.add_node(1, type);
-		//	//		}
-		//	//	}
-		//
-		//
-		//
-		//
-		//
-		//
-		//
-		//
-		//	//	ImGui::End();
-		//	//}
-		//
-		//	//if (ImGui::Begin("Browser", p_open, ImGuiWindowFlags_NoCollapse))
-		//	//{
-		//
-		//	//	ImGui::Text("Navigateur de matriaux ici.");
-		//	//	ImGui::End();
-		//	//}
-		//
-		//
-		//	//if (ImGui::Begin("Node Editor", p_open, ImGuiWindowFlags_NoCollapse))
-		//	//{
-		//	//	g_material_editor.update();
-		//	//	ImGui::End();
-		//	//}
-		//
-		//	//ImGui::End();
-		//}
+	//}
 
 
-	}
+
+
+
+
 }
 
 void HorusInspector::InspectorMesh()
@@ -1099,8 +1353,7 @@ void HorusInspector::InspectorProjectProperty()
 
 	m_ResetBuffer_ = false;
 
-	static char* FileDialogBuffer = nullptr;
-	static char Path[500] = "";
+	static std::string Path = "path/to/image.jpg";
 	static std::string LastUsedPath;
 	static bool WasBackdropImageEnabled = false;
 	static bool JustDisabledBackdrop = false;
@@ -1108,19 +1361,26 @@ void HorusInspector::InspectorProjectProperty()
 	m_Gpu00N_[0] = '\0';
 	m_Gpu00N_[1] = '\0';
 
-	rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, nullptr);
-	rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, nullptr);
-	rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(m_RenderStatistics_), &m_RenderStatistics_, 0);
+	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, nullptr); // TODO : Fix exception here
+	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, nullptr); // TODO : Fix exception here
+	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(m_RenderStatistics_), &m_RenderStatistics_, 0); // TODO : Fix exception here
 
 	//ImGui::Begin("Property Panel");
 
 	// gpu name
-	rpr_longlong MemoryUsage = m_RenderStatistics_.gpumem_usage / 1024 / 1024;
+	/*rpr_longlong MemoryUsage = m_RenderStatistics_.gpumem_usage / 1024 / 1024;
 	rpr_longlong SystemMemoryUsage = m_RenderStatistics_.sysmem_usage / 1024 / 1024;
 	rpr_longlong GpuMaxAllocation = m_RenderStatistics_.gpumem_max_allocation / 1024 / 1024;
-	rpr_longlong GpuTotal = m_RenderStatistics_.gpumem_total / 1024 / 1024;
+	rpr_longlong GpuTotal = m_RenderStatistics_.gpumem_total / 1024 / 1024;*/
 
+	/*long long MemoryUsage = 0;
+	long long SystemMemoryUsage = 0;
+	long long GpuMaxAllocation = 0;
+	long long GpuTotal = 0;*/
+
+	ImGui::Spacing();
 	ImGui::Separator();
+	ImGui::Spacing();
 
 	if (ImGui::CollapsingHeader("Render Info"))
 	{
@@ -1129,13 +1389,15 @@ void HorusInspector::InspectorProjectProperty()
 		ImGui::Separator();
 		ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
 		ImGui::Separator();
-		ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
+		/*ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
 		ImGui::Text("GPU Memory usage : %d MB", MemoryUsage);
 		ImGui::Text("GPU max allocation : %d MB", GpuMaxAllocation);
-		ImGui::Text("GPU total : %d MB", GpuTotal);
+		ImGui::Text("GPU total : %d MB", GpuTotal);*/
 	}
 
+	ImGui::Spacing();
 	ImGui::Separator();
+	ImGui::Spacing();
 
 	const char* RenderModes[] = {
 		"Diffuse only lighting",
@@ -1193,21 +1455,18 @@ void HorusInspector::InspectorProjectProperty()
 	ImGui::Separator();
 
 	ImGui::TextUnformatted("Path: ");
-	ImGui::InputText("##path", Path, sizeof(Path));
+	ImGui::InputText("##path", Path.data(), sizeof(Path));
 	ImGui::SameLine();
 	if (ImGui::Button("Browse##path"))
 	{
-		FileDialogBuffer = Path;
-		FileDialog::file_dialog_open = true;
-		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-	}
+		std::string FilePath = Utils::HorusFileDialog::OpenFile("Image (*.*)\0*.jpg\0*.png\0*.exr\0*.tiff\0");
+		if (!FilePath.empty())
+		{
+			spdlog::info("Open file : {}", FilePath);
+		}
 
-	if (FileDialog::file_dialog_open)
-	{
-		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, FileDialogBuffer, sizeof(FileDialogBuffer), FileDialog::file_dialog_open_type);
+		Path = FilePath;
 	}
-
-	// Backdrop image
 
 	if (bool CheckboxbeckdropChanged = ImGui::Checkbox("Background image", &m_EnableBackdropImage_); CheckboxbeckdropChanged && (m_EnableBackdropImage_ != m_PreviousEnableBackdropImage_))
 	{
@@ -1282,13 +1541,6 @@ void HorusInspector::InspectorProjectProperty()
 		{
 			if (ImGui::BeginTabItem("Sampling"))
 			{
-				// Sampling parameters
-
-				// Interactive render ?
-				// Progressive passes ?
-
-				// min and max samples set with slider and text input
-
 				if (ImGui::CollapsingHeader("Sampling", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Text("Min samples: %d", m_MinSamples_);
@@ -1336,7 +1588,7 @@ void HorusInspector::InspectorProjectProperty()
 
 						static float RussianRouletteDepth = 5;
 
-						if (ImGui::SliderFloat("Depth", &RussianRouletteDepth, 1.0f, 20.0f))  // Min 1.0, Max 20.0
+						if (ImGui::SliderFloat("Depth", &RussianRouletteDepth, 1.0f, 20.0f))
 						{
 							rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, RussianRouletteDepth);
 							RrParametersChanged = true;
@@ -1358,10 +1610,10 @@ void HorusInspector::InspectorProjectProperty()
 
 					static bool ParametersChanged = false;
 
-					if (bool CheckboxadsChanged = ImGui::Checkbox("Enable adaptive sampling", &m_EnableAdaptiveSampling_); CheckboxadsChanged && (m_EnableAdaptiveSampling_ != m_PreviousEnableAdaptiveSampling_))
+
+					if (ImGui::Checkbox("Adaptive sampling", &m_EnableAdaptiveSampling_))
 					{
 						m_ResetBuffer_ = true;
-						m_PreviousEnableAdaptiveSampling_ = m_EnableAdaptiveSampling_;
 						ParametersChanged = true;
 					}
 
@@ -1374,19 +1626,32 @@ void HorusInspector::InspectorProjectProperty()
 						ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Adaptive sampling is disabled");
 					}
 
+					/*if (bool CheckboxadsChanged = ImGui::Checkbox("Enable adaptive sampling", &m_EnableAdaptiveSampling_); CheckboxadsChanged && (m_EnableAdaptiveSampling_ != m_PreviousEnableAdaptiveSampling_))
+					{
+						m_ResetBuffer_ = true;
+						m_PreviousEnableAdaptiveSampling_ = m_EnableAdaptiveSampling_;
+						Radeon.SetAdaptiveRender();
+						ParametersChanged = true;
+					}
+
+					if (m_EnableAdaptiveSampling_)
+					{
+						ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Adaptive sampling is enabled");
+					}
+					else
+					{
+						ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Adaptive sampling is disabled");
+					}*/
+
 					if (ParametersChanged)
 					{
-						if (m_EnableAdaptiveSampling_ == true)
+						if (m_EnableAdaptiveSampling_)
 						{
-							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 16);
-							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, m_MinSamples_);
-							rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, m_AdaptiveThreshold_);
+							Radeon.SetAdaptiveRender();
 						}
 						else
 						{
-							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, 0);
-							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_MIN_SPP, 0);
-							rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, 0.0f);
+							Radeon.SetClassicRender();
 						}
 
 						ParametersChanged = false;
@@ -1394,8 +1659,9 @@ void HorusInspector::InspectorProjectProperty()
 
 					ImGui::Text("Threshold: %.2f", m_AdaptiveThreshold_);
 					ImGui::SameLine();
-					if (ImGui::SliderFloat("Threshold", &m_AdaptiveThreshold_, 0.0f, 1.0f))
+					if (ImGui::SliderFloat("Threshold", &m_AdaptiveThreshold_, 0.01f, 0.5f, "%.1f"))
 					{
+						Radeon.SetAdaptiveSamplingThreshold(m_AdaptiveThreshold_);
 						CallResetBuffer();
 						ParametersChanged = true;
 					}
@@ -1476,7 +1742,7 @@ void HorusInspector::InspectorProjectProperty()
 				}
 
 				const char* Filters[] = { "Box", "Triangle", "Gaussian", "Mitchell", "Lanczos", "Blackmanharris", "None" };
-				static int SelectedFilter = 5; // Gaussian by default
+				static int SelectedFilter = 2;
 
 				ImGui::Text("Select filter :");
 				if (ImGui::Combo("Filter", &SelectedFilter, Filters, IM_ARRAYSIZE(Filters)))
@@ -1509,28 +1775,6 @@ void HorusInspector::InspectorProjectProperty()
 				}
 
 				ImGui::Separator();
-
-
-				// collapsing header for change sampler type
-
-				/*bool showSamplerType = false;
-
-				if (ImGui::CollapsingHeader("Sampler Type"))
-				{
-					showSamplerType = true;
-				}
-
-				if (showSamplerType)
-				{
-					ImGui::RadioButton("Sobol", &samplerType, RPR_CONTEXT_SAMPLER_TYPE_SOBOL);
-					ImGui::RadioButton("Random", &samplerType, RPR_CONTEXT_SAMPLER_TYPE_RANDOM);
-					ImGui::RadioButton("CMJ", &samplerType, RPR_CONTEXT_SAMPLER_TYPE_CMJ);
-
-					rprContextSetParameterByKey1u(context, RPR_CONTEXT_SAMPLER_TYPE, samplerType);
-				}
-
-				ImGui::Separator();*/
-
 
 				ImGui::EndTabItem();
 			}
@@ -1829,41 +2073,50 @@ void HorusInspector::InspectorProjectProperty()
 		}
 
 		ImGui::InputText("Filename", m_UserInput_, 256);
+		if (ImGui::Button("Browse##ExportPath"))
+		{
+			std::string FilePath = Utils::HorusFileDialog::OpenFolder();
+			if (!FilePath.empty())
+			{
+				spdlog::info("Save file : {}", FilePath);
+				strncpy(m_UserInput_, FilePath.c_str(), sizeof(m_UserInput_));
+			}
+		}
+		ImGui::SameLine();
 		if (ImGui::Button("Export"))
 		{
-			if (strlen(m_UserInput_) > 0)
+			std::string ExportPath = m_UserInput_;
+			std::string Extension = std::string(Formats[ExportFormat]);
+			std::string Filename;
+
+			auto GenerateFinalFilename = [&](const std::string& BasePath)
+				{
+					std::string Result;
+					if (std::filesystem::exists(BasePath + Extension))
+					{
+						m_Suffix_++;
+						Result = BasePath + ("_" + std::to_string(m_Suffix_) + "_" + std::to_string(Radeon.GetSampleCount()) + Extension);
+						spdlog::warn("File already exists, renaming to: {}", Result);
+						Console.AddLog(" [warning] File already exists, renaming to : %s ", Result.c_str());
+					}
+					else
+					{
+						m_Suffix_ = 0;
+						Result = BasePath + ("_" + std::to_string(Radeon.GetSampleCount()) + Extension);
+						spdlog::info("Render exported with success: {}", Result);
+						Console.AddLog(" [success] Render exported with success: %s ", Result.c_str());
+					}
+					return Result;
+				};
+
+			if (!ExportPath.empty())
 			{
-				if (std::filesystem::exists(m_UserInput_ + std::string(Formats[ExportFormat])))
-				{
-					m_Suffix_++;
-					Filename = m_UserInput_ + ("_" + std::to_string(m_Suffix_) + "_" + std::to_string(Radeon.GetSampleCount()) + std::string(Formats[ExportFormat]));
-					spdlog::warn("File already exists, renaming to: {}", Filename);
-					Console.AddLog(" [warning] File already exists, renaming to : %s ", Filename.c_str());
-				}
-				else
-				{
-					m_Suffix_ = 0;
-					Filename = m_UserInput_ + ("_" + std::to_string(Radeon.GetSampleCount()) + std::string(Formats[ExportFormat]));
-					spdlog::info("Render exported with success: {}", Filename);
-					Console.AddLog(" [success] Render exported with success: %s ", Filename.c_str());
-				}
+				Filename = GenerateFinalFilename(ExportPath);
 			}
 			else
 			{
-				if (std::filesystem::exists(BaseFilename + std::string(Formats[ExportFormat])))
-				{
-					m_Suffix_++;
-					Filename = BaseFilename + ("_" + std::to_string(m_Suffix_) + std::to_string(Radeon.GetSampleCount()) + std::string(Formats[ExportFormat]));
-					spdlog::warn("File already exists, renaming to: {}", Filename);
-					Console.AddLog(" [warning] File already exists, renaming to : %s ", Filename.c_str());
-				}
-				else
-				{
-					m_Suffix_ = 0;
-					Filename = BaseFilename + ("_" + std::to_string(Radeon.GetSampleCount()) + std::string(Formats[ExportFormat]));
-					spdlog::info("Render exported with success: {}", Filename);
-					Console.AddLog(" [success] Render exported with success: %s ", Filename.c_str());
-				}
+				std::string BaseFilename = "Render";
+				Filename = GenerateFinalFilename(BaseFilename);
 			}
 
 			if (rpr_int Status = rprFrameBufferSaveToFile(Radeon.GetFrameBufferResolved(), Filename.c_str()); Status != RPR_SUCCESS)
@@ -1922,12 +2175,32 @@ void HorusInspector::ShowHelpMarker(const char* desc)
 	}
 }
 
+
+// Camera 
+void HorusInspector::PopulateCameraInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Getters Camera
+	m_CameraName_ = ObjectManager.GetCameraNameById(ObjectManager.GetActiveRadeonCameraId());
+
+	m_CameraLookAt_ = GetCameraLookAt();
+	m_CameraPosition_ = GetCameraPosition();
+	m_CameraRotation_ = GetCameraRotation();
+	m_CameraScale_ = GetCameraScale();
+	m_CameraNear_ = GetCameraNear();
+	m_CameraFar_ = GetCameraFar();
+	m_CameraFov_ = GetFov();
+	m_CameraFStop_ = GetFStop();
+	m_ApertureBlades_ = GetApertureBlades();
+}
+
 // Camera Getters
 glm::vec3 HorusInspector::GetCameraLookAt()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -1942,7 +2215,7 @@ glm::vec3 HorusInspector::GetCameraPosition()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -1958,7 +2231,7 @@ glm::vec3 HorusInspector::GetCameraRotation()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -1973,7 +2246,7 @@ glm::vec3 HorusInspector::GetCameraScale()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -1984,11 +2257,40 @@ glm::vec3 HorusInspector::GetCameraScale()
 		return { 0.0f, 0.0f, 0.0f };
 	}
 }
+float HorusInspector::GetCameraNear()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraNearPlane(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetCameraFar()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFarPlane(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
 float HorusInspector::GetFov()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -1999,6 +2301,78 @@ float HorusInspector::GetFov()
 		return 0.0f;
 	}
 }
+float HorusInspector::GetFStop()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFStop(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetFocusDistance()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFocusDistance(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+int HorusInspector::GetApertureBlades()
+{
+HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraApertureBlades(ActiveCamera);
+	}
+	else
+	{
+		return 0;
+	}
+}
+void HorusInspector::SetFocusPlaneToFocusPosition(rpr_shape& Plane)
+{
+	if (m_DrawFocusPlane_)
+	{
+		PopulateCameraInfos();
+		glm::vec3 FocusDir = glm::normalize(m_CameraLookAt_ - m_CameraPosition_);
+
+		glm::vec3 FocusPos = m_CameraPosition_ + FocusDir * m_FocusPlaneDistance_;
+		glm::vec3 FocusNormal = -FocusDir;
+
+		glm::mat4 FocusTransform = glm::mat4(1.0f);
+		FocusTransform = glm::translate(FocusTransform, FocusPos);
+
+		glm::vec3 WorldUp = { 0.0f, 1.0f, 0.0f };
+		glm::vec3 WorldRight = glm::normalize(glm::cross(WorldUp, FocusNormal));
+		glm::vec3 Up = glm::cross(FocusNormal, WorldRight);
+
+		glm::mat4 RotationMatrix = glm::mat4(glm::vec4(WorldRight, 0.0f),
+			glm::vec4(Up, 0.0f),
+			glm::vec4(FocusNormal, 0.0f),
+			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+		FocusTransform = FocusTransform * RotationMatrix;
+		CHECK(rprShapeSetTransform(Plane, false, &FocusTransform[0][0]));
+	}
+}
+void HorusInspector::ShowHideFocusPlane(rpr_shape& Plane)
+{
+	CHECK(rprShapeSetVisibility(Plane, m_DrawFocusPlane_));
+}
 
 // Camera Setters
 void HorusInspector::SetCameraLookAt(glm::vec3 look_at)
@@ -2006,7 +2380,7 @@ void HorusInspector::SetCameraLookAt(glm::vec3 look_at)
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -2023,7 +2397,7 @@ void HorusInspector::SetCameraPosition(glm::vec3 position)
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -2040,7 +2414,7 @@ void HorusInspector::SetCameraRotation(glm::vec3 rotation_axis)
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
@@ -2057,11 +2431,62 @@ void HorusInspector::SetCameraScale(glm::vec3 scale)
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{
 		ObjectManager.SetCameraScale(ActiveCamera, scale);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraNear(float Near)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraNear(ActiveCamera, Near);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraFar(float Far)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraFar(ActiveCamera, Far);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetFStop(float FStop)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetFStop(ActiveCamera, FStop);
 	}
 	else
 	{
@@ -2074,7 +2499,7 @@ void HorusInspector::SetFov(float fov)
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	int ActiveCamera = ObjectManager.GetActiveCameraId();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
 	{

@@ -19,11 +19,15 @@
 #include "ImGuizmo.h"
 #include <hrs_console.h>
 
+#include "hrs_inspector.h"
+#include "hrs_timer.h"
+
 bool LoadSetupEngineData()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusTimerManager::GetInstance().StartTimer("LoadData");
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
 	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -44,8 +48,10 @@ bool LoadSetupEngineData()
 	int SphereLight = ObjectManager.CreateLight("Lgt_Sphere01", "sphere");
 	ObjectManager.SetLightPosition(SphereLight, glm::vec3(8.0f, 1.0f, 0.0f));
 
-	int DiskLight = ObjectManager.CreateLight("Lgt_Disk01", "disk");
+	ObjectManager.CreateLight("Lgt_Disk01", "disk");
 
+	auto TimeLoad = HorusTimerManager::GetInstance().StopTimer("LoadData");
+	spdlog::info("Loading Engine data finished in {} ms.", TimeLoad);
 
 	return true;
 }
@@ -200,11 +206,14 @@ void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusUI& UI = HorusUI::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
+	HorusInspector& Inspector = HorusInspector::GetInstance();
 
 	UI.Init();
 	OpenGL.Init(Width, Height, Window);
 	ImGui.Init(Width, Height, Window);
 	Radeon.Init(Width, Height, Window);
+	Radeon.InitGraphics();
+	Inspector.Init();
 
 	// Artificial delay
 	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -230,16 +239,21 @@ void HorusEngine::Render()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusUI& UI = HorusUI::GetInstance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	//glm::mat4 model, view, projection; // Later for OpenGL
+	[[maybe_unused]] HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	[[maybe_unused]] HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	Radeon.RenderEngine();
-	//ObjectManager.UpdateCamera(ObjectManager.get_active_camera_id());
-	//ObjectManager.GetMatrices(ObjectManager.get_active_camera_id(), model, view, projection);
 
-	//glm::mat4 mvp = model * view * projection; // Later for OpenGL
-	//glLoadMatrixf(glm::value_ptr(mvp)); // Later for OpenGL
+	{
+		//glm::mat4 model, view, projection; // Later for OpenGL
+		//OpenGL.Render(); // TODO : Make it work with Radeon
+
+		//ObjectManager.UpdateRadeonCamera(ObjectManager.get_active_camera_id());
+		//ObjectManager.GetMatrices(ObjectManager.get_active_camera_id(), model, view, projection);
+
+		//glm::mat4 mvp = model * view * projection; // Later for OpenGL
+		//glLoadMatrixf(glm::value_ptr(mvp)); // Later for OpenGL
+	}
 
 	UI.RenderUI();
 }
@@ -254,27 +268,25 @@ void HorusEngine::PostRender()
 	OpenGL.PostRender();
 	Radeon.PostRender();
 
-	if (m_LoadingThread_.valid())
-	{
-		if (std::future_status Status = m_LoadingThread_.wait_for(std::chrono::seconds(20)); Status == std::future_status::ready)
-		{
-			m_LoadingThread_.get();
-			spdlog::warn("Loading Engine data finished.");
-		}
-	}
-
-	if (m_EngineIsReady_)
+	/*if (m_EngineIsReady_)
 	{
 		if (m_IsFirstLaunch_)
 		{
 			m_LoadingThread_ = std::async(std::launch::async, ::LoadSetupEngineData);
 		}
-	}
+	}*/
 
 	if (m_IsFirstLaunch_)
 	{
-
+		m_LoadingThread_ = std::async(std::launch::async, LoadSetupEngineData);
 		m_IsFirstLaunch_ = false;
+	}
+
+	if (m_LoadingThread_.valid() && m_LoadingThread_.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+	{
+		// The thread has finished, let's get the result (if any) and reset the future
+		m_LoadingThread_.get();
+		m_LaunchLoadData_ = false;
 	}
 
 	if (m_IsClosing_)
@@ -283,7 +295,7 @@ void HorusEngine::PostRender()
 	}
 }
 
-int GetExistingFileSuffix(std::string BaseName, std::string Extension)
+int GetExistingFileSuffix(const std::string& BaseName, const std::string& Extension)
 {
 	std::string RegexString = BaseName + R"((_\d+)?)";
 	std::regex Regex(RegexString + Extension + "$");
@@ -307,7 +319,7 @@ int GetExistingFileSuffix(std::string BaseName, std::string Extension)
 	return MaxSuffix;
 }
 
-void EditTransformWithGizmo(const float* view, const float* projection, float* matrix)
+void EditTransformWithGizmo(const float* View, const float* Projection, float* Matrix)
 {
 	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
 	static ImGuizmo::MODE MCurrentGizmoMode(ImGuizmo::WORLD);
@@ -333,11 +345,11 @@ void EditTransformWithGizmo(const float* view, const float* projection, float* m
 	}
 
 	float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-	ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
+	ImGuizmo::DecomposeMatrixToComponents(Matrix, matrixTranslation, matrixRotation, matrixScale);
 	ImGui::InputFloat3("Translation", matrixTranslation);
 	ImGui::InputFloat3("Rotation", matrixRotation);
 	ImGui::InputFloat3("Scale", matrixScale);
-	ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+	ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, Matrix);
 
 	if (mCurrentGizmoOperation != ImGuizmo::SCALE)
 	{
@@ -354,7 +366,7 @@ void EditTransformWithGizmo(const float* view, const float* projection, float* m
 
 
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, MCurrentGizmoMode, matrix, NULL, NULL);
+	ImGuizmo::Manipulate(View, Projection, mCurrentGizmoOperation, MCurrentGizmoMode, Matrix, NULL, NULL);
 
 }
 

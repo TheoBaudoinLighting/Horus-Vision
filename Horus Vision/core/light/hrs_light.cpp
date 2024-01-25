@@ -1,15 +1,12 @@
 
+#include "hrs_object_manager.h" // glad.h
 #include "hrs_light.h"
 #include "hrs_radeon.h"
 
 #include <thread>
 #include <mutex>
 
-#include "objects/hrs_object_manager.h"
 #include <hrs_console.h>
-
-#include "glm/detail/_noise.hpp"
-#include "glm/detail/_noise.hpp"
 
 std::mutex Mtx;
 
@@ -111,15 +108,15 @@ rpr_light CreateHdriLight(const std::string& HdriImage)
 
 		return nullptr;
 	}
-	CHECK(Status);
-	Gc.Add(Image);
+	CHECK(Status)
+		Gc.Add(Image);
 
-	CHECK(rprEnvironmentLightSetImage(Light, Image));
-	CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f));
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
-	CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true));
+	CHECK(rprEnvironmentLightSetImage(Light, Image))
+		CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f))
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
 
-	spdlog::info("Light created");
+		spdlog::info("Light created");
 	Console.AddLog(" [success] Light created");
 
 	return Light;
@@ -133,14 +130,14 @@ rpr_light CreatePointLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreatePointLight(Radeon.GetContext(), &Light));
-	gc.Add(Light);
+	CHECK(rprContextCreatePointLight(Radeon.GetContext(), &Light))
+		gc.Add(Light);
 
-	CHECK(rprPointLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
-	CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true));
+	CHECK(rprPointLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
 
-	spdlog::info("Point light created");
+		spdlog::info("Point light created");
 	Console.AddLog(" [success] Point light created");
 
 	return Light;
@@ -154,14 +151,14 @@ rpr_light CreateDirectionalLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateDirectionalLight(Radeon.GetContext(), &Light));
-	Gc.Add(Light);
+	CHECK(rprContextCreateDirectionalLight(Radeon.GetContext(), &Light))
+		Gc.Add(Light);
 
-	CHECK(rprDirectionalLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
-	CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true));
+	CHECK(rprDirectionalLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
 
-	spdlog::info("Directional light created");
+		spdlog::info("Directional light created");
 	Console.AddLog(" [success] Directional light created");
 
 	return Light;
@@ -185,8 +182,8 @@ rpr_light CreateSpotLight(const std::string& ImagePath)
 		IsImage = true;
 	}
 
-	CHECK(rprContextCreateSpotLight(Radeon.GetContext(), &Light));
-	Gc.Add(Light);
+	CHECK(rprContextCreateSpotLight(Radeon.GetContext(), &Light))
+		Gc.Add(Light);
 
 	if (IsImage)
 	{
@@ -208,15 +205,15 @@ rpr_light CreateSpotLight(const std::string& ImagePath)
 
 		if (Image != nullptr)
 		{
-			CHECK(rprSpotLightSetImage(Light, Image));
+			CHECK(rprSpotLightSetImage(Light, Image))
 		}
 	}
 
-	CHECK(rprSpotLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
-	CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true));
+	CHECK(rprSpotLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
 
-	spdlog::info("Spot light created");
+		spdlog::info("Spot light created");
 	Console.AddLog(" [success] Spot light created");
 
 	return Light;
@@ -235,14 +232,14 @@ rpr_light CreateSkyLight()
 
 	rpr_float albedo = 1.0f;
 
-	CHECK(rprSkyLightSetTurbidity(Light, 1.0f));
-	CHECK(rprSkyLightSetAlbedo(Light, albedo));
-	CHECK(rprSkyLightSetScale(Light, 1.0f));
+	CHECK(rprSkyLightSetTurbidity(Light, 1.0f))
+		CHECK(rprSkyLightSetAlbedo(Light, albedo))
+		CHECK(rprSkyLightSetScale(Light, 1.0f))
 
 
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
 
-	spdlog::info("Sky light created");
+		spdlog::info("Sky light created");
 	Console.AddLog(" [success] Sky light created");
 
 	return Light;
@@ -256,15 +253,15 @@ rpr_light CreateSphereLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateSphereLight(Radeon.GetContext(), &Light));
-	Gc.Add(Light);
+	CHECK(rprContextCreateSphereLight(Radeon.GetContext(), &Light))
+		Gc.Add(Light);
 
-	CHECK(rprSphereLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
-	CHECK(rprSphereLightSetRadius(Light, 1.f));
+	CHECK(rprSphereLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
+		CHECK(rprSphereLightSetRadius(Light, 1.f))
 
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
 
-	spdlog::info("Sphere light created");
+		spdlog::info("Sphere light created");
 	Console.AddLog(" [success] Sphere light created");
 
 	return Light;
@@ -278,18 +275,18 @@ rpr_light CreateDiskLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateDiskLight(Radeon.GetContext(), &Light));
-	Gc.Add(Light);
+	CHECK(rprContextCreateDiskLight(Radeon.GetContext(), &Light))
+		Gc.Add(Light);
 
-	CHECK(rprDiskLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
-	CHECK(rprDiskLightSetRadius(Light, 1.0f));
-	CHECK(rprDiskLightSetAngle(Light, 1.0f));
-	CHECK(rprDiskLightSetInnerAngle(Light, 1.0f));
+	CHECK(rprDiskLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
+		CHECK(rprDiskLightSetRadius(Light, 1.0f))
+		CHECK(rprDiskLightSetAngle(Light, 1.0f))
+		CHECK(rprDiskLightSetInnerAngle(Light, 1.0f))
 
 
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
+		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
 
-	spdlog::info("Disk light created");
+		spdlog::info("Disk light created");
 	Console.AddLog(" [success] Disk light created");
 
 	return Light;
@@ -483,9 +480,18 @@ void HorusLight::DestroyLight()
 
 	if (m_Light_ != nullptr)
 	{
-		CHECK(rprSceneDetachLight(ObjectManager.GetScene(), m_Light_));
-		CHECK(rprObjectDelete(m_Light_));
-		m_Light_ = nullptr;
+		try
+		{
+			CHECK(rprSceneDetachLight(ObjectManager.GetScene(), m_Light_))
+		}
+		catch (const std::exception& e)
+		{
+			spdlog::error("Failed to detach light: {}", e.what());
+			HorusConsole::GetInstance().AddLog(" [error] Failed to detach light : %s ", e.what());
+		}
+
+		CHECK(rprObjectDelete(m_Light_))
+			m_Light_ = nullptr;
 		m_IsLightHdri_ = false;
 
 	}
@@ -645,8 +651,8 @@ void HorusLight::SetSpotLightImage(const std::string& ImagePath)
 		return;
 	}
 
-	CHECK(Status);
-	HorusGarbageCollector::GetInstance().Add(Image);
+	CHECK(Status)
+		HorusGarbageCollector::GetInstance().Add(Image);
 
 	CHECK(rprSpotLightSetImage(m_Light_, Image))
 }
@@ -675,8 +681,8 @@ void HorusLight::SetEnvironmentLightSetImage(const std::string& ImagePath)
 		return;
 	}
 
-	CHECK(Status);
-	HorusGarbageCollector::GetInstance().Add(Image);
+	CHECK(Status)
+		HorusGarbageCollector::GetInstance().Add(Image);
 
 	CHECK(rprEnvironmentLightSetImage(m_Light_, Image))
 }

@@ -2,6 +2,9 @@
 #pragma warning (disable: 4127)  
 #pragma warning (disable: 4996)  
 #pragma warning (disable: 26451) 
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4005)
 
 // External includes
 #include "imgui.h"
@@ -58,7 +61,7 @@ public:
 	ImVec2 GetImageSize() { return m_ImgSize_; }
 	float GetImageAspectRatio() { return m_AspectRatioViewer_; }
 
-	void CallResetBuffer();
+	static void CallResetBuffer();
 
 private:
 
@@ -78,6 +81,7 @@ private:
 	bool m_IsRunning_ = true;
 	bool m_IsClosing_ = false;
 	bool m_IsFirstLaunch_ = true;
+	bool m_LaunchLoadData_ = true;
 
 	std::future<bool> m_LoadingThread_ = async(std::launch::async, []() { return true; });
 	std::future_status m_Status_;

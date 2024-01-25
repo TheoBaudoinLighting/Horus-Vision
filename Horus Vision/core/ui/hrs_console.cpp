@@ -41,7 +41,52 @@ void HorusConsole::Console(bool* p_open)
 		ImGui::EndPopup();
 	}
 
-	ImGui::TextWrapped("Test Console Text Horus Vision - Theo Baudoin - 2023");
+	if (ImGui::CollapsingHeader("Console Parameters"))
+	{
+		
+
+		ImGui::TextWrapped("Test Console Text Horus Vision - Theo Baudoin - 2023");
+
+		if (ImGui::SmallButton("Add Dummy Text"))
+		{
+			AddLog(" %d some text", m_Items_.Size);
+
+			AddLog(" [warning] Warning text ");
+
+			AddLog(" [info] info message here ! ");
+
+			AddLog(" [success] success message here ! ");
+
+			AddLog(" [debug] debug message here ! ");
+
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::SmallButton("Add Dummy Error")) AddLog("[error] something went wrong");
+
+		ImGui::SameLine();
+
+		if (ImGui::SmallButton("Clear")) { ClearLog(); }
+
+		ImGui::SameLine();
+
+		ImGui::Separator();
+
+		if (ImGui::BeginPopup("Options"))
+		{
+			ImGui::Checkbox("Auto-scroll", &m_AutoScroll_);
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
+		ImGui::SameLine();
+		m_Filter_.Draw(R"(Filter ("incl,-excl") ("error"))", 180);
+		ImGui::Separator();
+
+	}
+	
 
 	// %d = int
 	// %s = string
@@ -58,50 +103,11 @@ void HorusConsole::Console(bool* p_open)
 	// %p = pointer
 	// %e = float exponent
 
-
-	if (ImGui::SmallButton("Add Dummy Text"))
-	{
-		AddLog(" %d some text", m_Items_.Size);
-
-		AddLog(" [warning] Warning text ");
-
-		AddLog(" [info] info message here ! ");
-
-		AddLog(" [success] success message here ! ");
-
-		AddLog(" [debug] debug message here ! ");
-
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::SmallButton("Add Dummy Error")) AddLog("[error] something went wrong");
-
-	ImGui::SameLine();
-
-	if (ImGui::SmallButton("Clear")) { ClearLog(); }
-
-	ImGui::SameLine();
-
-	bool copy_to_clipboard = ImGui::SmallButton("Copy");
-
-	ImGui::Separator();
-
-	if (ImGui::BeginPopup("Options"))
-	{
-		ImGui::Checkbox("Auto-scroll", &m_AutoScroll_);
-		ImGui::EndPopup();
-	}
-
-	if (ImGui::Button("Options"))
-		ImGui::OpenPopup("Options");
-	ImGui::SameLine();
-	m_Filter_.Draw(R"(Filter ("incl,-excl") ("error"))", 180);
-	ImGui::Separator();
-
 	const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 	if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar))
 	{
+		bool copy_to_clipboard = ImGui::SmallButton("Copy");
+
 		if (ImGui::BeginPopupContextWindow())
 		{
 			if (ImGui::Selectable("Clear")) ClearLog();

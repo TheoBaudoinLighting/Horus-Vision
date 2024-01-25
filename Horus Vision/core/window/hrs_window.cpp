@@ -18,7 +18,6 @@ void HorusWindow::InitContexts(int width, int height, HorusWindow* window)
 
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
 }
-
 bool HorusWindow::InitWindow(int width, int height, const std::string& title)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
@@ -29,46 +28,11 @@ bool HorusWindow::InitWindow(int width, int height, const std::string& title)
 	m_WindowTitle_ = title;
 
 	Engine.InitContexts(m_WindowWidth_, m_WindowHeight_, this);
-	Radeon.InitGraphics();
 
 	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");
 
 	return m_IsRunning_;
-}
-
-void HorusWindow::Render()
-{
-	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
-	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusEngine& Engine = HorusEngine::GetInstance();
-
-	m_IsClosing_ = Engine.GetIsClosing();
-
-	OpenGL.InitRender();
-	ImGui.InitRender();
-
-	Radeon.RenderEngine();
-	// TODO Render UI Here
-
-	ImGui.PostRender();
-	OpenGL.PostRender();
-
-	ProcessInput();
-
-	if (m_IsClosing_ == true)
-	{
-		Close();
-	}
-}
-
-void HorusWindow::mouse_button_callback(int button, int action, int mods)
-{
-}
-
-void HorusWindow::key_callback(int key, int scancode, int action, int mods)
-{
 }
 
 void HorusWindow::ProcessInput()
@@ -165,7 +129,6 @@ void HorusWindow::ProcessInput()
 		}
 	}
 }
-
 void HorusWindow::Close()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();

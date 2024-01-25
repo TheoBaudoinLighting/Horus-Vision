@@ -7,7 +7,7 @@
 #include "hrs_imgui.h" // glfw3.h
 
 // External includes
-#include <RadeonProRender_v2.h>
+#include <RadeonProRender.hpp>
 #include <glm/glm.hpp>
 
 class HorusWindow : public HorusWindowConfig
@@ -29,13 +29,10 @@ public:
 	void InitContexts(int width, int height, HorusWindow* window);
 
 	bool InitWindow(int width, int height, const std::string& title);
-	void Render();
 
 	GLFWwindow* get_window() override { return m_Window_; }
 
 	void set_window(GLFWwindow* window) override { m_Window_ = window; }
-
-	static HorusWindow* from_native_window(GLFWwindow& window);
 
 	void OnScroll(GLFWwindow* window, double xoffset, double yoffset) override {}
 	void OnKey(GLFWwindow* window, int key, int scancode, int action, int mods) override {}
@@ -45,8 +42,8 @@ public:
 	void OnClose() override {}
 
 	void scroll_callback(double xoffset, double yoffset) override { m_MouseWheel_ = yoffset; }
-	void mouse_button_callback(int button, int action, int mods) override;
-	void key_callback(int key, int scancode, int action, int mods) override;
+	void mouse_button_callback(int button, int action, int mods) override {}
+	void key_callback(int key, int scancode, int action, int mods) override {}
 	void resize_callback(int width, int height) override { m_WindowWidth_ = width; m_WindowHeight_ = height; }
 	void close_callback() override {}
 	void ProcessInput();

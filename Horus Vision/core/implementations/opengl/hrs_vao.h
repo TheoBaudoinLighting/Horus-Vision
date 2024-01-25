@@ -12,7 +12,7 @@ public:
 
 	HorusVAO() : ID(0) {}
 
-	void LinkAttrib(HorusVBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset)
+	void LinkAttrib(HorusVBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizei stride, void* offset)
 	{
 		VBO.Bind();
 		glVertexAttribPointer(layout, numComponents, type, GL_FALSE, stride, offset);

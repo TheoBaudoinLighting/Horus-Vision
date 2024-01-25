@@ -131,6 +131,7 @@ void HorusOutliner::Outliner(bool* p_open)
 					Console.AddLog(" [info] Material id : %d ", Id);
 
 					ObjectManager.SetActualSelectedId(Id);
+					ObjectManager.SetActiveMaterialId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
 				}
 				ImGui::PopStyleColor();
@@ -159,6 +160,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 					ObjectManager.SetActualSelectedId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
+					HorusInspector::GetInstance().PopulateCameraInfos();
 				}
 				ImGui::PopStyleColor();
 			}
