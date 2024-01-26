@@ -1,6 +1,8 @@
 #pragma once
 #include <RadeonProRender.hpp>
 
+#include <mutex>
+
 class HorusScene
 {
 public:
@@ -30,6 +32,12 @@ public:
 private:
 
 	rpr_scene m_Scene_ = nullptr;
+
+	// Mutex for scene
+	//std::mutex m_SceneMutex_;
+
+
+
 };
 
 

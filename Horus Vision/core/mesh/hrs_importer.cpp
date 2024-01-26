@@ -15,6 +15,9 @@
 
 #include "common.h"
 
+//#define TINYOBJLOADER_IMPLEMENTATION
+//#include "tiny_obj_loader.h"
+
 inline std::mutex LoadMeshMutex;
 
 rpr_shape HorusMeshImporter::LoadMesh(const std::string& MeshPath)
@@ -197,3 +200,96 @@ rpr_shape HorusMeshImporter::LoadMesh(const std::string& MeshPath)
 
 	return TShape;
 }
+
+//rpr_shape HorusMeshImporter::LoadMeshTOL(const std::string& MeshPath)
+//{
+//	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+//	HorusConsole& Console = HorusConsole::GetInstance();
+//
+//	m_Name_ = MeshPath;
+//
+//	tinyobj::attrib_t Attrib;
+//	std::vector<tinyobj::shape_t> Shapes;
+//	std::vector<tinyobj::material_t> Materials;
+//	std::string Error;
+//	std::string Warning;
+//
+//	bool Ret = tinyobj::LoadObj(&Attrib, &Shapes, &Materials, &Warning, &Error, MeshPath.c_str(), 0, true);
+//
+//	if (!Ret)
+//	{
+//		spdlog::error("Error with TinyObjLoader : {}", Error);
+//		return nullptr;
+//	}
+//
+//	std::vector<float> vertices;
+//	std::vector<float> normals;
+//	std::vector<unsigned int> indices;
+//
+//	for (size_t S = 0; S < Shapes.size(); S++)
+//	{
+//		size_t IndexOffset = 0;
+//
+//		for (size_t f = 0; f < Shapes[S].mesh.num_face_vertices.size(); f++)
+//		{
+//			for (size_t fv = 0; fv < 3; fv++)
+//			{
+//				tinyobj::index_t Idx = Shapes[S].mesh.indices[IndexOffset + fv];
+//				tinyobj::real_t Vx = Attrib.vertices[3 * Idx.vertex_index + 0];
+//				tinyobj::real_t Vy = Attrib.vertices[3 * Idx.vertex_index + 1];
+//				tinyobj::real_t Vz = Attrib.vertices[3 * Idx.vertex_index + 2];
+//				tinyobj::real_t Nx = Attrib.normals[3 * Idx.normal_index + 0];
+//				tinyobj::real_t Ny = Attrib.normals[3 * Idx.normal_index + 1];
+//				tinyobj::real_t Nz = Attrib.normals[3 * Idx.normal_index + 2];
+//
+//				tinyobj::real_t Tx, Ty;
+//
+//				if (!Attrib.texcoords.empty())
+//				{
+//					Tx = Attrib.texcoords[2 * Idx.texcoord_index + 0];
+//					Ty = 1.0 - Attrib.texcoords[2 * Idx.texcoord_index + 1];
+//				}
+//				else
+//				{
+//					if (fv == 0)
+//						Tx = Ty = 0.0;
+//					else if (fv == 1)
+//						Tx = 0.0, Ty = 1.0;
+//					else
+//						Tx = Ty = 1.0;
+//				}
+//
+//				m_VerticesUVX_.push_back(RadeonProRender::float4(Vx, Vy, Vz, Tx));
+//				m_NormalsUVX_.push_back(RadeonProRender::float4(Nx, Ny, Nz, Ty));
+//
+//				vertices.push_back(Vx);
+//				vertices.push_back(Vy);
+//				vertices.push_back(Vz);
+//				normals.push_back(Nx);
+//				normals.push_back(Ny);
+//				normals.push_back(Nz);
+//				indices.push_back(IndexOffset + fv);
+//			}
+//
+//			IndexOffset += 3;
+//		}
+//	}
+//
+//	rpr_shape mesh;
+//	/*rpr_int status = rprContextCreateMesh(Radeon.GetContext(), vertices.data(),          
+//		vertices.size() / 3,      
+//		sizeof(float) * 3,        
+//		normals.data(),
+//		normals.size() / 3,       
+//		sizeof(float) * 3,        
+//		nullptr,                  
+//		0,                        
+//		0,                        
+//		indices.data(),           
+//		indices.size(),           
+//		sizeof(unsigned int),     
+//		&mesh                     
+//	);*/
+//
+//	return mesh;
+//}

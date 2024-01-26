@@ -32,9 +32,9 @@ public:
 
 	void Clean()
 	{
-		std::lock_guard Guard(CleanMutex);
 		for (const auto& i : m_NodesCollector_)
-			if (i) { rprObjectDelete(i); }
+			try { rprObjectDelete(i); }
+			catch (...) {}
 		m_NodesCollector_.clear();
 	}
 

@@ -138,6 +138,9 @@
     <ClCompile Include="external\RadeonProRender\rprTools\RadeonProRenderCpp.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\GLAD\INCLUDE\GLAD\glad.h">
@@ -1551,6 +1554,9 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\config\hrs_utils.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

@@ -27,7 +27,6 @@
 #include <hrs_viewport.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-
 #include "picojson.h"
 #include "stbi/stb_image_write.h"
 
@@ -231,7 +230,7 @@ bool HorusRadeon::InitGraphics()
 	CHECK(rprContextSetParameterByKey1u(0, RPR_CONTEXT_TRACING_ENABLED, 1));*/
 
 	rpr_int Status = rprCreateContext(RPR_API_VERSION, Plugins, NumPlugins,
-		RPR_CREATION_FLAGS_ENABLE_GL_INTEROP | RPR_CREATION_FLAGS_ENABLE_GPU0,
+		RPR_CREATION_FLAGS_ENABLE_GL_INTEROP | RPR_CREATION_FLAGS_ENABLE_GPU0 | RPR_CREATION_FLAGS_ENABLE_GPU1,
 		g_contextProperties, nullptr, &m_ContextA_);
 
 	CHECK(Status);
@@ -248,7 +247,7 @@ bool HorusRadeon::InitGraphics()
 	ObjectManager.CreateDefaultScene();
 
 	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_DISPLAY_GAMMA, 2.4f));
-	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_RADIANCE_CLAMP, 2.0f));
+	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_RADIANCE_CLAMP, 2.f));
 
 	// Set Classic Render (Default) -> Don't call the function because at the startup the engine need to render the first frame forced
 	const rpr_framebuffer_desc Desc = { static_cast<unsigned int>(m_WindowWidth_), static_cast<unsigned int>(m_WindowHeight_) };
@@ -275,6 +274,7 @@ bool HorusRadeon::InitGraphics()
 	RenderFuture.wait();
 
 	CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_ITERATIONS, m_MaxIterations_));
+	rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_MAX_RECURSION, 4);
 
 	m_FbData_ = std::shared_ptr<float>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
 
@@ -360,143 +360,149 @@ void HorusRadeon::RenderEngine()
 }
 void HorusRadeon::RenderClassic()
 {
-	if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_)
-	{
-		return;
-	}
-
-	// Benchmark
-	{
-		const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
-
-		if (BenchmarkStart == InvalidTime)
-			BenchmarkStart = TimeUpdateStarts;
-		if (BenchmarkNumberOfRenderIteration >= 100 && m_IsDirty_)
-		{
-			double ElapsedTimeMs = std::chrono::duration<double, std::milli>(TimeUpdateStarts - BenchmarkStart).count();
-			double RenderPerSecond = static_cast<double>(BenchmarkNumberOfRenderIteration) * 1000.0 / ElapsedTimeMs;
-			spdlog::info("Rendering -> {} iterations per second.", RenderPerSecond);
-			BenchmarkNumberOfRenderIteration = 0;
-			BenchmarkStart = TimeUpdateStarts;
-		}
-	}
-
-	RenderProgressCallback.Clear();
-
-	if (m_IsDirty_)
-	{
-		//m_RenderMutex_.lock();
-		m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
-
-		//m_RenderMutex_.unlock();
-		//m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple JThread
-		//m_RenderThread_ = std::thread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Thread
-
-		m_ThreadRunning_ = true;
-	}
-
-	while (!RenderProgressCallback.Done)
+	if (!m_LockingRender_)
 	{
 		if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_)
 		{
-			break;
+			return;
 		}
 
-		if (RenderProgressCallback.HasUpdate)
+		// Benchmark
 		{
-			RenderMutex.lock();
-			m_SampleCount_++;
+			const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
 
-			m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
-
-			glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<const GLvoid*>(m_FbData_.get()));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			RenderProgressCallback.HasUpdate = false;
-
-			RenderMutex.unlock();
-			break;
+			if (BenchmarkStart == InvalidTime)
+				BenchmarkStart = TimeUpdateStarts;
+			if (BenchmarkNumberOfRenderIteration >= 100 && m_IsDirty_)
+			{
+				double ElapsedTimeMs = std::chrono::duration<double, std::milli>(TimeUpdateStarts - BenchmarkStart).count();
+				double RenderPerSecond = static_cast<double>(BenchmarkNumberOfRenderIteration) * 1000.0 / ElapsedTimeMs;
+				spdlog::info("Rendering -> {} iterations per second.", RenderPerSecond);
+				BenchmarkNumberOfRenderIteration = 0;
+				BenchmarkStart = TimeUpdateStarts;
+			}
 		}
+
+		RenderProgressCallback.Clear();
+
+		if (m_IsDirty_)
+		{
+			//m_RenderMutex_.lock();
+			m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
+
+			//m_RenderMutex_.unlock();
+			//m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple JThread
+			//m_RenderThread_ = std::thread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Thread
+
+			m_ThreadRunning_ = true;
+		}
+
+		while (!RenderProgressCallback.Done)
+		{
+			if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_)
+			{
+				break;
+			}
+
+			if (RenderProgressCallback.HasUpdate)
+			{
+				RenderMutex.lock();
+				m_SampleCount_++;
+
+				m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
+
+				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<const GLvoid*>(m_FbData_.get()));
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				RenderProgressCallback.HasUpdate = false;
+
+				RenderMutex.unlock();
+				break;
+			}
+		}
+
+		if (m_ThreadRunning_)
+		{
+			m_ClassicRenderFuture_.wait(); // Simple Future Wait
+			m_ClassicRenderInfoFuture_.wait();
+			//m_RenderThread_.join(); // Simple Thread Join
+			m_ThreadRunning_ = false;
+		}
+
+		GetClassicRenderProgress();
+
+		BenchmarkNumberOfRenderIteration += m_BatchSize_;
 	}
-
-	if (m_ThreadRunning_)
-	{
-		m_ClassicRenderFuture_.wait(); // Simple Future Wait
-		m_ClassicRenderInfoFuture_.wait();
-		//m_RenderThread_.join(); // Simple Thread Join
-		m_ThreadRunning_ = false;
-	}
-
-	GetClassicRenderProgress();
-
-	BenchmarkNumberOfRenderIteration += m_BatchSize_;
 }
 void HorusRadeon::RenderAdaptive()
 {
-	if (!m_IsDirty_ && (m_IsAdaptativeSampling_ && m_ActivePixelRemains_ == 0))
-	{
-		return;
-	}
-
-	// Benchmark
-	{
-		const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
-
-		if (BenchmarkStart == InvalidTime)
-			BenchmarkStart = TimeUpdateStarts;
-		if (BenchmarkNumberOfRenderIteration >= 100 && m_IsDirty_)
-		{
-			double ElapsedTimeMs = std::chrono::duration<double, std::milli>(TimeUpdateStarts - BenchmarkStart).count();
-			double RenderPerSecond = static_cast<double>(BenchmarkNumberOfRenderIteration) * 1000.0 / ElapsedTimeMs;
-			spdlog::info("Adaptive rendering -> {} iterations per second.", RenderPerSecond);
-			BenchmarkNumberOfRenderIteration = 0;
-			BenchmarkStart = TimeUpdateStarts;
-		}
-	}
-
-	RenderProgressCallback.Clear();
-
-	if (m_IsDirty_)
-	{
-		m_AdaptiveRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback);
-		m_ThreadRunning_ = true;
-	}
-
-	while (!RenderProgressCallback.Done)
+	if (!m_LockingRender_)
 	{
 		if (!m_IsDirty_ && (m_IsAdaptativeSampling_ && m_ActivePixelRemains_ == 0))
 		{
-			break;
+			return;
 		}
 
-		if (RenderProgressCallback.HasUpdate)
+		// Benchmark
 		{
-			RenderMutex.lock();
+			const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
 
-			m_AdaptiveRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferAdaptive_);
-
-			glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<const GLvoid*>(m_FbData_.get()));
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			RenderProgressCallback.HasUpdate = false;
-
-			RenderMutex.unlock();
-			break;
+			if (BenchmarkStart == InvalidTime)
+				BenchmarkStart = TimeUpdateStarts;
+			if (BenchmarkNumberOfRenderIteration >= 100 && m_IsDirty_)
+			{
+				double ElapsedTimeMs = std::chrono::duration<double, std::milli>(TimeUpdateStarts - BenchmarkStart).count();
+				double RenderPerSecond = static_cast<double>(BenchmarkNumberOfRenderIteration) * 1000.0 / ElapsedTimeMs;
+				spdlog::info("Adaptive rendering -> {} iterations per second.", RenderPerSecond);
+				BenchmarkNumberOfRenderIteration = 0;
+				BenchmarkStart = TimeUpdateStarts;
+			}
 		}
+
+		RenderProgressCallback.Clear();
+
+		if (m_IsDirty_)
+		{
+			m_AdaptiveRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback);
+			m_ThreadRunning_ = true;
+		}
+
+		while (!RenderProgressCallback.Done)
+		{
+			if (!m_IsDirty_ && (m_IsAdaptativeSampling_ && m_ActivePixelRemains_ == 0))
+			{
+				break;
+			}
+
+			if (RenderProgressCallback.HasUpdate)
+			{
+				RenderMutex.lock();
+
+				m_AdaptiveRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferAdaptive_);
+
+				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<const GLvoid*>(m_FbData_.get()));
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				RenderProgressCallback.HasUpdate = false;
+
+				RenderMutex.unlock();
+				break;
+			}
+		}
+
+		if (m_ThreadRunning_)
+		{
+			m_AdaptiveRenderFuture_.wait();
+			m_AdaptiveRenderInfoFuture_.wait();
+			m_ThreadRunning_ = false;
+		}
+
+		GetAdaptiveRenderProgress();
+
+		BenchmarkNumberOfRenderIteration += m_BatchSize_;
 	}
-
-	if (m_ThreadRunning_)
-	{
-		m_AdaptiveRenderFuture_.wait();
-		m_AdaptiveRenderInfoFuture_.wait();
-		m_ThreadRunning_ = false;
-	}
-
-	GetAdaptiveRenderProgress();
-
-	BenchmarkNumberOfRenderIteration += m_BatchSize_;
 }
 
 void HorusRadeon::SetClassicRender()

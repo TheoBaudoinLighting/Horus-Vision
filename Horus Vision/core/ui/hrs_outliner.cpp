@@ -42,6 +42,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 			if (ImGui::Button("Show Property panel"))
 			{
+				HorusInspector::GetInstance().PopulateProjectInfos();
 				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
 			}
 

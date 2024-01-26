@@ -29,7 +29,7 @@ bool LoadSetupEngineData()
 
 	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
+	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_2k.hdr");
 	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	//int DirectionnalLight = ObjectManager.CreateLight("Lgt_Dir01", "directional");

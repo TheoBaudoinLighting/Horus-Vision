@@ -29,8 +29,6 @@ public:
 	void operator=(HorusInspector const&) = delete;
 
 	void Inspector(bool* p_open);
-	InspectorType GetInspectorType();
-
 	void Init();
 
 	void SetInspectorType(InspectorType Type);
@@ -45,14 +43,12 @@ public:
 
 	void ShowHelpMarker(const char* desc);
 
-	// Getters
-	void CallResetBuffer() { PopulateCameraInfos(); HorusResetBuffers::GetInstance().CallResetBuffers(); }
-
 	// --- Camera ---
 
 	void PopulateCameraInfos();
 
 	// Getters Camera
+	void CallResetBuffer() { PopulateCameraInfos(); HorusResetBuffers::GetInstance().CallResetBuffers(); }
 	glm::vec3 GetCameraLookAt();
 	glm::vec3 GetCameraPosition();
 	glm::vec3 GetCameraRotation();
@@ -68,10 +64,7 @@ public:
 	void CallSetFocusPlaneToFocusPosition() { SetFocusPlaneToFocusPosition(m_FocusPlaneShape_); }
 	void ShowHideFocusPlane(rpr_shape& Plane);
 
-
 	// Setters
-
-	// Setters Camera
 	void SetCameraLookAt(glm::vec3 look_at);
 	void SetCameraPosition(glm::vec3 position);
 	void SetCameraRotation(glm::vec3 rotation_axis);
@@ -82,20 +75,25 @@ public:
 	void SetFStop(float FStop);
 	void SetFov(float fov);
 
-private:
+	// --- Light ---
+
+	// --- Project ---
+	void PopulateProjectInfos();
 
 	
 
-	HorusInspector(): m_Gpu00N_{}, m_Gpu01N_{}
+private:
+
+
+
+	HorusInspector() : m_Gpu00N_{}, m_Gpu01N_{}
 	{
 	}
 
-	// Main inspector
+	//--------------------------------------------- GENERAL ---------------------------------------------//
 	InspectorType m_SelectionType_ = InspectorType::PROJECT;
 
-	// Transform inspector
-
-	// Camera inspector
+	//--------------------------------------------- CAMERA INSPECTOR ---------------------------------------------//
 	std::string m_CameraName_ = "";
 	glm::vec3 m_CameraLookAt_ = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_CameraPosition_ = { 0.0f, 0.0f, 0.0f };
@@ -113,12 +111,9 @@ private:
 	bool m_EnableDof_ = false;
 	bool m_DrawFocusPlane_ = false;
 	rpr_shape m_FocusPlaneShape_ = nullptr;
-	
 
+	//--------------------------------------------- LIGHT INSPECTOR ---------------------------------------------//
 
-
-
-	// Light inspector
 	int m_LightType_ = 0;
 
 	bool m_IsLightVisible_ = false;
@@ -155,7 +150,8 @@ private:
 	float m_DiskLightAngle = 1.0f;
 	float m_DiskLightInnerAngle_ = 0.6f;
 
-	// Material inspector
+	//--------------------------------------------- MATERIAL INSPECTOR ---------------------------------------------//
+
 	glm::vec4 m_DiffuseColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glm::vec4 m_DiffuseWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glm::vec4 m_DiffuseRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -185,17 +181,22 @@ private:
 	bool m_ReflectionMode_ = false;
 	bool m_CoatingMode_ = false;
 
+	//--------------------------------------------- MESH INSPECTOR ---------------------------------------------//
 
+	//--------------------------------------------- TEXTURE INSPECTOR ---------------------------------------------//
 
-	// Mesh inspector
+	//--------------------------------------------- SCENE INSPECTOR ---------------------------------------------//
 
-	// Texture inspector
+	//--------------------------------------------- RENDER INSPECTOR ---------------------------------------------//
 
-	// Scene inspector
+	//--------------------------------------------- PROJECT INSPECTOR ---------------------------------------------//
 
-	// Render inspector
+	// Backdrop image
+	std::string m_BackgroundPath_ = "path/to/image.jpg";
+	std::string m_LastBackgroundPath_ = "";
+	bool m_WasBackdropImageEnabled_ = false;
+	bool m_JustDisabledBackdropImage_ = false;
 
-	// Project inspector
 	bool m_ResetBuffer_ = false;
 	bool m_EnableRenderRegion_ = false;
 	bool m_PreviousEnableAdaptiveSampling_ = false;
@@ -222,8 +223,8 @@ private:
 	float m_DesiredWidth_ = 800.0f;
 
 	char m_UserInput_[256] = "";
-	char m_Gpu00N_[1024];
-	char m_Gpu01N_[1024];
+	std::string m_Gpu00N_;
+	std::string m_Gpu01N_;
 
 	rpr_render_statistics m_RenderStatistics_ = {};
 };

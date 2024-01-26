@@ -184,6 +184,7 @@
     <ClCompile Include="core\scene\hrs_importer_manager.cpp" />
     <ClCompile Include="external\RadeonProRender\inc\Math\half.cpp" />
     <ClCompile Include="external\RadeonProRender\rprTools\RadeonProRenderCpp.cpp" />
+    <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\config\hrs_config.h" />
@@ -531,6 +532,7 @@
     <ClInclude Include="external\RadeonProRender\inc\RadeonProRender_v2.h" />
     <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h" />
     <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp" />
+    <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger.h" />

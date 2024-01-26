@@ -332,11 +332,11 @@ void HorusObjectManager::SetCameraLookat(int id, glm::vec3& pivot)
 	Camera.SetLookAt(pivot);
 }
 
-void HorusObjectManager::TumbleCamera(int id, float x, float y)
+void HorusObjectManager::TumbleCamera(int id, float x, float y, float sensitivity)
 {
 	HorusRadeonCamera& Camera = GetRadeonCamera(id);
 
-	Camera.Tumbling(x, y);
+	Camera.Tumbling(x, y, sensitivity);
 }
 void HorusObjectManager::PanCamera(int id, float x, float y)
 {

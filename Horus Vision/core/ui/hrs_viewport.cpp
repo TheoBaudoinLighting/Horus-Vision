@@ -69,25 +69,25 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
-			ImGui::SetNextItemWidth(WidthPerItems-30);
+			ImGui::SetNextItemWidth(WidthPerItems-50);
 			ImGui::Text("Size : ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems-30);
+			ImGui::SetNextItemWidth(WidthPerItems- 50);
 			ImGui::DragInt("", &CustomX);
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems-30);
+			ImGui::SetNextItemWidth(WidthPerItems- 50);
 			ImGui::Text(" x ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems-30);
+			ImGui::SetNextItemWidth(WidthPerItems- 50);
 			ImGui::DragInt("", &CustomY);
 			ImGui::SameLine();
 
 			ImGui::SameLine(); ShowHelpMarker("Resize the viewport to the desired size. The render will be automatically resized to fit the viewport. Ctrl + Click to edit directly the size.");
 
-			ImGui::SetNextItemWidth(WidthPerItems-30);
+			ImGui::SetNextItemWidth(WidthPerItems- 50);
 			if (ImGui::Combo("Predefined Sizes", &ItemCurrent, Items, IM_ARRAYSIZE(Items)))
 			{
 				sscanf_s(Items[ItemCurrent], "%dx%d", &CustomX, &CustomY);
@@ -103,6 +103,23 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 
 			ImGui::Checkbox("Zooming", &IsZooming);
 			ImGui::SameLine(); ShowHelpMarker("Zoom on the render when you rest the mouse on it.");
+			ImGui::SameLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+
+			// TODO : Implement Combo box for choosing the render space (sRGB, Linear, etc...)
+
+			const char* ColorSpaceConfigItems[] = { "sRGB", "Linear", "ACEScg", "ACES2065-1", "ACEScc", "ACEScct", "ACESproxy" };
+			static int CurrentColorSpaceConfig = 0;
+
+			ImGui::SetNextItemWidth(WidthPerItems- 50);
+			if (ImGui::Combo("Color Space", &CurrentColorSpaceConfig, ColorSpaceConfigItems, IM_ARRAYSIZE(ColorSpaceConfigItems)))
+			{
+				//Radeon.SetColorSpace(CurrentColorSpaceConfig);
+				spdlog::info("Color Space set to : {}", ColorSpaceConfigItems[CurrentColorSpaceConfig]);
+			}
+
+
+
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
@@ -663,7 +680,10 @@ void HorusViewportInput::ProcessInput()
 			MouseDelta.x /= WindowSize.x;
 			MouseDelta.y /= WindowSize.y;
 
-			ObjectManager.TumbleCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y);
+			constexpr float CameraSpeed = 2.5f;
+
+			ObjectManager.TumbleCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y, CameraSpeed);
+
 			ImGui::ResetMouseDragDelta(0);
 		}
 

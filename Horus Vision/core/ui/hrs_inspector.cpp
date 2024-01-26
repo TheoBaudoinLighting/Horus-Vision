@@ -53,7 +53,7 @@ void HorusInspector::Init()
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	// Init Focus Plane
+	// Init Focus Plane and camera
 	m_FocusPlaneShape_ = CreateSquare(GarbageCollector, Radeon.GetContext(), ObjectManager.GetScene(), 0.0f, 0.0f, 2.0f, 0.1f);
 
 	rpr_material_node Emissive;
@@ -76,6 +76,12 @@ void HorusInspector::Init()
 
 	CHECK(rprShapeSetVisibility(m_FocusPlaneShape_, false));
 	SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
+
+	// Init Project Inspector
+	PopulateProjectInfos();
+
+
+
 }
 
 void HorusInspector::SetInspectorType(InspectorType Type)
@@ -1353,53 +1359,50 @@ void HorusInspector::InspectorProjectProperty()
 
 	m_ResetBuffer_ = false;
 
-	static std::string Path = "path/to/image.jpg";
-	static std::string LastUsedPath;
-	static bool WasBackdropImageEnabled = false;
-	static bool JustDisabledBackdrop = false;
-
-	m_Gpu00N_[0] = '\0';
-	m_Gpu00N_[1] = '\0';
-
-	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, nullptr); // TODO : Fix exception here
-	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, nullptr); // TODO : Fix exception here
-	//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(m_RenderStatistics_), &m_RenderStatistics_, 0); // TODO : Fix exception here
-
-	//ImGui::Begin("Property Panel");
-
-	// gpu name
-	/*rpr_longlong MemoryUsage = m_RenderStatistics_.gpumem_usage / 1024 / 1024;
-	rpr_longlong SystemMemoryUsage = m_RenderStatistics_.sysmem_usage / 1024 / 1024;
-	rpr_longlong GpuMaxAllocation = m_RenderStatistics_.gpumem_max_allocation / 1024 / 1024;
-	rpr_longlong GpuTotal = m_RenderStatistics_.gpumem_total / 1024 / 1024;*/
-
-	/*long long MemoryUsage = 0;
-	long long SystemMemoryUsage = 0;
-	long long GpuMaxAllocation = 0;
-	long long GpuTotal = 0;*/
-
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-	if (ImGui::CollapsingHeader("Render Info"))
+	// Render Informations
 	{
-		ImGui::Text("GPU name: %s", m_Gpu00N_); // %s is a placeholder for a string
-		ImGui::Text("GPU name: %s", m_Gpu01N_);
+		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, nullptr); // TODO : Fix exception here
+		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, nullptr); // TODO : Fix exception here
+		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(m_RenderStatistics_), &m_RenderStatistics_, 0); // TODO : Fix exception here
+
+		//ImGui::Begin("Property Panel");
+
+		// gpu name
+		/*rpr_longlong MemoryUsage = m_RenderStatistics_.gpumem_usage / 1024 / 1024;
+		rpr_longlong SystemMemoryUsage = m_RenderStatistics_.sysmem_usage / 1024 / 1024;
+		rpr_longlong GpuMaxAllocation = m_RenderStatistics_.gpumem_max_allocation / 1024 / 1024;
+		rpr_longlong GpuTotal = m_RenderStatistics_.gpumem_total / 1024 / 1024;*/
+
+		/*long long MemoryUsage = 0;
+		long long SystemMemoryUsage = 0;
+		long long GpuMaxAllocation = 0;
+		long long GpuTotal = 0;*/
+
+		ImGui::Spacing();
 		ImGui::Separator();
-		ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
+		ImGui::Spacing();
+
+		if (ImGui::CollapsingHeader("Render Info"))
+		{
+			ImGui::Text("GPU name n01 : %s", m_Gpu00N_.c_str());
+			ImGui::Text("GPU name n02 : %s", m_Gpu01N_.c_str());
+			ImGui::Separator();
+			ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
+			ImGui::Separator();
+			/*ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
+			ImGui::Text("GPU Memory usage : %d MB", MemoryUsage);
+			ImGui::Text("GPU max allocation : %d MB", GpuMaxAllocation);
+			ImGui::Text("GPU total : %d MB", GpuTotal);*/
+		}
+
+		ImGui::Spacing();
 		ImGui::Separator();
-		/*ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
-		ImGui::Text("GPU Memory usage : %d MB", MemoryUsage);
-		ImGui::Text("GPU max allocation : %d MB", GpuMaxAllocation);
-		ImGui::Text("GPU total : %d MB", GpuTotal);*/
+		ImGui::Spacing();
 	}
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-	const char* RenderModes[] = {
+	// Render Modes
+	{
+		const char* RenderModes[] = {
 		"Diffuse only lighting",
 		"Normal GI lighting",
 		"Only direct lighting",
@@ -1410,130 +1413,138 @@ void HorusInspector::InspectorProjectProperty()
 		"Output normal values",
 		"Output UV coordinates",
 		"Output an AO render"
-	};
-	static int SelectedRenderMode = 1;
+		};
+		static int SelectedRenderMode = 1;
 
-	ImGui::Text("Select render mode :");
-	if (ImGui::Combo("Render mode", &SelectedRenderMode, RenderModes, IM_ARRAYSIZE(RenderModes)))
-	{
-		switch (SelectedRenderMode)
+		ImGui::Text("Select render mode :");
+		if (ImGui::Combo("Render mode", &SelectedRenderMode, RenderModes, IM_ARRAYSIZE(RenderModes)))
 		{
-		case 0:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
-			break;
-		case 1:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
-			break;
-		case 2:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
-			break;
-		case 3:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
-			break;
-		case 4:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
-			break;
-		case 5:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
-			break;
-		case 6:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
-			break;
-		case 7:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
-			break;
-		case 8:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
-			break;
-		case 9:
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
-			break;
-		}
-		CallResetBuffer();
-	}
-
-	ImGui::Separator();
-
-	ImGui::TextUnformatted("Path: ");
-	ImGui::InputText("##path", Path.data(), sizeof(Path));
-	ImGui::SameLine();
-	if (ImGui::Button("Browse##path"))
-	{
-		std::string FilePath = Utils::HorusFileDialog::OpenFile("Image (*.*)\0*.jpg\0*.png\0*.exr\0*.tiff\0");
-		if (!FilePath.empty())
-		{
-			spdlog::info("Open file : {}", FilePath);
-		}
-
-		Path = FilePath;
-	}
-
-	if (bool CheckboxbeckdropChanged = ImGui::Checkbox("Background image", &m_EnableBackdropImage_); CheckboxbeckdropChanged && (m_EnableBackdropImage_ != m_PreviousEnableBackdropImage_))
-	{
-		m_ResetBuffer_ = true;
-		m_PreviousEnableBackdropImage_ = m_EnableBackdropImage_;
-	}
-
-	if (m_EnableBackdropImage_ == true)
-	{
-		if (Path != LastUsedPath || JustDisabledBackdrop)
-		{
-			ObjectManager.SetBackgroundImage(Path);
-			LastUsedPath = Path;
-			JustDisabledBackdrop = false;
+			switch (SelectedRenderMode)
+			{
+			case 0:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
+				break;
+			case 1:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
+				break;
+			case 2:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
+				break;
+			case 3:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
+				break;
+			case 4:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
+				break;
+			case 5:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
+				break;
+			case 6:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
+				break;
+			case 7:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
+				break;
+			case 8:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
+				break;
+			case 9:
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
+				break;
+			}
 			CallResetBuffer();
 		}
-		WasBackdropImageEnabled = true;
-	}
-	else if (WasBackdropImageEnabled)
-	{
-		ObjectManager.UnsetBackgroundImage();
-		WasBackdropImageEnabled = false;
-		JustDisabledBackdrop = true;
-		CallResetBuffer();
 	}
 
-	if (WasBackdropImageEnabled)
-	{
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Backdrop image is enabled");
-	}
-	else
-	{
-		ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Backdrop image is disabled");
-	}
-
-	static bool WasTransparentBackgroundEnabled = false;
-
-	if (bool CheckboxTransparentBackgroundChanged = ImGui::Checkbox("Transparent background", &m_EnableTransparentBackground_))
-	{
-		if (m_EnableTransparentBackground_ && !WasTransparentBackgroundEnabled)
-		{
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 1);
-			spdlog::info("Transparent background enabled");
-			Console.AddLog(" [info] Transparent background enabled");
-			WasTransparentBackgroundEnabled = true;
-			m_ResetBuffer_ = true;
-		}
-		else if (!m_EnableTransparentBackground_ && WasTransparentBackgroundEnabled)
-		{
-			rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 0);
-			spdlog::info("Transparent background disabled");
-			Console.AddLog(" [info] Transparent background disabled");
-			WasTransparentBackgroundEnabled = false;
-			m_ResetBuffer_ = true;
-		}
-	}
-
-	if (WasTransparentBackgroundEnabled)
-	{
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Transparent background is enabled");
-	}
-	else
-	{
-		ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Transparent background is disabled");
-	}
-
+	ImGui::Spacing();
 	ImGui::Separator();
+	ImGui::Spacing();
+
+	// Background image and transparent background
+	{
+		ImGui::TextUnformatted("Path: ");
+		ImGui::InputText("##path", m_BackgroundPath_.data(), sizeof(m_BackgroundPath_));
+		ImGui::SameLine();
+		if (ImGui::Button("Browse##path"))
+		{
+			std::string FilePath = Utils::HorusFileDialog::OpenFile("Image (*.*)\0*.jpg\0*.png\0*.exr\0*.tiff\0");
+			if (!FilePath.empty())
+			{
+				spdlog::info("Open file : {}", FilePath);
+			}
+
+			m_BackgroundPath_ = FilePath;
+		}
+
+		if (bool CheckboxbeckdropChanged = ImGui::Checkbox("Background image", &m_EnableBackdropImage_); CheckboxbeckdropChanged && (m_EnableBackdropImage_ != m_PreviousEnableBackdropImage_))
+		{
+			m_ResetBuffer_ = true;
+			m_PreviousEnableBackdropImage_ = m_EnableBackdropImage_;
+		}
+
+		if (m_EnableBackdropImage_ == true)
+		{
+			if (m_BackgroundPath_ != m_LastBackgroundPath_ || m_JustDisabledBackdropImage_)
+			{
+				ObjectManager.SetBackgroundImage(m_BackgroundPath_);
+				m_LastBackgroundPath_ = m_BackgroundPath_;
+				m_JustDisabledBackdropImage_ = false;
+				CallResetBuffer();
+			}
+			m_WasBackdropImageEnabled_ = true;
+		}
+		else if (m_WasBackdropImageEnabled_)
+		{
+			ObjectManager.UnsetBackgroundImage();
+			m_WasBackdropImageEnabled_ = false;
+			m_JustDisabledBackdropImage_ = true;
+			CallResetBuffer();
+		}
+
+		if (m_WasBackdropImageEnabled_)
+		{
+			ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Backdrop image is enabled");
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Backdrop image is disabled");
+		}
+
+		static bool WasTransparentBackgroundEnabled = false;
+
+		if (bool CheckboxTransparentBackgroundChanged = ImGui::Checkbox("Transparent background", &m_EnableTransparentBackground_))
+		{
+			if (m_EnableTransparentBackground_ && !WasTransparentBackgroundEnabled)
+			{
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 1);
+				spdlog::info("Transparent background enabled");
+				Console.AddLog(" [info] Transparent background enabled");
+				WasTransparentBackgroundEnabled = true;
+				m_ResetBuffer_ = true;
+			}
+			else if (!m_EnableTransparentBackground_ && WasTransparentBackgroundEnabled)
+			{
+				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_TRANSPARENT_BACKGROUND, 0);
+				spdlog::info("Transparent background disabled");
+				Console.AddLog(" [info] Transparent background disabled");
+				WasTransparentBackgroundEnabled = false;
+				m_ResetBuffer_ = true;
+			}
+		}
+
+		if (WasTransparentBackgroundEnabled)
+		{
+			ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Transparent background is enabled");
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Transparent background is disabled");
+		}
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
 
 	if (ImGui::CollapsingHeader("Render settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -2331,7 +2342,7 @@ float HorusInspector::GetFocusDistance()
 }
 int HorusInspector::GetApertureBlades()
 {
-HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
 
 	if (ActiveCamera != -1)
@@ -2511,3 +2522,30 @@ void HorusInspector::SetFov(float fov)
 		Console.AddLog(" [error] No camera selected");
 	}
 }
+
+
+
+// Project
+void HorusInspector::PopulateProjectInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+
+	// Populate Project Infos
+	m_Gpu00N_ = "No GPU";
+	m_Gpu01N_ = "No GPU";
+	/*CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), &m_Gpu00N_, nullptr));
+	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), &m_Gpu01N_, nullptr));*/
+
+
+
+
+
+
+
+
+
+}
+
+// Project Getters
+// Project Setters

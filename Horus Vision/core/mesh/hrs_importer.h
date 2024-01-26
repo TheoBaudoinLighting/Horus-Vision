@@ -5,6 +5,8 @@
 #include <vector>
 #include <assimp/scene.h>
 
+#include "Math/mathutils.h"
+
 class HorusMeshImporter
 {
 public:
@@ -24,6 +26,7 @@ public:
 
 	// Import mesh with assimp
 	rpr_shape LoadMesh(const std::string& MeshPath);
+	//rpr_shape LoadMeshTOL(const std::string& MeshPath);
 
 private:
 
@@ -31,7 +34,8 @@ private:
 	{
 	}
 
-	std::vector<aiMesh*> m_Meshes_;
+	std::string m_Name_;
+
 	std::vector<float> m_Vertices_;
 	std::vector<float> m_Normals_;
 	std::vector<rpr_int> m_Indices_;  
@@ -39,9 +43,12 @@ private:
 	std::vector<rpr_int> m_VertexIndices_;
 	std::vector<rpr_int> m_NormalIndices_;
 	std::vector<rpr_int> m_TexcoordIndices_;  
-	std::vector<rpr_int> m_NumFaceVertices_; 
-	size_t m_NumFaces_; 
+	std::vector<rpr_int> m_NumFaceVertices_;
 
+	std::vector<RadeonProRender::float4> m_VerticesUVX_ ;
+	std::vector<RadeonProRender::float4> m_NormalsUVX_ ;
+
+	size_t m_NumFaces_; 
 	std::vector<std::vector<rpr_float>> m_AllTexCoords_;
 	std::vector<rpr_float> m_UdimTexCoords_;
 

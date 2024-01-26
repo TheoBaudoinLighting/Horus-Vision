@@ -64,7 +64,7 @@ rpr_material_node HorusMaterial::CreateMaterial()
 		0.0f, 0.0f))
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFRACTION_IOR, 1.500000f, 1.500000f
 		, 1.500000f, 1.500000f))
-	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFRACTION_THIN_SURFACE, 0))
+	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFRACTION_THIN_SURFACE, 1))
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFRACTION_ABSORPTION_COLOR, 1.0f,
 		1.0f, 1.0f, 0.0f))
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFRACTION_ABSORPTION_DISTANCE, 1.0f
@@ -76,8 +76,7 @@ rpr_material_node HorusMaterial::CreateMaterial()
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_COATING_WEIGHT, 0.f, 0.f, 0.f, 0.f))
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_COATING_ROUGHNESS, 0.f, 0.f, 0.f,
 		0.f))
-	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_COATING_MODE,
-		RPR_UBER_MATERIAL_IOR_MODE_METALNESS))
+	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_COATING_MODE, RPR_UBER_MATERIAL_IOR_MODE_METALNESS))
 	// RPR_UBER_MATERIAL_IOR_MODE_METALNESS // RPR_UBER_MATERIAL_IOR_MODE_PBR
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_COATING_IOR, 1.460000f, 1.460000f,
 		1.460000f, 1.460000f))

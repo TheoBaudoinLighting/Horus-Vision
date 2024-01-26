@@ -111,12 +111,11 @@ rpr_light CreateHdriLight(const std::string& HdriImage)
 	CHECK(Status)
 		Gc.Add(Image);
 
-	CHECK(rprEnvironmentLightSetImage(Light, Image))
-		CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f))
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
-		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
+	CHECK(rprEnvironmentLightSetImage(Light, Image));
+	CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Light created");
+	spdlog::info("Light created");
 	Console.AddLog(" [success] Light created");
 
 	return Light;
@@ -130,14 +129,13 @@ rpr_light CreatePointLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreatePointLight(Radeon.GetContext(), &Light))
-		gc.Add(Light);
+	CHECK(rprContextCreatePointLight(Radeon.GetContext(), &Light));
+	gc.Add(Light);
 
-	CHECK(rprPointLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
-		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
+	CHECK(rprPointLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Point light created");
+	spdlog::info("Point light created");
 	Console.AddLog(" [success] Point light created");
 
 	return Light;
@@ -151,14 +149,13 @@ rpr_light CreateDirectionalLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateDirectionalLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateDirectionalLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
-	CHECK(rprDirectionalLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
-		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
+	CHECK(rprDirectionalLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Directional light created");
+	spdlog::info("Directional light created");
 	Console.AddLog(" [success] Directional light created");
 
 	return Light;
@@ -182,8 +179,8 @@ rpr_light CreateSpotLight(const std::string& ImagePath)
 		IsImage = true;
 	}
 
-	CHECK(rprContextCreateSpotLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateSpotLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
 	if (IsImage)
 	{
@@ -205,15 +202,14 @@ rpr_light CreateSpotLight(const std::string& ImagePath)
 
 		if (Image != nullptr)
 		{
-			CHECK(rprSpotLightSetImage(Light, Image))
+			CHECK(rprSpotLightSetImage(Light, Image));
 		}
 	}
 
-	CHECK(rprSpotLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
-		CHECK(rprLightSetVisibilityFlag(Light, RPR_LIGHT_VISIBILITY_LIGHT, true))
+	CHECK(rprSpotLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Spot light created");
+	spdlog::info("Spot light created");
 	Console.AddLog(" [success] Spot light created");
 
 	return Light;
@@ -227,19 +223,19 @@ rpr_light CreateSkyLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateSkyLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateSkyLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
 	rpr_float albedo = 1.0f;
 
-	CHECK(rprSkyLightSetTurbidity(Light, 1.0f))
-		CHECK(rprSkyLightSetAlbedo(Light, albedo))
-		CHECK(rprSkyLightSetScale(Light, 1.0f))
+	CHECK(rprSkyLightSetTurbidity(Light, 1.0f));
+	CHECK(rprSkyLightSetAlbedo(Light, albedo));
+	CHECK(rprSkyLightSetScale(Light, 1.0f));
 
 
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Sky light created");
+	spdlog::info("Sky light created");
 	Console.AddLog(" [success] Sky light created");
 
 	return Light;
@@ -253,15 +249,15 @@ rpr_light CreateSphereLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateSphereLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateSphereLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
-	CHECK(rprSphereLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprSphereLightSetRadius(Light, 1.f))
+	CHECK(rprSphereLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprSphereLightSetRadius(Light, 1.f));
 
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Sphere light created");
+	spdlog::info("Sphere light created");
 	Console.AddLog(" [success] Sphere light created");
 
 	return Light;
@@ -275,18 +271,18 @@ rpr_light CreateDiskLight()
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateDiskLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateDiskLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
-	CHECK(rprDiskLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprDiskLightSetRadius(Light, 1.0f))
-		CHECK(rprDiskLightSetAngle(Light, 1.0f))
-		CHECK(rprDiskLightSetInnerAngle(Light, 1.0f))
+	CHECK(rprDiskLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprDiskLightSetRadius(Light, 1.0f));
+	CHECK(rprDiskLightSetAngle(Light, 1.0f));
+	CHECK(rprDiskLightSetInnerAngle(Light, 1.0f));
 
 
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Disk light created");
+	spdlog::info("Disk light created");
 	Console.AddLog(" [success] Disk light created");
 
 	return Light;
@@ -300,13 +296,13 @@ rpr_light CreateIesLight(const std::string& ImagePath)
 
 	rpr_light Light = nullptr;
 
-	CHECK(rprContextCreateIESLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
+	CHECK(rprContextCreateIESLight(Radeon.GetContext(), &Light));
+	Gc.Add(Light);
 
-	CHECK(rprIESLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f))
-		CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light))
+	CHECK(rprIESLightSetRadiantPower3f(Light, 10.0f, 10.0f, 10.0f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
-		spdlog::info("Ies light created");
+	spdlog::info("Ies light created");
 	Console.AddLog(" [success] Ies light created");
 
 	return Light;
@@ -607,14 +603,7 @@ void HorusLight::SetIntensity(glm::vec3& Intensity)
 }
 void HorusLight::SetLightVisibility(bool Visibility)
 {
-	if (Visibility)
-	{
-		CHECK(rprLightSetVisibilityFlag(m_Light_, RPR_LIGHT_VISIBILITY_LIGHT, true))
-	}
-	else
-	{
-		CHECK(rprLightSetVisibilityFlag(m_Light_, RPR_LIGHT_VISIBILITY_LIGHT, false))
-	}
+	CHECK(rprLightSetVisibilityFlag(m_Light_, RPR_LIGHT_VISIBILITY_LIGHT, Visibility))
 }
 
 // Directional 

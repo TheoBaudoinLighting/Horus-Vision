@@ -191,7 +191,7 @@ public:
 
 	void SetCameraLookat(int id, glm::vec3& pivot);
 
-	void TumbleCamera(int id, float x, float y);
+	void TumbleCamera(int id, float x, float y, float sensitivity);
 	void PanCamera(int id, float x, float y);
 	void ZoomCamera(int id, float distance);
 

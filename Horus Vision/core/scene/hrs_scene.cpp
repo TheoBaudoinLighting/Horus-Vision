@@ -5,6 +5,10 @@
 #include "hrs_object_manager.h" // glfw3.h
 #include "hrs_importer_manager.h"
 
+#include <mutex>
+
+std::mutex m_SceneMutex_;
+
 void HorusScene::Init()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
@@ -122,18 +126,18 @@ void HorusScene::ShowLookdevScene()
 		ObjectManager.SetShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
 
 		{
-			// Create statue
-			int Aretheuse =  ObjectManager.CreateMesh("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
-			int AreMat = ObjectManager.CreateMaterial("M_aretheuse");
+			// Create statue (Arethusa)
+			//int Aretheuse =  ObjectManager.CreateMesh("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
+			//int AreMat = ObjectManager.CreateMaterial("M_aretheuse");
 
-			ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
-			ObjectManager.SetReflectionMode(AreMat, 0); // 0 = PBR
-			ObjectManager.SetRoughness(AreMat, Roughness);
-			ObjectManager.AssignMaterial(Aretheuse, AreMat);
-			
+			//ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
+			//ObjectManager.SetReflectionMode(AreMat, 0); // 0 = PBR
+			//ObjectManager.SetRoughness(AreMat, Roughness);
+			//ObjectManager.AssignMaterial(Aretheuse, AreMat);
+			//
 
-			ObjectManager.SetShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
-			ObjectManager.SetShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
+			//ObjectManager.SetShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
+			//ObjectManager.SetShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
 		}
 
 		// Create Gold Sphere
@@ -145,49 +149,47 @@ void HorusScene::ShowLookdevScene()
 		ObjectManager.SetMetallic(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_METALNESS_8K_METALNESS.png");
 		ObjectManager.SetReflectionMode(Goldmat, 1); // 1 = metalness
 		ObjectManager.AssignMaterial(SphereMesh, Goldmat);
-
+		
 		ObjectManager.SetShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
 		ObjectManager.SetShapeScale(SphereMesh, { 0.5f, 1.2f, 0.5f });
-	}
 
-	rpr_scene Scene = ObjectManager.GetScene();
+		{
+			// Create Statue (Arria)
+			//int Arria = ObjectManager.CreateMesh("resources/Lookdev/Downloaded/Arria/source/ARRIA/ARRIA.obj", "Arria");
+			//int ArriaMat = ObjectManager.CreateMaterial("M_Arria");
+
+			//ObjectManager.SetBaseColor(ArriaMat, "resources/Lookdev/Downloaded/Arria/textures/ARRIA.jpg");
+			//ObjectManager.SetReflectionMode(ArriaMat, 0); // 0 = PBR
+			//ObjectManager.SetRoughness(ArriaMat, Roughness);
+			//ObjectManager.AssignMaterial(Arria, ArriaMat);
+
+			//ObjectManager.SetShapeScale(Arria, { 0.25f, 0.25f, 0.25f });
+		}
+	}
 
 	// Test Scene
 	//auto ImportBarberChair = GltfImporter.ImportGltf("resources/Meshes/gltf_teapot/cube_floor.gltf", Radeon.GetContext(), Radeon.GetMatsys(), &ObjectManager.GetScene());
 	//auto ImportBarberChair = GltfImporter.ImportGltf("resources/Scene/gltf/BarberShopChair_01_4k.gltf", Radeon.GetContext(), Radeon.GetMatsys(), &ObjectManager.GetScene());
 
-
-
+	glm::vec4 GlassBaseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glm::vec4 GlassRoughness = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glm::vec4 GlassTransmissionColor = { 0.3f, 0.5f, 0.8f, 1.0f };
+	glm::vec4 GlassRefractionWeight = { 1.f, 1.f, 1.f, 1.0f };
+	glm::vec4 GlassRefractionRoughness = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Create Glass Sphere
+	int SphereMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
+	int Glassmat = ObjectManager.CreateMaterial("M_Sphere");
 
+	ObjectManager.SetBaseColor(Glassmat, GlassBaseColor);
+	ObjectManager.SetRoughness(Glassmat, GlassRoughness);
+	ObjectManager.SetReflectionMode(Glassmat, 0); // 0 = PBR
+	ObjectManager.SetRefractionColor(Glassmat, GlassTransmissionColor);
+	ObjectManager.SetRefractionWeight(Glassmat, GlassRefractionWeight);
+	ObjectManager.SetRefractionRoughness(Glassmat, GlassRefractionRoughness);
+	ObjectManager.SetTransparency(Glassmat, GlassRefractionRoughness);
+	ObjectManager.AssignMaterial(SphereMesh, Glassmat);
+
+	ObjectManager.SetShapePosition(SphereMesh, { -3.0f, 2.f, 0.0f });
 	
-
-	//int floor = ObjectManager.create_mesh("resources/Meshes/florr_test.fbx", "plane_msh");
-
-	//int floormata = ObjectManager.create_material("M_Floor");
-	//ObjectManager.set_base_color(floormata, "resources/Textures/ufoieaklw_8K_Albedo.jpg");
-	////g_object_manager.set_base_color(floormata, debug_color); // debug purpose
-	//ObjectManager.set_normal(floormata, "resources/Textures/ufoieaklw_8K_Normal.jpg");
-	//ObjectManager.set_roughness(floormata, "resources/Textures/ufoieaklw_8K_Roughness.jpg");
-	//ObjectManager.assign_material(floor, floormata);
-
-	//ObjectManager.create_material_editor_node(1, "M_Floor");
-
-	/*ObjectManager.assign_material_editor_node(1, 1); */// assign material to mesh
-
-	//ObjectManager.set_shape_scale(floor, { 100.0f, 100.0f, 100.0f });
-
-	//ObjectManager.create_mesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "SphereGlass");
-	/*ObjectManager.create_material(3, "M_SphereGlass");
-	ObjectManager.set_base_color(3, color);
-	ObjectManager.set_roughness(3, roughness);
-	ObjectManager.set_refraction_color(3, transmission_color);
-	ObjectManager.set_refraction_weight(3, refraction_weight);
-
-	ObjectManager.set_reflection_mode(3, 0);
-	ObjectManager.assign_material(3, 3);
-	ObjectManager.create_material_editor_node(3, "M_SphereGlass");
-
-	ObjectManager.set_shape_position(3, { 0.0f, 2.f, 0.0f });*/
 }
