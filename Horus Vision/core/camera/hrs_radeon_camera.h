@@ -1,6 +1,7 @@
 #pragma once
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
+#pragma warning(disable : 4305)
 
 #include <RadeonProRender.hpp>
 #include <Math/mathutils.h>
@@ -70,11 +71,9 @@ public:
 
 	void Move2D(int x, int y);
 
-	void Tumbling(float x, float y);
+	void Tumbling(float x, float y, float sensitivity);
 	void Zoom(float distance);
 	void Pan(float x, float y);
-
-	void SetPos(int button, int state, int x, int y);
 
 	// Getters
 	CameraType GetMode();
@@ -141,6 +140,7 @@ private:
 
 	int m_ApertureBlades_ = 5;
 
+	glm::quat m_QuatRotation_ = glm::quat(1, 0, 0, 0);
 	glm::mat4 m_Transform_ = glm::mat4(1.0f);
 	glm::vec3 m_LookAt_ = glm::vec3(0, 0, 0);
 	glm::vec3 m_Up_ = glm::vec3(0, 1, 0);

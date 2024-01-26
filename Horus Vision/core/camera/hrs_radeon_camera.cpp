@@ -3,6 +3,7 @@
 #include "hrs_radeon_camera.h"
 
 #include <Math/mathutils.h>
+#include <cmath>
 
 #include "common.h"
 #include "hrs_radeon.h"
@@ -39,7 +40,6 @@ void HorusRadeonCamera::VariableCheckers(std::string Name)
 	cout << "Camera focus distance : " << m_FocusDistance_ << '\n';
 
 }
-
 void HorusRadeonCamera::GetCameraInfo()
 {
 	/*try
@@ -93,7 +93,6 @@ void HorusRadeonCamera::Init(std::string Name)
 	CHECK(rprCameraLookAt(m_Camera_, m_Position_.x, m_Position_.y, m_Position_.z, m_LookAt_.x, m_LookAt_.y, m_LookAt_.z, m_Up_.x, m_Up_.y, m_Up_.z));
 	CHECK(rprSceneSetCamera(ObjectManager.GetScene(), m_Camera_));
 }
-
 void HorusRadeonCamera::Reset()
 {
 	GetCameraInfo();
@@ -107,7 +106,6 @@ void HorusRadeonCamera::Reset()
 	VariableCheckers("Reset");
 	UpdateCamera();
 }
-
 void HorusRadeonCamera::Destroy()
 {
 	if (m_Camera_)
@@ -130,13 +128,8 @@ void HorusRadeonCamera::Unbind()
 
 void HorusRadeonCamera::UpdateCamera()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
 	rprCameraLookAt(m_Camera_, m_Position_.x, m_Position_.y, m_Position_.z, m_LookAt_.x, m_LookAt_.y, m_LookAt_.z, m_Up_.x, m_Up_.y, m_Up_.z);
-
-	//ObjectManager.TransfertDataBetwweenCamera(ObjectManager.GetActiveRadeonCameraId(), ObjectManager.GetActiveOpenGLCameraId());
 }
-
 void HorusRadeonCamera::UpdateTransform()
 {
 	glm::mat4 Translate = translate(glm::mat4(1.0f), m_Position_);
@@ -212,31 +205,23 @@ void HorusRadeonCamera::MoveCamera(CameraDirection Dir)
 	//VariableCheckers("Move Camera");
 	UpdateCamera();
 }
+void HorusRadeonCamera::Move2D(int x, int y)
+{
+
+	//VariableCheckers("Move 2D");
+	UpdateCamera();
+}
 
 void HorusRadeonCamera::ChangePitch(float Degrees)
 {
 
-
 	//VariableCheckers("Change Pitch");
 	UpdateCamera();
 }
-
 void HorusRadeonCamera::ChangeHeading(float degrees)
 {
 
-
-
 	//VariableCheckers("Change Heading");
-	UpdateCamera();
-}
-
-void HorusRadeonCamera::Move2D(int x, int y)
-{
-
-
-
-
-	//VariableCheckers("Move 2D");
 	UpdateCamera();
 }
 
@@ -253,10 +238,8 @@ void HorusRadeonCamera::SetMode(CameraType CamMode)
 		rprCameraSetMode(m_Camera_, RPR_CAMERA_MODE_ORTHOGRAPHIC);
 	}
 
-
 	//VariableCheckers("Set Mode");
 }
-
 void HorusRadeonCamera::SetPosition(glm::vec3 pos)
 {
 	GetCameraInfo();
@@ -265,7 +248,6 @@ void HorusRadeonCamera::SetPosition(glm::vec3 pos)
 
 	UpdateCamera();
 }
-
 void HorusRadeonCamera::SetLookAt(glm::vec3 pos)
 {
 	GetCameraInfo();
@@ -274,7 +256,6 @@ void HorusRadeonCamera::SetLookAt(glm::vec3 pos)
 
 	UpdateCamera();
 }
-
 void HorusRadeonCamera::SetFov(const float Fov)
 {
 	GetCameraInfo();
@@ -284,7 +265,6 @@ void HorusRadeonCamera::SetFov(const float Fov)
 
 	UpdateCamera();
 }
-
 void HorusRadeonCamera::SetViewport(int loc_x, int loc_y, int width, int height)
 {
 	m_ViewportX_ = loc_x;
@@ -294,7 +274,6 @@ void HorusRadeonCamera::SetViewport(int loc_x, int loc_y, int width, int height)
 
 	m_Aspect_ = static_cast<float>(width) / static_cast<float>(height);
 }
-
 void HorusRadeonCamera::SetClipping(float NearClipDistance, float FarClipDistance)
 {
 	m_Near_ = NearClipDistance;
@@ -306,11 +285,31 @@ void HorusRadeonCamera::SetClipping(float NearClipDistance, float FarClipDistanc
 	UpdateCamera();
 }
 
-void HorusRadeonCamera::Tumbling(float x, float y)
+void HorusRadeonCamera::Tumbling(float x, float y, float sensitivity)
 {
 	GetCameraInfo();
+	
+	// New method with quaternions
+	const float AngleX = -x * sensitivity;
+	const float AngleY = y * sensitivity;
 
-	const float AngleX = x * 2.5f;
+	glm::vec3 CameraDirection = glm::normalize(m_Position_ - m_LookAt_);
+	const float Radius = glm::length(m_Position_ - m_LookAt_);
+
+	glm::vec3 Axis = glm::cross(CameraDirection, m_Up_);
+
+	glm::quat QuatPitch = glm::angleAxis(AngleY, Axis); // y = pitch
+	glm::quat QuatHeading = glm::angleAxis(AngleX, m_Up_); // x = heading
+
+	glm::quat QuatTemp = glm::normalize(glm::cross(QuatPitch, QuatHeading));
+
+	CameraDirection = glm::rotate(QuatTemp, CameraDirection);
+
+	m_Position_ = m_LookAt_ + CameraDirection * Radius;
+
+	{
+		// Previous method with Euler angles (deprecated)
+	/*const float AngleX = x * 2.5f;
 	const float AngleY = y * 2.5f;
 
 	glm::vec3 CamToPivot = m_Position_ - m_LookAt_;
@@ -322,16 +321,16 @@ void HorusRadeonCamera::Tumbling(float x, float y)
 	CurrentYaw += AngleX;
 	CurrentPitch += AngleY;
 
-	constexpr float MinPitch = glm::radians(89.f); // Important to avoid gimbal lock
+	constexpr float MinPitch = glm::radians(89.9f);
 	CurrentPitch = glm::max(-MinPitch, glm::min(CurrentPitch, MinPitch));
 
 	CamToPivot.x = Radius * cosf(CurrentPitch) * cosf(CurrentYaw);
 	CamToPivot.y = Radius * sinf(CurrentPitch);
 	CamToPivot.z = Radius * cosf(CurrentPitch) * sinf(CurrentYaw);
 
-	m_Position_ = m_LookAt_ + CamToPivot;
+	m_Position_ = m_LookAt_ + CamToPivot;*/
+	}
 
-	//VariableCheckers("Tumbling");
 	UpdateCamera();
 }
 void HorusRadeonCamera::Zoom(float distance)
@@ -382,7 +381,6 @@ void HorusRadeonCamera::GetViewport(int& LocX, int& LocY, int& Width, int& Heigh
 
 	VariableCheckers("Get Viewport");
 }
-
 void HorusRadeonCamera::GetMatrices(glm::mat4& P, glm::mat4& V, glm::mat4& M)
 {
 	/*P = m_ProjectionMatrix_;
@@ -459,23 +457,18 @@ float HorusRadeonCamera::GetAspect()
 {
 	return m_Aspect_;
 }
-
 float HorusRadeonCamera::GetAperture()
 {
 	return m_Aperture_;
 }
-
 float HorusRadeonCamera::GetFocusPlane()
 {
 	return m_FocusPlane_;
 }
-
 int HorusRadeonCamera::GetApertureBlades()
 {
 	return m_ApertureBlades_;
 }
-
-
 
 // Setters
 
