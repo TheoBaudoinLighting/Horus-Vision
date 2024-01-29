@@ -11,12 +11,15 @@ void ResetBuffer()
 	HorusResetBuffers::GetInstance().CallResetBuffers();
 }
 
-void HorusMesh::GetMeshInfo()
+// Group Shape Section
+void HorusGroupShape::GetGroupShapeInfo()
 {
-	rprShapeGetInfo(m_Shape_, RPR_SHAPE_TRANSFORM, sizeof(int), &m_Transform_, nullptr);
+	/*for (rpr_shape shape : m_Shape_)
+	{
+		rprShapeGetInfo(shape, RPR_SHAPE_TRANSFORM, sizeof(int), &m_Transform_, nullptr);
+	}*/
 }
-
-void HorusMesh::Init(const char* Path)
+void HorusGroupShape::Init(const char* Path)
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusMeshImporter& MeshImporter = HorusMeshImporter::GetInstance();
@@ -25,78 +28,135 @@ void HorusMesh::Init(const char* Path)
 
 	m_Shape_ = MeshImporter.LoadMesh(Path);
 
-	GetMeshInfo();
+	GetGroupShapeInfo();
 
 	rpr_scene GScene = ObjectManager.GetScene();
-	rprSceneAttachShape(GScene, m_Shape_);
-	Gc.Add(m_Shape_);
+
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		rpr_shape shape = std::get<0>(ShapeAndName);
+		std::string name = std::get<1>(ShapeAndName);
+
+		CHECK(rprSceneAttachShape(GScene, shape));
+		CHECK(rprObjectSetName(shape, name.c_str())); // In testing for now (TODO : If it's working, apply it to all the shapes)
+		Gc.Add(shape);
+	}
 
 	spdlog::info("Mesh {} loaded", Path);
 	Console.AddLog("Mesh %s loaded", Path);
 
 	ResetBuffer();
 }
-
-void HorusMesh::DestroyMesh()
+void HorusGroupShape::DestroyGroupShape()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	
 
 	rpr_scene GScene = ObjectManager.GetScene();
 
-	rprSceneDetachShape(GScene, m_Shape_);
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		rpr_shape shape = std::get<0>(ShapeAndName);
+		std::string name = std::get<1>(ShapeAndName);
 
-	rprObjectDelete(m_Shape_);
+		rprSceneDetachShape(GScene, shape);
+		// Don't delete shape, it's done by the garbage collector
+	}
 
 	ResetBuffer();
 }
 
-void HorusMesh::AssignMaterial(rpr_material_node Material)
+std::vector<std::pair<rpr_shape, std::string>> HorusGroupShape::GetShapeAndName()
 {
-	HorusConsole& Console = HorusConsole::GetInstance();
+	std::vector<std::pair<rpr_shape, std::string>> ShapesAndNames;
 
-	CHECK(rprShapeSetMaterial(m_Shape_, Material))
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		rpr_shape shape = std::get<0>(ShapeAndName);
+		std::string name = std::get<1>(ShapeAndName);
 
-	spdlog::info("Material correctly assigned to mesh");
-	Console.AddLog("[success] Material correctly assigned to mesh");
-	ResetBuffer();
+		ShapesAndNames.push_back(std::make_pair(shape, name));
+	}
+
+	return ShapesAndNames;
 }
 
-void HorusMesh::SetShapePosition(glm::vec3 Pos)
+std::vector<rpr_shape> HorusGroupShape::GetShape()
 {
-	GetMeshInfo();
+	std::vector<rpr_shape> Shapes;
+
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		rpr_shape shape = std::get<0>(ShapeAndName);
+
+		Shapes.push_back(shape);
+	}
+
+	return Shapes;
+}
+std::vector<std::string> HorusGroupShape::GetShapeName()
+{
+	std::vector<std::string> Names;
+
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		std::string name = std::get<1>(ShapeAndName);
+
+		Names.push_back(name);
+	}
+
+	return Names;
+}
+
+void HorusGroupShape::SetGroupShapePosition(glm::vec3 Pos)
+{
+	GetGroupShapeInfo();
 
 	m_Position_ = Pos;
 
-	UpdateTransform();
+	UpdateGroupShapeTransform();
 }
-void HorusMesh::SetShapeRotation(glm::vec3 Rot)
+void HorusGroupShape::SetGroupShapeRotation(glm::vec3 Rot)
 {
-	GetMeshInfo();
+	GetGroupShapeInfo();
 
 	m_Rotation_ = Rot;
 
-	UpdateTransform();
+	UpdateGroupShapeTransform();
 }
-void HorusMesh::SetShapeScale(glm::vec3 Scale)
+void HorusGroupShape::SetGroupShapeScale(glm::vec3 Scale)
 {
-	GetMeshInfo();
+	GetGroupShapeInfo();
 
 	m_Scale_ = Scale;
 
-	UpdateTransform();
+	UpdateGroupShapeTransform();
+}
+void HorusGroupShape::SetGroupResetTransform()
+{
+	GetGroupShapeInfo();
+
+	m_Position_ = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_Rotation_ = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_Scale_ = glm::vec3(1.0f, 1.0f, 1.0f);
+
+	UpdateGroupShapeTransform();
 }
 
-void HorusMesh::SetObjectToScene()
+void HorusGroupShape::SetGroupShapeToScene()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	rpr_scene GScene = ObjectManager.GetScene();
 
-	rprSceneAttachShape(GScene, m_Shape_);
-}
+	for (auto& ShapeAndName : m_Shape_)
+	{
+		rpr_shape shape = std::get<0>(ShapeAndName);
+		std::string name = std::get<1>(ShapeAndName);
 
-void HorusMesh::UpdateTransform()
+		rprSceneAttachShape(GScene, shape);
+	}
+}
+void HorusGroupShape::UpdateGroupShapeTransform()
 {
 	glm::mat4 Translate = translate(glm::mat4(1.0f), m_Position_);
 	glm::mat4 RotationX = rotate(glm::mat4(1.0f), glm::radians(m_Rotation_.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -108,8 +168,22 @@ void HorusMesh::UpdateTransform()
 
 	m_Transform_ = Translate * Rotation * Scale;
 
-	rprShapeSetTransform(m_Shape_, RPR_FALSE, &m_Transform_[0][0]); // RPR_TRUE = transpose matrix in row
+	
+
+	//rprShapeSetTransform(m_Shape_, RPR_FALSE, &m_Transform_[0][0]); // RPR_TRUE = transpose matrix in row
 }
 
+// Shape Section
+rpr_shape HorusGroupShape::GetShape(const std::string& shapeName)
+{
+	for (const auto& ShapeTuple : m_Shape_)
+	{
+		if (std::get<1>(ShapeTuple) == shapeName)
+		{
+			return std::get<0>(ShapeTuple);
+		}
+	}
+	return nullptr;
+}
 
 

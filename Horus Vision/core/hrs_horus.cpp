@@ -33,11 +33,11 @@
  * DOCUMENTATION: For detailed documentation and usage instructions, visit
  * https://github.com/TheoBaudoinLighting/Horus-Vision/blob/master/README.md.
  *
- * Last Updated: 26/01/2024
  */
 
 // Projects Include
 #include "hrs_engine.h" 
+#include "hrs_engine_core.h"
 #include "hrs_timer.h"
 
 int main()

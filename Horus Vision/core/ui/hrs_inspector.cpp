@@ -25,8 +25,11 @@ void HorusInspector::Inspector(bool* p_open)
 	case InspectorType::MATERIAL:
 		InspectorMaterial();
 		break;
-	case InspectorType::MESH:
-		InspectorMesh();
+	case InspectorType::GROUPSHAPE:
+		InspectorGroupShape();
+		break;
+	case InspectorType::SHAPE:
+		InspectorShape();
 		break;
 	case InspectorType::TEXTURE:
 		InspectorTexture();
@@ -46,7 +49,6 @@ void HorusInspector::Inspector(bool* p_open)
 		m_ResetBuffer_ = false;
 	}
 }
-
 void HorusInspector::Init()
 {
 	HorusGarbageCollector& GarbageCollector = HorusGarbageCollector::GetInstance();
@@ -78,20 +80,22 @@ void HorusInspector::Init()
 	SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
 
 	// Init Project Inspector
-	PopulateProjectInfos();
+	PopulateSelectedProjectInfos();
 
 
 
 }
-
 void HorusInspector::SetInspectorType(InspectorType Type)
 {
 	m_SelectionType_ = Type;
 }
 
+//-------------------------------------- CAMERA INSPECTOR --------------------------------------
+
 void HorusInspector::InspectorCamera()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 	//ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Green");
 	//ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Pink");
@@ -126,7 +130,7 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Forward"))
 		{
-			ObjectManager.MoveCameraForward(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraForward(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -135,14 +139,14 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Backward"))
 		{
-			ObjectManager.MoveCameraBackward(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraBackward(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
 
 		if (ImGui::Button("Move Camera Left"))
 		{
-			ObjectManager.MoveCameraLeft(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraLeft(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -151,14 +155,14 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Right"))
 		{
-			ObjectManager.MoveCameraRight(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraRight(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
 
 		if (ImGui::Button("Move Camera Up"))
 		{
-			ObjectManager.MoveCameraUp(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraUp(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -167,7 +171,7 @@ void HorusInspector::InspectorCamera()
 
 		if (ImGui::Button("Move Camera Down"))
 		{
-			ObjectManager.MoveCameraDown(ObjectManager.GetActiveRadeonCameraId());
+			ObjectManager.SetMoveCameraDown(ObjectManager.GetActiveRadeonCameraId());
 
 			CallResetBuffer();
 		}
@@ -263,7 +267,7 @@ void HorusInspector::InspectorCamera()
 	{
 		if (m_EnableDof_)
 		{
-			PopulateCameraInfos();
+			PopulateSelectedCameraInfos();
 			ObjectManager.SetFStop(ObjectManager.GetActiveRadeonCameraId(), m_CameraFStop_);
 			SetFocusPlaneToFocusPosition(m_FocusPlaneShape_);
 			CallResetBuffer();
@@ -286,7 +290,7 @@ void HorusInspector::InspectorCamera()
 			ShowHideFocusPlane(m_FocusPlaneShape_);
 
 			spdlog::debug("Draw Focus Plane : {}", m_DrawFocusPlane_);
-
+			Radeon.SetLockPreviewMode(m_DrawFocusPlane_);
 			CallResetBuffer();
 		}
 
@@ -347,6 +351,343 @@ void HorusInspector::InspectorCamera()
 
 	ImGui::Separator();
 }
+
+void HorusInspector::PopulateSelectedCameraInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Getters Camera
+	m_CameraName_ = ObjectManager.GetCameraNameById(ObjectManager.GetActiveRadeonCameraId());
+
+	m_CameraLookAt_ = GetCameraLookAt();
+	m_CameraPosition_ = GetCameraPosition();
+	m_CameraRotation_ = GetCameraRotation();
+	m_CameraScale_ = GetCameraScale();
+	m_CameraNear_ = GetCameraNear();
+	m_CameraFar_ = GetCameraFar();
+	m_CameraFov_ = GetFov();
+	m_CameraFStop_ = GetFStop();
+	m_ApertureBlades_ = GetApertureBlades();
+}
+
+// Camera Getters
+glm::vec3 HorusInspector::GetCameraLookAt()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraLookAt(ActiveCamera);
+	}
+	else
+	{
+		return { 0.0f, 0.0f, 0.0f };
+	}
+}
+glm::vec3 HorusInspector::GetCameraPosition()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraPosition(ActiveCamera);
+	}
+	else
+	{
+		return { 0.0f, 0.0f, 0.0f };
+	}
+
+}
+glm::vec3 HorusInspector::GetCameraRotation()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraRotation(ActiveCamera);
+	}
+	else
+	{
+		return { 0.0f, 0.0f, 0.0f };
+	}
+}
+glm::vec3 HorusInspector::GetCameraScale()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraScale(ActiveCamera);
+	}
+	else
+	{
+		return { 0.0f, 0.0f, 0.0f };
+	}
+}
+float HorusInspector::GetCameraNear()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraNearPlane(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetCameraFar()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFarPlane(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetFov()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFov(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetFStop()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFStop(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+float HorusInspector::GetFocusDistance()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraFocusDistance(ActiveCamera);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+int HorusInspector::GetApertureBlades()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		return ObjectManager.GetCameraApertureBlades(ActiveCamera);
+	}
+	else
+	{
+		return 0;
+	}
+}
+void HorusInspector::SetFocusPlaneToFocusPosition(rpr_shape& Plane)
+{
+	if (m_DrawFocusPlane_)
+	{
+		PopulateSelectedCameraInfos();
+		glm::vec3 FocusDir = glm::normalize(m_CameraLookAt_ - m_CameraPosition_);
+
+		glm::vec3 FocusPos = m_CameraPosition_ + FocusDir * m_FocusPlaneDistance_;
+		glm::vec3 FocusNormal = -FocusDir;
+
+		glm::mat4 FocusTransform = glm::mat4(1.0f);
+		FocusTransform = glm::translate(FocusTransform, FocusPos);
+
+		glm::vec3 WorldUp = { 0.0f, 1.0f, 0.0f };
+		glm::vec3 WorldRight = glm::normalize(glm::cross(WorldUp, FocusNormal));
+		glm::vec3 Up = glm::cross(FocusNormal, WorldRight);
+
+		glm::mat4 RotationMatrix = glm::mat4(glm::vec4(WorldRight, 0.0f),
+			glm::vec4(Up, 0.0f),
+			glm::vec4(FocusNormal, 0.0f),
+			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+		FocusTransform = FocusTransform * RotationMatrix;
+		CHECK(rprShapeSetTransform(Plane, false, &FocusTransform[0][0]));
+	}
+}
+void HorusInspector::ShowHideFocusPlane(rpr_shape& Plane)
+{
+	CHECK(rprShapeSetVisibility(Plane, m_DrawFocusPlane_));
+}
+
+// Camera Setters
+void HorusInspector::SetCameraLookAt(glm::vec3 look_at)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraLookat(ActiveCamera, look_at);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraPosition(glm::vec3 position)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraPosition(ActiveCamera, position);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraRotation(glm::vec3 rotation_axis)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraRotation(ActiveCamera, rotation_axis);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraScale(glm::vec3 scale)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraScale(ActiveCamera, scale);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraNear(float Near)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraNear(ActiveCamera, Near);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetCameraFar(float Far)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraFar(ActiveCamera, Far);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetFStop(float FStop)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetFStop(ActiveCamera, FStop);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+void HorusInspector::SetFov(float fov)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
+
+	if (ActiveCamera != -1)
+	{
+		ObjectManager.SetCameraFov(ActiveCamera, fov);
+	}
+	else
+	{
+		spdlog::error("No camera selected");
+		Console.AddLog(" [error] No camera selected");
+	}
+}
+
+//-------------------------------------- LIGHT INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorLight()
 {
@@ -878,6 +1219,8 @@ void HorusInspector::InspectorLight()
 
 }
 
+//-------------------------------------- MATERIAL INSPECTOR --------------------------------------
+
 void HorusInspector::InspectorMaterial()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
@@ -885,89 +1228,89 @@ void HorusInspector::InspectorMaterial()
 	// TODO : Add a checkbox for freeze the value of the material
 
 	// Getters Material
-	std::string& MaterialName = ObjectManager.GetMaterialName(ObjectManager.GetActiveMaterialId());
+	//std::string& MaterialName = ObjectManager.GetMaterialName(ObjectManager.GetActiveMaterialId());
 
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Material Inspector");
-	ImGui::PopStyleColor();
-	ImGui::Separator();
+	//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	//ImGui::Text("Material Inspector");
+	//ImGui::PopStyleColor();
+	//ImGui::Separator();
 
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Presets");
-	ImGui::PopStyleColor();
-	// Preset system
-	if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		if (ImGui::Button("Default"))
-		{
+	//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	//ImGui::Text("Presets");
+	//ImGui::PopStyleColor();
+	//// Preset system
+	//if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen))
+	//{
+	//	if (ImGui::Button("Default"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Default material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Default material preset.");
 
-		if (ImGui::Button("Plastic"))
-		{
+	//	if (ImGui::Button("Plastic"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Plastic material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Plastic material preset.");
 
-		if (ImGui::Button("Metal"))
-		{
+	//	if (ImGui::Button("Metal"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Metal material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Metal material preset.");
 
-		if (ImGui::Button("Glass"))
-		{
+	//	if (ImGui::Button("Glass"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Glass material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Glass material preset.");
 
-		if (ImGui::Button("Fabric"))
-		{
+	//	if (ImGui::Button("Fabric"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Fabric material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Fabric material preset.");
 
-		if (ImGui::Button("Skin"))
-		{
+	//	if (ImGui::Button("Skin"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Skin material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Skin material preset.");
 
-		if (ImGui::Button("Hair"))
-		{
+	//	if (ImGui::Button("Hair"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Hair material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Hair material preset.");
 
-		if (ImGui::Button("Emissive"))
-		{
+	//	if (ImGui::Button("Emissive"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Emissive material preset.");
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Emissive material preset.");
 
-		if (ImGui::Button("Car Paint"))
-		{
+	//	if (ImGui::Button("Car Paint"))
+	//	{
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Car Paint material preset.");
-	}
+	//		CallResetBuffer();
+	//	}
+	//	ImGui::SameLine(); ShowHelpMarker("Car Paint material preset.");
+	//}
 
-	ImGui::Spacing();
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Diffuse");
-	ImGui::PopStyleColor();
-	ImGui::Separator();
-	ImGui::Spacing();
+	//ImGui::Spacing();
+	//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	//ImGui::Text("Diffuse");
+	//ImGui::PopStyleColor();
+	//ImGui::Separator();
+	//ImGui::Spacing();
 
 	//if (ImGui::CollapsingHeader("Diffuse", ImGuiTreeNodeFlags_DefaultOpen))
 	//{
@@ -1216,22 +1559,150 @@ void HorusInspector::InspectorMaterial()
 
 }
 
-void HorusInspector::InspectorMesh()
+//-------------------------------------- GROUP SHAPE INSPECTOR --------------------------------------
+
+void HorusInspector::InspectorGroupShape()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group Shape Inspector");
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group : ");
+	ImGui::SameLine();
+	ImGui::Text(m_GroupShapeName_.c_str());
+	ImGui::PopStyleColor();
+
+	// TODO : Show a text input for the name of the group shape
+	//ImGui::Text("Group Shape name: %s ", MeshName.c_str());
+
+	// Only Transform 
+	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Reset Transform"))
+		{
+			ObjectManager.SetGroupShapeResetTransform(ObjectManager.GetActiveGroupShapeId());
+
+			PopulateSelectedGroupShapeInfos();
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the group shape.");
+
+		ImGui::Separator();
+
+		if (ImGui::InputFloat3("Position", &m_GroupShapePosition_[0]))
+		{
+			ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), m_GroupShapePosition_);
+
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Rotation", &m_GroupShapeRotation_[0]))
+		{
+			ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeRotation_);
+
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Scale", &m_GroupShapeScale_[0]))
+		{
+			ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeScale_);
+
+			CallResetBuffer();
+		}
+	}
+
+	// Visualisation
+	static bool showNormals = false;
+	ImGui::Checkbox("Show Normals", &showNormals);
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group Shape Infos");
+	ImGui::PopStyleColor();
+
+	ImGui::Separator();
+
+	ImGui::Text("Group shape id: %d ", ObjectManager.GetActiveGroupShapeId());
+	ImGui::Text("Group shape name: %s ", m_GroupShapeName_.c_str());
+	ImGui::Text("Group shape position: %.2f %.2f %.2f ", m_GroupShapePosition_.x, m_GroupShapePosition_.y, m_GroupShapePosition_.z);
+	ImGui::Text("Group shape rotation: %.2f %.2f %.2f ", m_GroupShapeRotation_.x, m_GroupShapeRotation_.y, m_GroupShapeRotation_.z);
+	ImGui::Text("Group shape scale: %.2f %.2f %.2f ", m_GroupShapeScale_.x, m_GroupShapeScale_.y, m_GroupShapeScale_.z);
+	ImGui::Text("Group shape number of shapes count: %d ", 0);
+	ImGui::Text("Group shape all cumuled vertices count: %d ", 0);
+	ImGui::Text("Group shape number of materials in : %d ", 0);
+
+	ImGui::Separator();
+}
+
+void HorusInspector::PopulateSelectedGroupShapeInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	m_GroupShapeName_ = ObjectManager.GetGroupShapeName(ObjectManager.GetActiveGroupShapeId());
+
+	m_GroupShapePosition_ = ObjectManager.GetGroupShapePosition(ObjectManager.GetActiveGroupShapeId());
+	m_GroupShapeRotation_ = ObjectManager.GetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId());
+	m_GroupShapeScale_ = ObjectManager.GetGroupShapeScale(ObjectManager.GetActiveGroupShapeId());
+
+
+
+
+
+}
+
+void HorusInspector::SetGroupShapeName(std::string name)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeName(ObjectManager.GetActiveGroupShapeId(), name.c_str());
+
+	//CallResetBuffer();
+}
+void HorusInspector::SetGroupShapePosition(glm::vec3 position)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), position);
+
+	CallResetBuffer();
+}
+void HorusInspector::SetGroupShapeRotation(glm::vec3 rotation)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), rotation);
+
+	CallResetBuffer();
+}
+void HorusInspector::SetGroupShapeScale(glm::vec3 scale)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), scale);
+
+	CallResetBuffer();
+}
+
+
+
+// -------------------------------------- SHAPE INSPECTOR --------------------------------------
+
+void HorusInspector::InspectorShape()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	//ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Green");
 	//ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Pink");
 
-	// Getters Mesh
-	std::string& MeshName = ObjectManager.GetMeshName(ObjectManager.GetActiveMeshId());
-
-	glm::vec3 MeshPosition = ObjectManager.GetMeshPosition(ObjectManager.GetActiveMeshId());
-	glm::vec3 MeshRotation = ObjectManager.GetMeshRotation(ObjectManager.GetActiveMeshId());
-	glm::vec3 MeshScale = ObjectManager.GetMeshScale(ObjectManager.GetActiveMeshId());
-
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Mesh Inspector");
+	ImGui::Text("Shape Inspector");
 	ImGui::PopStyleColor();
 	ImGui::Separator();
 
@@ -1244,48 +1715,60 @@ void HorusInspector::InspectorMesh()
 	ImGui::Text("Vertices: %d", vertexCount);
 	ImGui::Text("Faces: %d", faceCount);
 
-	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+	// Delete shape button
+	if (ImGui::Button("Delete Shape"))
+	{
+		ObjectManager.DeleteSelectedShape(ObjectManager.GetActiveShapeId());
+
+		CallResetBuffer();
+	}
+	ImGui::SameLine(); ShowHelpMarker("Delete the selected shape. Attention! No undo possible.");
+
+	if (ImGui::CollapsingHeader("Transform", InputFloatFlags))
 	{
 		if (ImGui::Button("Reset Transform"))
 		{
-			//ObjectManager.ResetTransform(ObjectManager.GetActiveMeshId());
+			ObjectManager.SetShapeResetTransformById(ObjectManager.GetActiveShapeId());
 
 			CallResetBuffer();
 		}
-		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the mesh.");
+		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the shape.");
 
 		ImGui::Separator();
 
-		if (ImGui::InputFloat3("Position", &MeshPosition[0]))
+		if (ImGui::InputFloat3("Position", &m_ShapePosition_[0], "%.1f", InputFloatFlags))
 		{
-			ObjectManager.SetShapePosition(ObjectManager.GetActiveMeshId(), MeshPosition);
+			ObjectManager.SetShapePositionById(ObjectManager.GetActiveShapeId(), m_ShapePosition_);
 
+			spdlog::debug("Shape ID: {}", ObjectManager.GetActiveShapeId());
+
+			spdlog::debug("Shape position set : {0} {1} {2}", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
 			CallResetBuffer();
 		}
 
-		if (ImGui::InputFloat3("Rotation", &MeshRotation[0]))
+		if (ImGui::InputFloat3("Rotation", &m_ShapeRotation_[0], "%.1f", InputFloatFlags))
 		{
-			ObjectManager.SetShapeRotation(ObjectManager.GetActiveMeshId(), MeshRotation);
-
+			ObjectManager.SetShapeRotationById(ObjectManager.GetActiveShapeId(), m_ShapeRotation_);
+			spdlog::debug("Shape rotation set : {0} {1} {2}", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
 			CallResetBuffer();
 		}
 
-		if (ImGui::InputFloat3("Scale", &MeshScale[0]))
+		if (ImGui::InputFloat3("Scale", &m_ShapeScale_[0], "%.1f", InputFloatFlags))
 		{
-			ObjectManager.SetShapeScale(ObjectManager.GetActiveMeshId(), MeshScale);
-
+			ObjectManager.SetShapeScaleById(ObjectManager.GetActiveShapeId(), m_ShapeScale_);
+			spdlog::debug("Shape scale set : {0} {1} {2}", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
 			CallResetBuffer();
 		}
 	}
 
 	ImGui::Text("Materials");
-
+	// TODO : See the assigned materials here
 
 	if (ImGui::Button("Recalculate Normals"))
 	{
 
 	}
-	ImGui::SameLine(); ShowHelpMarker("Recalculate the normals of the mesh.");
+	ImGui::SameLine(); ShowHelpMarker("Recalculate the normals of the shape.");
 
 	// Visualisation
 	static bool showNormals = false;
@@ -1296,29 +1779,44 @@ void HorusInspector::InspectorMesh()
 	ImGui::Spacing();
 
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Mesh Infos");
+	ImGui::Text("Shape Infos");
 	ImGui::PopStyleColor();
 
 	ImGui::Separator();
 
-	ImGui::Text("Mesh id: %d ", ObjectManager.GetActiveMeshId());
-	ImGui::Text("Mesh name: %s ", MeshName.c_str());
-	ImGui::Text("Mesh position: %.2f %.2f %.2f ", MeshPosition.x, MeshPosition.y, MeshPosition.z);
-	ImGui::Text("Mesh rotation: %.2f %.2f %.2f ", MeshRotation.x, MeshRotation.y, MeshRotation.z);
-	ImGui::Text("Mesh scale: %.2f %.2f %.2f ", MeshScale.x, MeshScale.y, MeshScale.z);
-	ImGui::Text("Mesh vertex count: %d ", vertexCount);
-	ImGui::Text("Mesh face count: %d ", faceCount);
-	ImGui::Text("Mesh materials: %d ", 0);
+	ImGui::Text("Shape id: %d ", ObjectManager.GetActiveShapeId());
+	ImGui::Text("Shape name: %s ", m_ShapeName_.c_str());
+	ImGui::Text("Shape position: %.2f %.2f %.2f ", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
+	ImGui::Text("Shape rotation: %.2f %.2f %.2f ", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
+	ImGui::Text("Shape scale: %.2f %.2f %.2f ", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
+	ImGui::Text("Shape vertex count: %d ", vertexCount);
+	ImGui::Text("Shape face count: %d ", faceCount);
+	ImGui::Text("Shape materials: %d ", 0);
 
 	ImGui::Separator();
 }
+
+void HorusInspector::PopulateSelectedShapeInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	m_ShapeName_ = ObjectManager.GetShapeNameById(ObjectManager.GetActiveShapeId());
+	m_ShapePosition_ = ObjectManager.GetShapePositionById(ObjectManager.GetActiveShapeId());
+	m_ShapeRotation_ = ObjectManager.GetShapeRotationById(ObjectManager.GetActiveShapeId());
+	m_ShapeScale_ = ObjectManager.GetShapeScaleById(ObjectManager.GetActiveShapeId());
+
+
+
+}
+
+//-------------------------------------- TEXTURE INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorTexture()
 {
 	ImGui::Text("Texture Inspector");
 	ImGui::Separator();
 
-	GLuint textureId = 0;
+	/*GLuint textureId = 0;
 	ImGui::Image((void*)(intptr_t)textureId, ImVec2(100, 100));
 
 	static char texturePath[128] = "path/to/texture.png";
@@ -1344,8 +1842,10 @@ void HorusInspector::InspectorTexture()
 
 	}
 
-	ImGui::Spacing();
+	ImGui::Spacing();*/
 }
+
+//-------------------------------------- PROJECT INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorProjectProperty()
 {
@@ -1384,8 +1884,8 @@ void HorusInspector::InspectorProjectProperty()
 
 		if (ImGui::CollapsingHeader("Render Info"))
 		{
-			ImGui::Text("GPU name n01 : %s", m_Gpu00N_.c_str());
-			ImGui::Text("GPU name n02 : %s", m_Gpu01N_.c_str());
+			ImGui::Text("GPU N01 : %s", m_Gpu00N_);
+			ImGui::Text("GPU N02 : %s", m_Gpu01N_);
 			ImGui::Separator();
 			ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
 			ImGui::Separator();
@@ -1402,67 +1902,83 @@ void HorusInspector::InspectorProjectProperty()
 
 	// Render Modes
 	{
-		const char* RenderModes[] = {
-		"Diffuse only lighting",
-		"Normal GI lighting",
-		"Only direct lighting",
-		"Direct lighting with no shadowing",
-		"White objects with black wireframe",
-		"Output only Material indices",
-		"Output P positions for each pixel hit",
-		"Output normal values",
-		"Output UV coordinates",
-		"Output an AO render"
-		};
-		static int SelectedRenderMode = 1;
-
 		ImGui::Text("Select render mode :");
-		if (ImGui::Combo("Render mode", &SelectedRenderMode, RenderModes, IM_ARRAYSIZE(RenderModes)))
+		ImGui::SameLine();
+		if (ImGui::Combo("Render mode", &m_SelectedRenderMode_, m_RenderModes_, IM_ARRAYSIZE(m_RenderModes_)))
 		{
-			switch (SelectedRenderMode)
-			{
-			case 0:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
-				break;
-			case 1:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
-				break;
-			case 2:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
-				break;
-			case 3:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
-				break;
-			case 4:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
-				break;
-			case 5:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
-				break;
-			case 6:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
-				break;
-			case 7:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
-				break;
-			case 8:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
-				break;
-			case 9:
-				rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
-				break;
-			}
+			Radeon.SetVisualizationRenderMode(m_SelectedRenderMode_);
 			CallResetBuffer();
 		}
 	}
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
+	ShowBigSeparator();
+
+	// Show AOVs
+	{
+		ImGui::Spacing();
+
+		const char* AovItems[] = {
+	"No AOVs",
+	"Opacity",
+	"World Coordinate",
+	"UV",
+	"Material Index",
+	"Geometric Normal",
+	"Shading Normal",
+	"Depth",
+	"Object Index",
+	"Object Group ID",
+	"Shadow Catcher",
+	"Background",
+	"Emission",
+	"Velocity",
+	"Direct Illumination",
+	"Indirect Illumination",
+	"Ambient Occlusion",
+	"Direct Diffuse",
+	"Direct Reflect",
+	"Indirect Diffuse",
+	"Indirect Reflect",
+	"Refract",
+	"Volume",
+	"Diffuse Albedo",
+	"Variance",
+	"View Shading Normal",
+	"Reflection Catcher",
+	"Light Group 0",
+	"Light Group 1",
+	"Light Group 2",
+	"Light Group 3",
+	"Light Group 4",
+	"Light Group 5",
+	"Light Group 6",
+	"Light Group 7",
+	"Light Group 8",
+	"Light Group 9",
+	"Light Group 10",
+	"Light Group 11",
+	"Light Group 12",
+	"Light Group 13",
+	"Light Group 14",
+	"Light Group 15"
+		};
+
+		ImGui::Text("Select AOV :");
+		ImGui::SameLine();
+		if (ImGui::Combo("AOVs", &m_SelectedAov_, AovItems, IM_ARRAYSIZE(AovItems)))
+		{
+			Radeon.SetShowAOVsMode(m_SelectedAov_);
+			CallResetBuffer();
+		}
+	}
+
+
+	ShowBigSeparator();
 
 	// Background image and transparent background
 	{
 		ImGui::TextUnformatted("Path: ");
+		ImGui::SameLine();
 		ImGui::InputText("##path", m_BackgroundPath_.data(), sizeof(m_BackgroundPath_));
 		ImGui::SameLine();
 		if (ImGui::Button("Browse##path"))
@@ -1475,40 +1991,46 @@ void HorusInspector::InspectorProjectProperty()
 
 			m_BackgroundPath_ = FilePath;
 		}
+		ImGui::SameLine();
+		// Clear Path button
+		if (ImGui::Button("Clear##path"))
+		{
+			m_BackgroundPath_.clear();
+		}
 
-		if (bool CheckboxbeckdropChanged = ImGui::Checkbox("Background image", &m_EnableBackdropImage_); CheckboxbeckdropChanged && (m_EnableBackdropImage_ != m_PreviousEnableBackdropImage_))
+		if (ImGui::Checkbox("Background image", &m_EnableBackdropImage_))
 		{
 			m_ResetBuffer_ = true;
-			m_PreviousEnableBackdropImage_ = m_EnableBackdropImage_;
-		}
-
-		if (m_EnableBackdropImage_ == true)
-		{
-			if (m_BackgroundPath_ != m_LastBackgroundPath_ || m_JustDisabledBackdropImage_)
+			if (m_EnableBackdropImage_ != m_PreviousEnableBackdropImage_)
 			{
-				ObjectManager.SetBackgroundImage(m_BackgroundPath_);
-				m_LastBackgroundPath_ = m_BackgroundPath_;
-				m_JustDisabledBackdropImage_ = false;
-				CallResetBuffer();
+				m_PreviousEnableBackdropImage_ = m_EnableBackdropImage_;
+				if (m_EnableBackdropImage_)
+				{
+					if (m_BackgroundPath_ != m_LastBackgroundPath_ || m_JustDisabledBackdropImage_)
+					{
+						ObjectManager.SetBackgroundImage(m_BackgroundPath_);
+						m_LastBackgroundPath_ = m_BackgroundPath_;
+						m_JustDisabledBackdropImage_ = false;
+						CallResetBuffer();
+					}
+					m_WasBackdropImageEnabled_ = true;
+				}
+				else
+				{
+					if (m_WasBackdropImageEnabled_)
+					{
+						ObjectManager.UnsetBackgroundImage();
+						m_WasBackdropImageEnabled_ = false;
+						m_JustDisabledBackdropImage_ = true;
+						CallResetBuffer();
+					}
+				}
 			}
-			m_WasBackdropImageEnabled_ = true;
 		}
-		else if (m_WasBackdropImageEnabled_)
-		{
-			ObjectManager.UnsetBackgroundImage();
-			m_WasBackdropImageEnabled_ = false;
-			m_JustDisabledBackdropImage_ = true;
-			CallResetBuffer();
-		}
+		ImGui::TextColored(m_WasBackdropImageEnabled_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f),
+			m_WasBackdropImageEnabled_ ? "Backdrop image is enabled" : "Backdrop image is disabled");
 
-		if (m_WasBackdropImageEnabled_)
-		{
-			ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Backdrop image is enabled");
-		}
-		else
-		{
-			ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Backdrop image is disabled");
-		}
+		ShowBigSeparator();
 
 		static bool WasTransparentBackgroundEnabled = false;
 
@@ -1542,519 +2064,463 @@ void HorusInspector::InspectorProjectProperty()
 		}
 	}
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
+	ShowBigSeparator();
 
-	if (ImGui::CollapsingHeader("Render settings", ImGuiTreeNodeFlags_DefaultOpen))
+	// Render settings
 	{
-		if (ImGui::BeginTabBar("rnds_settings"))
+		if (ImGui::CollapsingHeader("Render settings", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if (ImGui::BeginTabItem("Sampling"))
+			if (ImGui::BeginTabBar("rnds_settings"))
 			{
-				if (ImGui::CollapsingHeader("Sampling", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::BeginTabItem("Sampling"))
 				{
-					ImGui::Text("Min samples: %d", m_MinSamples_);
-					ImGui::SameLine();
-					if (ImGui::SliderInt("Min samples", &m_MinSamples_, 1, 99))
-					{
+					ShowBigSeparator();
 
-						if (m_MinSamples_ > m_MaxSamples_)
+					if (ImGui::CollapsingHeader("Sampling", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						// Max samples
+						ImGui::Text("Min samples: %d", m_MinSamples_);
+						ImGui::SameLine();
+						if (ImGui::SliderInt("Min samples", &m_MinSamples_, 1, 99))
 						{
-							m_MinSamples_ = m_MaxSamples_;
+
+							if (m_MinSamples_ > m_MaxSamples_)
+							{
+								m_MinSamples_ = m_MaxSamples_;
+							}
+
+							Radeon.SetMinSamples(m_MinSamples_);
+							CallResetBuffer();
+							PopulateSelectedProjectInfos();
 						}
 
-						Radeon.SetMinSamples(m_MinSamples_);
-						CallResetBuffer();
-					}
-
-					ImGui::Text("Max samples: %d", m_MaxSamples_);
-					ImGui::SameLine();
-					if (ImGui::SliderInt("Max samples", &m_MaxSamples_, 1, 1024))
-					{
-						if (m_MaxSamples_ < m_MinSamples_)
+						// Max samples
+						ImGui::Text("Max samples: %d", m_MaxSamples_);
+						ImGui::SameLine();
+						if (ImGui::SliderInt("Max samples", &m_MaxSamples_, 1, 1024))
 						{
-							m_MaxSamples_ = m_MinSamples_;
+							if (m_MaxSamples_ < m_MinSamples_)
+							{
+								m_MaxSamples_ = m_MinSamples_;
+							}
+
+							Radeon.SetMaxSamples(m_MaxSamples_);
+							CallResetBuffer();
+							PopulateSelectedProjectInfos();
 						}
 
-						Radeon.SetMaxSamples(m_MaxSamples_);
-						CallResetBuffer();
+						ShowBigSeparator();
+
+						// Russian roulette
+						// Russian roulette
+						if (ImGui::Checkbox("Russian Roulette", &m_EnableRussianRoulette_))
+						{
+							m_ResetBuffer_ = m_EnableRussianRoulette_ != m_PreviousEnableRussianRoulette_;
+							m_PreviousEnableRussianRoulette_ = m_EnableRussianRoulette_;
+						}
+
+						ImVec4 rrColor = m_EnableRussianRoulette_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+						ImGui::TextColored(rrColor, m_EnableRussianRoulette_ ? "Russian roulette is enabled" : "Russian roulette is disabled");
+
+						if (m_EnableRussianRoulette_)
+						{
+							static float RussianRouletteDepth = 5;
+							if (ImGui::SliderFloat("Depth", &RussianRouletteDepth, 1.0f, 20.0f))
+							{
+								rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, RussianRouletteDepth);
+								CallResetBuffer();
+							}
+						}
+
+						ShowBigSeparator();
+
+						// Handle adaptive sampling checkbox and update render mode
+						if (ImGui::Checkbox("Adaptive sampling", &m_EnableAdaptiveSampling_))
+						{
+							CallResetBuffer();
+							if (m_EnableAdaptiveSampling_)
+							{
+								Radeon.SetAdaptiveRender();
+							}
+							else {
+								Radeon.SetClassicRender();
+							}
+						}
+
+						ImVec4 color = m_EnableAdaptiveSampling_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+						ImGui::TextColored(color, m_EnableAdaptiveSampling_ ? "Adaptive sampling is enabled" : "Adaptive sampling is disabled");
+
+						// Display and handle adaptive threshold slider
+						ImGui::Text("Threshold: %.2f", m_AdaptiveThreshold_);
+						ImGui::SameLine();
+						if (ImGui::SliderFloat("Threshold", &m_AdaptiveThreshold_, 0.01f, 0.5f, "%.1f"))
+						{
+							Radeon.SetAdaptiveSamplingThreshold(m_AdaptiveThreshold_);
+							CallResetBuffer();
+						}
 					}
 
-					ImGui::Separator();
+					ShowBigSeparator();
 
-					// Russian roulette
-					static bool RrParametersChanged = false;
-
-					if (bool CheckboxRrChanged = ImGui::Checkbox("Russian Roulette", &m_EnableRussianRoulette_); CheckboxRrChanged && (m_EnableRussianRoulette_ != m_PreviousEnableRussianRoulette_))
-					{
+					// checkbox for enable preview mode
+					// Handle the enable preview checkbox and update preview mode settings
+					if (bool CheckboxChanged = ImGui::Checkbox("Enable preview", &m_EnablePreviewMode_); CheckboxChanged && (m_EnablePreviewMode_ != m_PreviousResetMode_)) {
 						m_ResetBuffer_ = true;
-						m_PreviousEnableRussianRoulette_ = m_EnableRussianRoulette_;
-						RrParametersChanged = true;
+						m_PreviousResetMode_ = m_EnablePreviewMode_;
+						Radeon.SetLockPreviewMode(m_EnablePreviewMode_);
+						PopulateSelectedProjectInfos();
 					}
 
-					if (m_EnableRussianRoulette_)
-					{
-						ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Russian roulette is enabled");
+					// Display preview mode status
+					ImVec4 colorPM = m_EnablePreviewMode_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+					ImGui::TextColored(colorPM, m_EnablePreviewMode_ ? "Preview mode is enabled" : "Preview mode is disabled");
 
-						static float RussianRouletteDepth = 5;
+					ShowBigSeparator();
 
-						if (ImGui::SliderFloat("Depth", &RussianRouletteDepth, 1.0f, 20.0f))
-						{
-							rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, RussianRouletteDepth);
-							RrParametersChanged = true;
-						}
-
-					}
-					else
-					{
-						ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Russian roulette is disabled");
-					}
-
-					if (RrParametersChanged)
-					{
-						CallResetBuffer();
-						RrParametersChanged = false;
-					}
-
-					ImGui::Separator();
-
-					static bool ParametersChanged = false;
-
-
-					if (ImGui::Checkbox("Adaptive sampling", &m_EnableAdaptiveSampling_))
-					{
+					// Anti Aliasing
+					bool CheckboxAaChanged = ImGui::Checkbox("Enable AA", &m_EnableAa_);
+					if (CheckboxAaChanged) {
 						m_ResetBuffer_ = true;
-						ParametersChanged = true;
+						m_PreviousEnableAa_ = m_EnableAa_;
+						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_AA_ENABLED, m_EnableAa_ ? 1 : 0);
 					}
 
-					if (m_EnableAdaptiveSampling_)
-					{
-						ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Adaptive sampling is enabled");
-					}
-					else
-					{
-						ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Adaptive sampling is disabled");
-					}
+					ImVec4 colorAA = m_EnableAa_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+					ImGui::TextColored(colorAA, m_EnableAa_ ? "Anti aliasing is enabled" : "Anti aliasing is disabled");
 
-					/*if (bool CheckboxadsChanged = ImGui::Checkbox("Enable adaptive sampling", &m_EnableAdaptiveSampling_); CheckboxadsChanged && (m_EnableAdaptiveSampling_ != m_PreviousEnableAdaptiveSampling_))
-					{
-						m_ResetBuffer_ = true;
-						m_PreviousEnableAdaptiveSampling_ = m_EnableAdaptiveSampling_;
-						Radeon.SetAdaptiveRender();
-						ParametersChanged = true;
-					}
+					// Display and handle filter 
+					const char* Filters[] = { "Box", "Triangle", "Gaussian", "Mitchell", "Lanczos", "Blackmanharris", "None" };
+					static int SelectedFilter = 2;
 
-					if (m_EnableAdaptiveSampling_)
+					ImGui::Text("Select filter :");
+					if (ImGui::Combo("Filter", &SelectedFilter, Filters, IM_ARRAYSIZE(Filters)))
 					{
-						ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Adaptive sampling is enabled");
-					}
-					else
-					{
-						ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Adaptive sampling is disabled");
-					}*/
-
-					if (ParametersChanged)
-					{
-						if (m_EnableAdaptiveSampling_)
+						switch (SelectedFilter)
 						{
-							Radeon.SetAdaptiveRender();
+						case 0:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BOX);
+							break;
+						case 1:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_TRIANGLE);
+							break;
+						case 2:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_GAUSSIAN);
+							break;
+						case 3:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_MITCHELL);
+							break;
+						case 4:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_LANCZOS);
+							break;
+						case 5:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BLACKMANHARRIS);
+							break;
+						case 6:
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_NONE);
+							break;
 						}
-						else
+						CallResetBuffer();
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("Globals"))
+				{
+					ShowBigSeparator();
+
+					// Trace depth
+					if (ImGui::CollapsingHeader("Trace Depth", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						static int maxDepthDiffuse = 1;
+						if (ImGui::SliderInt("Diffuse Ray Depth", &maxDepthDiffuse, 1, 64))
 						{
-							Radeon.SetClassicRender();
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_DIFFUSE, maxDepthDiffuse);
+							CallResetBuffer();
 						}
 
-						ParametersChanged = false;
+						static int maxDepthGlossy = 1;
+						if (ImGui::SliderInt("Reflection Ray Depth", &maxDepthGlossy, 1, 64))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY, maxDepthGlossy);
+							CallResetBuffer();
+						}
+
+						static int maxDepthRefraction = 1;
+						if (ImGui::SliderInt("Refraction Ray Depth", &maxDepthRefraction, 1, 64))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_REFRACTION, maxDepthRefraction);
+							CallResetBuffer();
+						}
+
+						static int maxDepthGlossyRefraction = 1;
+						if (ImGui::SliderInt("Glossy Refraction Ray Depth", &maxDepthGlossyRefraction, 1, 64))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY_REFRACTION, maxDepthGlossyRefraction);
+							CallResetBuffer();
+						}
+
+						static int maxDepthShadow = 1;
+						if (ImGui::SliderInt("Shadow Ray Depth", &maxDepthShadow, 1, 64))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_SHADOW, maxDepthShadow);
+							CallResetBuffer();
+						}
 					}
 
-					ImGui::Text("Threshold: %.2f", m_AdaptiveThreshold_);
-					ImGui::SameLine();
-					if (ImGui::SliderFloat("Threshold", &m_AdaptiveThreshold_, 0.01f, 0.5f, "%.1f"))
+					// Color management
+
+					if (ImGui::CollapsingHeader("Color Management", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						Radeon.SetAdaptiveSamplingThreshold(m_AdaptiveThreshold_);
-						CallResetBuffer();
-						ParametersChanged = true;
+						ImGui::Text("Color Space");
+
+
 					}
-				}
 
-				ImGui::Separator();
+					// Options
 
-				// checkbox for enable preview mode
-				static bool PreviewParametersChanged = false;
-
-				if (bool CheckboxChanged = ImGui::Checkbox("Enable preview", &m_EnablePreviewMode_); CheckboxChanged && (m_EnablePreviewMode_ != m_PreviousResetMode_))
-				{
-					m_ResetBuffer_ = true;
-					m_PreviousResetMode_ = m_EnablePreviewMode_;
-					PreviewParametersChanged = true;
-				}
-
-				if (m_EnablePreviewMode_)
-				{
-					ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Preview mode is enabled");
-				}
-				else
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Preview mode is disabled");
-				}
-
-				if (PreviewParametersChanged)
-				{
-					if (m_EnablePreviewMode_ == true)
+					if (ImGui::CollapsingHeader("Options", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_PREVIEW, 1);
+						ImGui::Text("Color Space");
+
+
 					}
-					else
+
+					// Overrides
+
+					if (ImGui::CollapsingHeader("Override", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_PREVIEW, 0);
+						ImGui::Text("Color Space");
+
+
 					}
 
-					PreviewParametersChanged = false;
-				}
+					// material override
 
-				ImGui::Separator();
-
-				// Anti Aliasing
-				static bool AaParametersChanged = false;
-
-				bool CheckboxAaChanged = ImGui::Checkbox("Enable AA", &m_EnableAa_);
-
-				if (CheckboxAaChanged)
-				{
-					m_ResetBuffer_ = true;
-					m_PreviousEnableAa_ = m_EnableAa_;
-					AaParametersChanged = true;
-				}
-
-				if (m_EnableAa_)
-				{
-					ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Anti aliasing is enabled"); // green
-
-				}
-				else
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Anti aliasing is disabled"); // pink
-
-				}
-
-				if (AaParametersChanged)
-				{
-					if (m_EnableAa_)
+					if (ImGui::CollapsingHeader("Material Override", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_AA_ENABLED, 1);
-					}
-					else
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_AA_ENABLED, 0);
+						ImGui::Text("Color Space");
+
+
 					}
 
-					AaParametersChanged = false;
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
 				}
 
-				const char* Filters[] = { "Box", "Triangle", "Gaussian", "Mitchell", "Lanczos", "Blackmanharris", "None" };
-				static int SelectedFilter = 2;
-
-				ImGui::Text("Select filter :");
-				if (ImGui::Combo("Filter", &SelectedFilter, Filters, IM_ARRAYSIZE(Filters)))
+				if (ImGui::BeginTabItem("Motion blur"))
 				{
-					switch (SelectedFilter)
+					ShowBigSeparator();
+
+					if (ImGui::CollapsingHeader("Motion Blur", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-					case 0:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BOX);
-						break;
-					case 1:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_TRIANGLE);
-						break;
-					case 2:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_GAUSSIAN);
-						break;
-					case 3:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_MITCHELL);
-						break;
-					case 4:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_LANCZOS);
-						break;
-					case 5:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_BLACKMANHARRIS);
-						break;
-					case 6:
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_IMAGE_FILTER_TYPE, RPR_FILTER_NONE);
-						break;
+
+
 					}
-					CallResetBuffer();
+
+					if (ImGui::CollapsingHeader("Shutter", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
 				}
 
-				ImGui::Separator();
+				if (ImGui::BeginTabItem("GI"))
+				{
+					ShowBigSeparator();
 
-				ImGui::EndTabItem();
+					if (ImGui::CollapsingHeader("GI", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						static int MaxRecursion = 4;
+
+						if (ImGui::SliderInt("Trace Depth", &MaxRecursion, 1, 64))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_RECURSION, MaxRecursion);
+							CallResetBuffer();
+						}
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("Caustics"))
+				{
+					ShowBigSeparator();
+
+					if (ImGui::CollapsingHeader("Caustics", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+
+					}
+
+					if (ImGui::CollapsingHeader("Trace Depth", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("AOV"))
+				{
+					ShowBigSeparator();
+
+					if (ImGui::CollapsingHeader("AOVs", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+					}
+
+					ImGui::Spacing();
+
+					if (ImGui::CollapsingHeader("Active AOVs", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+
+					}
+
+					ImGui::Spacing();
+
+					if (ImGui::CollapsingHeader("Processing", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						if (ImGui::CollapsingHeader("Deep Output", ImGuiTreeNodeFlags_DefaultOpen))
+						{
+
+
+						}
+
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("Optimizations"))
+				{
+					ShowBigSeparator();
+
+					// SSS
+					if (ImGui::CollapsingHeader("Sub-Surface Scattering", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					// Cut-off thresholds
+					if (ImGui::CollapsingHeader("Cut-off Thresholds", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					// Ray tracing acceleration
+					if (ImGui::CollapsingHeader("Ray Tracing Acceleration", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("System"))
+				{
+					ShowBigSeparator();
+
+					// Log and feedback
+					if (ImGui::CollapsingHeader("Log and Feedback", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					// Tile rendering
+					if (ImGui::CollapsingHeader("Tile Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					// Shadow Linking
+					if (ImGui::CollapsingHeader("Shadow Linking", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+					}
+
+					// Memory
+					if (ImGui::CollapsingHeader("Memory", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						/*static float rayCastEpsilon = 0.002f;
+						if (ImGui::SliderFloat("Ray Cast Epsilon", &rayCastEpsilon, 0.0f, 1.0f, "%.5f"))
+						{
+							rprContextSetParameterByKey1f(context, RPR_CONTEXT_RAY_CAST_EPISLON, rayCastEpsilon);
+							CallResetBuffer();
+						}*/
+
+						static int CpuThreadLimit = 4;
+						if (ImGui::SliderInt("CPU Thread limit", &CpuThreadLimit, 1, 16))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_CPU_THREAD_LIMIT, CpuThreadLimit);
+							CallResetBuffer();
+						}
+
+						static int gpuMemoryLimitMB = 1024;
+						if (ImGui::SliderInt("GPU Thread limit (MB)", &gpuMemoryLimitMB, 256, 16384))
+						{
+							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_GPU_MEMORY_LIMIT, gpuMemoryLimitMB);
+							CallResetBuffer();
+						}
+					}
+
+					// Global preferences
+					if (ImGui::CollapsingHeader("Global Preferences", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+
+
+					}
+
+					// Compute devices
+					if (ImGui::CollapsingHeader("Compute Devices", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						ImGui::Text("GPU name: %s", m_Gpu00N_);
+						ImGui::SameLine();
+						ImGui::Text("GPU name: %s", m_Gpu01N_);
+					}
+
+					ShowBigSeparator();
+
+					ImGui::EndTabItem();
+				}
+
 			}
 
-			if (ImGui::BeginTabItem("Globals"))
-			{
-				// Trace depth
-				if (ImGui::CollapsingHeader("Trace Depth", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					static int maxDepthDiffuse = 1;
-					if (ImGui::SliderInt("Diffuse Ray Depth", &maxDepthDiffuse, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_DIFFUSE, maxDepthDiffuse);
-						CallResetBuffer();
-					}
-
-					static int maxDepthGlossy = 1;
-					if (ImGui::SliderInt("Reflection Ray Depth", &maxDepthGlossy, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY, maxDepthGlossy);
-						CallResetBuffer();
-					}
-
-					static int maxDepthRefraction = 1;
-					if (ImGui::SliderInt("Refraction Ray Depth", &maxDepthRefraction, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_REFRACTION, maxDepthRefraction);
-						CallResetBuffer();
-					}
-
-					static int maxDepthGlossyRefraction = 1;
-					if (ImGui::SliderInt("Glossy Refraction Ray Depth", &maxDepthGlossyRefraction, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY_REFRACTION, maxDepthGlossyRefraction);
-						CallResetBuffer();
-					}
-
-					static int maxDepthShadow = 1;
-					if (ImGui::SliderInt("Shadow Ray Depth", &maxDepthShadow, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_SHADOW, maxDepthShadow);
-						CallResetBuffer();
-					}
-				}
-
-				// Color management
-
-				if (ImGui::CollapsingHeader("Color Management", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Text("Color Space");
-
-
-				}
-
-				// Options
-
-				if (ImGui::CollapsingHeader("Options", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Text("Color Space");
-
-
-				}
-
-				// Overrides
-
-				if (ImGui::CollapsingHeader("Override", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Text("Color Space");
-
-
-				}
-
-				// material override
-
-				if (ImGui::CollapsingHeader("Material Override", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Text("Color Space");
-
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("Motion blur"))
-			{
-				if (ImGui::CollapsingHeader("Motion Blur", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				if (ImGui::CollapsingHeader("Shutter", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("GI"))
-			{
-				if (ImGui::CollapsingHeader("GI", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					static int MaxRecursion = 4;
-
-					if (ImGui::SliderInt("Trace Depth", &MaxRecursion, 1, 64))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_RECURSION, MaxRecursion);
-						CallResetBuffer();
-					}
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("Caustics"))
-			{
-				if (ImGui::CollapsingHeader("Caustics", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-
-				}
-
-				if (ImGui::CollapsingHeader("Trace Depth", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("AOV"))
-			{
-				if (ImGui::CollapsingHeader("AOVs", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-
-				}
-
-				if (ImGui::CollapsingHeader("Active AOVs", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-
-				}
-
-				if (ImGui::CollapsingHeader("Processing", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					if (ImGui::CollapsingHeader("Deep Output", ImGuiTreeNodeFlags_DefaultOpen))
-					{
-
-
-					}
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("Optimizations"))
-			{
-				// SSS
-				if (ImGui::CollapsingHeader("Sub-Surface Scattering", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				// Cut-off thresholds
-				if (ImGui::CollapsingHeader("Cut-off Thresholds", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				// Ray tracing acceleration
-				if (ImGui::CollapsingHeader("Ray Tracing Acceleration", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("System"))
-			{
-				// Log and feedback
-				if (ImGui::CollapsingHeader("Log and Feedback", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				// Tile rendering
-				if (ImGui::CollapsingHeader("Tile Rendering", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				// Shadow Linking
-				if (ImGui::CollapsingHeader("Shadow Linking", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-				}
-
-				// Memory
-				if (ImGui::CollapsingHeader("Memory", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					/*static float rayCastEpsilon = 0.002f;
-					if (ImGui::SliderFloat("Ray Cast Epsilon", &rayCastEpsilon, 0.0f, 1.0f, "%.5f"))
-					{
-						rprContextSetParameterByKey1f(context, RPR_CONTEXT_RAY_CAST_EPISLON, rayCastEpsilon);
-						CallResetBuffer();
-					}*/
-
-					static int CpuThreadLimit = 4;
-					if (ImGui::SliderInt("CPU Thread limit", &CpuThreadLimit, 1, 16))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_CPU_THREAD_LIMIT, CpuThreadLimit);
-						CallResetBuffer();
-					}
-
-					static int gpuMemoryLimitMB = 1024;
-					if (ImGui::SliderInt("GPU Thread limit (MB)", &gpuMemoryLimitMB, 256, 16384))
-					{
-						rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_GPU_MEMORY_LIMIT, gpuMemoryLimitMB);
-						CallResetBuffer();
-					}
-				}
-
-				// Global preferences
-				if (ImGui::CollapsingHeader("Global Preferences", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-
-
-				}
-
-				// Compute devices
-				if (ImGui::CollapsingHeader("Compute Devices", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Text("GPU name: %s", m_Gpu00N_); ImGui::SameLine(); ImGui::Text("GPU name: %s", m_Gpu01N_);
-
-				}
-
-				ImGui::EndTabItem();
-			}
-
+			ImGui::EndTabBar();
 		}
-		ImGui::EndTabBar();
 	}
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
+	ShowBigSeparator();
 
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Export Settings");
 	ImGui::PopStyleColor();
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
+	ShowBigSeparator();
 
 	if (ImGui::CollapsingHeader("Export render", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -2168,9 +2634,8 @@ void HorusInspector::InspectorProjectProperty()
 		}
 
 	}
-	ImGui::Separator();
 
-	//ImGui::End();
+	ShowBigSeparator();
 }
 
 void HorusInspector::ShowHelpMarker(const char* desc)
@@ -2185,361 +2650,29 @@ void HorusInspector::ShowHelpMarker(const char* desc)
 		ImGui::EndTooltip();
 	}
 }
-
-
-// Camera 
-void HorusInspector::PopulateCameraInfos()
+void HorusInspector::ShowBigSeparator()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	// Getters Camera
-	m_CameraName_ = ObjectManager.GetCameraNameById(ObjectManager.GetActiveRadeonCameraId());
-
-	m_CameraLookAt_ = GetCameraLookAt();
-	m_CameraPosition_ = GetCameraPosition();
-	m_CameraRotation_ = GetCameraRotation();
-	m_CameraScale_ = GetCameraScale();
-	m_CameraNear_ = GetCameraNear();
-	m_CameraFar_ = GetCameraFar();
-	m_CameraFov_ = GetFov();
-	m_CameraFStop_ = GetFStop();
-	m_ApertureBlades_ = GetApertureBlades();
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
 }
-
-// Camera Getters
-glm::vec3 HorusInspector::GetCameraLookAt()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraLookAt(ActiveCamera);
-	}
-	else
-	{
-		return { 0.0f, 0.0f, 0.0f };
-	}
-}
-glm::vec3 HorusInspector::GetCameraPosition()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraPosition(ActiveCamera);
-	}
-	else
-	{
-		return { 0.0f, 0.0f, 0.0f };
-	}
-
-}
-glm::vec3 HorusInspector::GetCameraRotation()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraRotation(ActiveCamera);
-	}
-	else
-	{
-		return { 0.0f, 0.0f, 0.0f };
-	}
-}
-glm::vec3 HorusInspector::GetCameraScale()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraScale(ActiveCamera);
-	}
-	else
-	{
-		return { 0.0f, 0.0f, 0.0f };
-	}
-}
-float HorusInspector::GetCameraNear()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraNearPlane(ActiveCamera);
-	}
-	else
-	{
-		return 0.0f;
-	}
-}
-float HorusInspector::GetCameraFar()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraFarPlane(ActiveCamera);
-	}
-	else
-	{
-		return 0.0f;
-	}
-}
-float HorusInspector::GetFov()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraFov(ActiveCamera);
-	}
-	else
-	{
-		return 0.0f;
-	}
-}
-float HorusInspector::GetFStop()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraFStop(ActiveCamera);
-	}
-	else
-	{
-		return 0.0f;
-	}
-}
-float HorusInspector::GetFocusDistance()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraFocusDistance(ActiveCamera);
-	}
-	else
-	{
-		return 0.0f;
-	}
-}
-int HorusInspector::GetApertureBlades()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		return ObjectManager.GetCameraApertureBlades(ActiveCamera);
-	}
-	else
-	{
-		return 0;
-	}
-}
-void HorusInspector::SetFocusPlaneToFocusPosition(rpr_shape& Plane)
-{
-	if (m_DrawFocusPlane_)
-	{
-		PopulateCameraInfos();
-		glm::vec3 FocusDir = glm::normalize(m_CameraLookAt_ - m_CameraPosition_);
-
-		glm::vec3 FocusPos = m_CameraPosition_ + FocusDir * m_FocusPlaneDistance_;
-		glm::vec3 FocusNormal = -FocusDir;
-
-		glm::mat4 FocusTransform = glm::mat4(1.0f);
-		FocusTransform = glm::translate(FocusTransform, FocusPos);
-
-		glm::vec3 WorldUp = { 0.0f, 1.0f, 0.0f };
-		glm::vec3 WorldRight = glm::normalize(glm::cross(WorldUp, FocusNormal));
-		glm::vec3 Up = glm::cross(FocusNormal, WorldRight);
-
-		glm::mat4 RotationMatrix = glm::mat4(glm::vec4(WorldRight, 0.0f),
-			glm::vec4(Up, 0.0f),
-			glm::vec4(FocusNormal, 0.0f),
-			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-		FocusTransform = FocusTransform * RotationMatrix;
-		CHECK(rprShapeSetTransform(Plane, false, &FocusTransform[0][0]));
-	}
-}
-void HorusInspector::ShowHideFocusPlane(rpr_shape& Plane)
-{
-	CHECK(rprShapeSetVisibility(Plane, m_DrawFocusPlane_));
-}
-
-// Camera Setters
-void HorusInspector::SetCameraLookAt(glm::vec3 look_at)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraLookat(ActiveCamera, look_at);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetCameraPosition(glm::vec3 position)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraPosition(ActiveCamera, position);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetCameraRotation(glm::vec3 rotation_axis)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraRotation(ActiveCamera, rotation_axis);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetCameraScale(glm::vec3 scale)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraScale(ActiveCamera, scale);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetCameraNear(float Near)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraNear(ActiveCamera, Near);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetCameraFar(float Far)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraFar(ActiveCamera, Far);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetFStop(float FStop)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetFStop(ActiveCamera, FStop);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-void HorusInspector::SetFov(float fov)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	int ActiveCamera = ObjectManager.GetActiveRadeonCameraId();
-
-	if (ActiveCamera != -1)
-	{
-		ObjectManager.SetCameraFov(ActiveCamera, fov);
-	}
-	else
-	{
-		spdlog::error("No camera selected");
-		Console.AddLog(" [error] No camera selected");
-	}
-}
-
-
 
 // Project
-void HorusInspector::PopulateProjectInfos()
+void HorusInspector::PopulateSelectedProjectInfos()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 	// Populate Project Infos
-	m_Gpu00N_ = "No GPU";
-	m_Gpu01N_ = "No GPU";
-	/*CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), &m_Gpu00N_, nullptr));
-	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), &m_Gpu01N_, nullptr));*/
+	m_Gpu00N_[0] = 0;
+	m_Gpu01N_[0] = 0;
 
+	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, 0));
+	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, 0));
 
-
-
+	m_MinSamples_ = Radeon.GetMinSamples();
+	m_MaxSamples_ = Radeon.GetMaxSamples();
+	m_SelectedRenderMode_ = Radeon.GetVisualizationRenderMode();
 
 
 

@@ -26,6 +26,7 @@ public:
 	void ShowDummyDragon();
 	void ShowDummyPlane();
 	void ShowLookdevScene();
+	void ShowJaguardXKSS();
 
 	rpr_scene& GetScene() { return m_Scene_; }
 

@@ -1,138 +1,126 @@
 #include "hrs_ocio.h"
 
-#include <memory>
+#include "Math/mathutils.h"
 
-#if ( USE_OCIO == 1 )
-#include <OpenColorIO/OpenColorIO.h>
-#include <OpenColorIO/OpenColorTypes.h>
-namespace OCIO = OCIO_NAMESPACE;
-#endif
-
-#include <Math/float3.h>
-#include <Math/mathutils.h>
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+#include "common.h"
+#include "spdlog/spdlog.h"
 
 unsigned char FloatToByte(float f)
 {
-	return (unsigned char)RadeonProRender::clamp((int)(f * 255.0f), (int)0, (int)255);
+	return static_cast<unsigned char>(RadeonProRender::clamp(static_cast<int>(f * 255.0f), (int)0, (int)255));
 }
 
-rpr_status HorusOCIO::Display(rpr_framebuffer Framebuffer, const std::string& OcioFile, const std::string& Src, const std::string& display, const std::string& view, float exposure, float Gamma, const std::string& FilePath, bool UseOcio)
+rpr_status HorusOCIO::Init(rpr_context Context, rpr_framebuffer Framebuffer, std::shared_ptr<float[]> FramebufferData, const std::string& OcioFile,
+	const std::string& Source, const std::string& Display, const std::string& View,
+	float Exposure, float Gamma)
 {
-	rpr_framebuffer_desc FbInfoDesc;
-	rpr_status Status = rprFrameBufferGetInfo(Framebuffer, RPR_FRAMEBUFFER_DESC, sizeof(FbInfoDesc), &FbInfoDesc, 0);
-	if (Status != RPR_SUCCESS)
-		return Status;
+	m_CurrentOcioConfigPath_ = OcioFile.c_str();
+	m_CurrentOcioRenderSpace_ = Display.c_str();
 
-	const int64_t PxlCount = FbInfoDesc.fb_height * FbInfoDesc.fb_width;
-	const int fltCount = PxlCount * 4;
-	auto frame_buffer_data = std::make_unique<float[]>(fltCount);
-	Status = rprFrameBufferGetInfo(Framebuffer, RPR_FRAMEBUFFER_DATA, fltCount * 4, frame_buffer_data.get(), NULL);
-	if (Status != RPR_SUCCESS)
-		return Status;
+	spdlog::info("OCIO config : {}", m_CurrentOcioConfigPath_);
 
-	const int channelCountLDR = 3;
-	auto framebufferLDR = std::make_unique<unsigned char[]>(PxlCount * channelCountLDR);
+	// Setup Radeon with OCIO
+	// For texture file color space uniquely
+	{
+		SetOcioConfigPath(Context, m_CurrentOcioConfigPath_);
 
+		SetOcioRenderColorSpace(Context, m_CurrentOcioRenderSpace_);
+	}
 
-#if ( USE_OCIO == 1 )
+	m_Status_ = rprFrameBufferGetInfo(Framebuffer, RPR_FRAMEBUFFER_DESC, sizeof(m_FbInfoDesc_), &m_FbInfoDesc_, 0);
+	if (m_Status_ != RPR_SUCCESS)
+	{
+		spdlog::error("rprFrameBufferGetInfo failed");
+		return m_Status_;
+	}
 
-	OCIO::ConstProcessorRcPtr Processor = nullptr;
-	OCIO::ConstCPUProcessorRcPtr cpuProcessor = nullptr;;
-	OCIO::ConstConfigRcPtr config = nullptr;
+	m_PixelCount_ = m_FbInfoDesc_.fb_width * m_FbInfoDesc_.fb_height;
+	m_ChannelCount_ = m_PixelCount_ * 4;
 
-	// Create a basic Display View Transform.
+	m_FramebufferData_ = std::move(FramebufferData);
+
+	ChannelCountLDR = 3;
+	m_FramebufferDataLdr_ = std::make_unique<float[]>(m_PixelCount_ * ChannelCountLDR);
+
 	try
 	{
-		config = OCIO::Config::CreateFromFile(OcioFile.c_str());
+		m_Config_ = OCIO::Config::CreateFromFile(OcioFile.c_str());
 
-		OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
-		transform->setSrc(Src.c_str());
-		transform->setDisplay(display.c_str());
-		transform->setView(view.c_str());
+		m_Transform_ = OCIO::DisplayViewTransform::Create();
+		m_Transform_->setSrc(Source.c_str());
+		m_Transform_->setDisplay(Display.c_str());
+		m_Transform_->setView(View.c_str());
 
-		OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
-		vp->setDisplayViewTransform(transform);
-		vp->setLooksOverrideEnabled(true);
-		vp->setLooksOverride("");
+		m_ViewingPipeline_ = OCIO::LegacyViewingPipeline::Create();
+		m_ViewingPipeline_->setDisplayViewTransform(m_Transform_);
+		m_ViewingPipeline_->setLooksOverrideEnabled(true);
+		m_ViewingPipeline_->setLooksOverride("");
 
-		// exposure
+		spdlog::info("OCIO source : {}", Source.c_str());
+
+		// Exposure
 		{
-			double gain = exposure;
-			const double slope4f[] = { gain, gain, gain, gain };
-			double m44[16];
-			double offset4[4];
-			OCIO::MatrixTransform::Scale(m44, offset4, slope4f);
-			OCIO::MatrixTransformRcPtr mtx = OCIO::MatrixTransform::Create();
-			mtx->setMatrix(m44);
-			mtx->setOffset(offset4);
-			vp->setLinearCC(mtx);
+			m_Gain_ = Exposure;
+
+			OCIO::MatrixTransform::Scale(m_Matrix4X4_, m_Offset4F_, m_Slope4F_);
+			m_ExposureTransform_ = OCIO::MatrixTransform::Create();
+			m_ExposureTransform_->setMatrix(m_Matrix4X4_);
+			m_ExposureTransform_->setOffset(m_Offset4F_);
+			m_ViewingPipeline_->setLinearCC(m_ExposureTransform_);
+
+			spdlog::info("OCIO exposure : {}", Exposure);
 		}
 
-		// Post-display transform gamma
-		if (Gamma != 0.0)
+		// Post display transform
+		if (Gamma != 0.0f)
 		{
-			double exponent = 1.0 / std::max(1e-6, (double)Gamma);
-			const double exponent4f[4] = { exponent, exponent, exponent, exponent };
-			OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
-			expTransform->setValue(exponent4f);
-			vp->setDisplayCC(expTransform);
+			double Exponent = 1.0 / std::max(1e-6, double(Gamma));
+			const double Exponent4f[4] = { Exponent, Exponent, Exponent, Exponent };
+
+			m_ExponentTransform_ = OCIO::ExponentTransform::Create();
+			m_ExponentTransform_->setValue(Exponent4f);
+			m_ViewingPipeline_->setDisplayCC(m_ExponentTransform_);
+
+			spdlog::info("OCIO gamma : {}", Gamma);
 		}
 
-		Processor = vp->getProcessor(config);
-		cpuProcessor = Processor->getDefaultCPUProcessor();
+		m_Processor_ = m_ViewingPipeline_->getProcessor(m_Config_);
+		m_CpuProcessor_ = m_Processor_->getDefaultCPUProcessor(); // getDefaultGPUProcessor
+		m_GpuProcessor_ = m_Processor_->getDefaultGPUProcessor();
 
+		spdlog::info("OCIO config loaded");
 	}
 	catch (std::exception& e)
 	{
-		const char* what = e.what();
-		Processor = nullptr;
-		cpuProcessor = nullptr;
-		config = nullptr;
-		std::cout << "Error during OCIO config: " << what << std::endl;
+		const char* What = e.what();
+		m_Processor_ = nullptr;
+		m_CpuProcessor_ = nullptr;
+		m_GpuProcessor_ = nullptr;
+		m_Config_ = nullptr;
+		std::cout << "OCIO exception: " << What << "\n";
 		return RPR_ERROR_INTERNAL_ERROR;
 	}
 
-#endif
-
-	// run the post process on each pixels
-	for (int64_t i = 0; i < PxlCount; i++) // <-- can be multithreaded for perf improve
-	{
-		RadeonProRender::float3 rgb = RadeonProRender::float3(
-			frame_buffer_data[i * 4 + 0],
-			frame_buffer_data[i * 4 + 1],
-			frame_buffer_data[i * 4 + 2]);
-
-
-#if ( USE_OCIO == 1 )
-		if (UseOcio) // if using OCIO processor
-		{
-			cpuProcessor->applyRGB(&(rgb.x));
-		}
-		else
-#endif
-		{
-			rgb.x = powf(rgb.x * exposure, 1.0f / Gamma);
-			rgb.y = powf(rgb.y * exposure, 1.0f / Gamma);
-			rgb.z = powf(rgb.z * exposure, 1.0f / Gamma);
-		}
-
-		framebufferLDR[i * 3 + 0] = FloatToByte(rgb[0]);
-		framebufferLDR[i * 3 + 1] = FloatToByte(rgb[1]);
-		framebufferLDR[i * 3 + 2] = FloatToByte(rgb[2]);
-	}
-
-	// export to png file.
-	stbi_write_png(
-		FilePath.c_str(),
-		FbInfoDesc.fb_width,
-		FbInfoDesc.fb_height,
-		channelCountLDR,
-		framebufferLDR.get(),
-		FbInfoDesc.fb_width * channelCountLDR
-	);
-
 	return RPR_SUCCESS;
 }
+
+
+void HorusOCIO::ApplyOCIO(rpr_framebuffer Framebuffer)
+{
+
+
+}
+
+
+void HorusOCIO::SetOcioConfigPath(rpr_context Context, std::string OcioConfigPath)
+{
+	const char ocio_config[] = "resources/aces_1.0.3/config.ocio";
+
+	CHECK(rprContextSetParameterByKeyString(Context, RPR_CONTEXT_OCIO_CONFIG_PATH, ocio_config));
+}
+
+void HorusOCIO::SetOcioRenderColorSpace(rpr_context Context, std::string RenderingColorSpace)
+{
+	CHECK(rprContextSetParameterByKeyString(Context, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, "ACES - ACEScg"));
+}
+

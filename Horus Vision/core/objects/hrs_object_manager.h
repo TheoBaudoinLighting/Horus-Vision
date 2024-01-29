@@ -91,15 +91,14 @@ public:
 	void SetBackgroundImage(const std::string& path);
 	void UnsetBackgroundImage();
 
-	// ----------------------------------------------
 	// Outliner -------------------------------------
 
-	void GetOutlinerMeshes(std::vector<std::string>& Meshes)
+	void GetOutlinerGroupShapes(std::vector<std::string>& Meshes)
 	{
-		for (const auto& Key : m_Meshes_ | std::views::keys)
+		for (const auto& Key : m_GroupShape_ | std::views::keys)
 		{
 			int Id = Key;
-			std::string Name = m_MeshNames_[Id];
+			std::string Name = m_GroupShapeNames_[Id];
 			Meshes.push_back(Name);
 		}
 	}
@@ -131,7 +130,6 @@ public:
 		}
 	}
 
-	// ----------------------------------------------
 	// Camera object ----------------------------------
 
 	void CameraExtractor(rpr_camera& Camera);
@@ -156,8 +154,8 @@ public:
 	HorusRadeonCamera& GetRadeonCamera(int id) { return m_RadeonCameras_[id]; }
 	HorusOpenGLCamera& GetOpenGlCamera(int id) { return m_OpenGlCameras_[id]; }
 
-	void BindCamera(int id);
-	void UnbindCamera(int id);
+	void BindRadeonCamera(int id);
+	void UnbindRadeonCamera(int id);
 
 	void UpdateRadeonCamera(int id);
 	void UpdateOpenGLCamera(int id);
@@ -178,22 +176,22 @@ public:
 	int GetCameraIdByName(const char* name);
 	std::string& GetCameraNameById(int id);
 
-	void MoveCameraForward(int id);
-	void MoveCameraBackward(int id);
-	void MoveCameraLeft(int id);
-	void MoveCameraRight(int id);
-	void MoveCameraUp(int id);
-	void MoveCameraDown(int id);
-	void ScrollCamera(int id, float delta);
+	void SetMoveCameraForward(int id);
+	void SetMoveCameraBackward(int id);
+	void SetMoveCameraLeft(int id);
+	void SetMoveCameraRight(int id);
+	void SetMoveCameraUp(int id);
+	void SetMoveCameraDown(int id);
+	void SetScrollCamera(int id, float delta);
 
 	void SetPitch(int id, float pitch);
 	void SetHeading(int id, float heading);
 
 	void SetCameraLookat(int id, glm::vec3& pivot);
 
-	void TumbleCamera(int id, float x, float y, float sensitivity);
-	void PanCamera(int id, float x, float y);
-	void ZoomCamera(int id, float distance);
+	void SetTumbleCamera(int id, float x, float y, float sensitivity);
+	void SetPanCamera(int id, float x, float y, float sensitivity);
+	void SetZoomCamera(int id, float distance);
 
 	// Getters for inspector
 
@@ -225,51 +223,77 @@ public:
 	void SetCameraRotation(int id, glm::vec3 rotation_axis);
 	void SetCameraScale(int id, glm::vec3 scale);
 
-	// ----------------------------------------------
-	// Mesh object ----------------------------------
+	// Group Shape object ----------------------------------
 
-	int CreateMesh(const char* path, const std::string& name);
+	int CreateGroupShape(const char* path, const std::string& name);
 
-	void DestroyMesh(int id);
-	void DestroyAllMeshes();
+	void DestroyGroupShape(int id);
+	void DestroyGroupShapeByName(const char* name);
+	void DestroyAllGroupShape();
 
 	// Getters for inspector
-	HorusMesh& GetMesh(int id /*, HorusMesh* mesh*/);
+	HorusGroupShape& GetGroupShape(int id /*, HorusGroupShape* mesh*/);
 
-	rpr_shape GetMeshShape(int id);
+	std::string& GetGroupShapeName(int id);
+	void SetActiveGroupShape(int id);
+	int GetActiveGroupShapeId();
 
-	std::string& GetMeshName(int id);
-	void SetActiveMesh(int id);
-	int GetActiveMeshId();
+	int GetGroupShapeCount(int count);
+	int GetGroupShapeId(const char* name);
+	void GetGroupShapeIdByIndex(int index, int* id);
+	void GetGroupShapeIndexById(int id, int* index);
+	void GetGroupShapeIndexByName(const char* name);
 
-	void GetMeshCount(int count);
-	int GetMeshId(const char* name);
-	void GetMeshIdByIndex(int index, int* id);
-	void GetMeshIndexById(int id, int* index);
-	void GetMeshIndexByName(const char* name);
+	std::map<std::string, std::vector<std::string>>& GetGroupShapeWithShapesAndNames();
 
-	glm::mat4 GetMeshTransform(int id);
-	glm::vec3 GetMeshPosition(int id);
-	glm::vec3 GetMeshRotation(int id);
-	glm::vec3 GetMeshScale(int id);
+	glm::mat4 GetGroupShapeTransform(int id);
+	glm::vec3 GetGroupShapePosition(int id);
+	glm::vec3 GetGroupShapeRotation(int id);
+	glm::vec3 GetGroupShapeScale(int id);
 
 	// Setters for inspector
+	void SetGroupShapeName(int id, const char* name);
+	void SetGroupShapeId(int id, int new_id);
+	void SetGroupShapePosition(int id, glm::vec3 pos);
+	void SetGroupShapeRotation(int id, glm::vec3 rot);
+	void SetGroupShapeScale(int id, glm::vec3 scale);
+	void SetGroupShapeResetTransform(int id);
+	void UpdateGroupShapeOutlinerData();
 
-	void SetMeshName(int id, const char* name);
-	void SetMeshId(int id, int new_id);
+	// Shape object ----------------------------------
 
-	void SetShapePosition(int id, glm::vec3 pos);
-	void SetShapeRotation(int id, glm::vec3 rot);
-	void SetShapeScale(int id, glm::vec3 scale);
+	void SetShapeId(int id);
+	int GetActiveShapeId();
+	std::string GetShapeNameById(int id);
+	void DeleteSelectedShape(int id);
 
-	// ----------------------------------------------
+	// Getters
+	rpr_shape GetShapeById(int id);
+	rpr_shape GetShapeFromGroup(int GroupId, const std::string& shapeName);
+
+	glm::vec3 GetShapePositionById(int id);
+	glm::vec3 GetShapeRotationById(int id);
+	glm::vec3 GetShapeScaleById(int id);
+
+	// Setters
+	void UpdateShapeTransforms(rpr_shape shape);
+	void SetActiveShapeId(int id) { m_ActiveShapeId_ = id; }
+	void SetShapePositionById(int shapeId, const glm::vec3& newPosition);
+	void SetShapeRotationById(int shapeId, const glm::vec3& newRotation);
+	void SetShapeScaleById(int shapeId, const glm::vec3& newScale);
+	void SetShapeResetTransformById(int shapeId);
+
+
+
 	// Material object ------------------------------
 
 	int GetActiveMaterialId();
+	int GetMaterialIdByName(std::string Name);
 	std::string& GetMaterialName(int Id);
 	int CreateMaterial(std::string Name);
 
 	HorusMaterial& GetMaterial(int Id);
+	bool MaterialExists(std::string Name);
 
 	void DestroyMaterial(int Id);
 	void DestroyAllMaterial();
@@ -286,6 +310,9 @@ public:
 	// Setters for inspector
 	void SetActiveMaterialId(int id);
 	void AssignMaterial(int mesh_id, int mat_id);
+	void AssignMaterialDirectly(rpr_shape shape, int mat);
+
+	rpr_material_node GetMaterialNode(int materialId);
 
 	void SetBaseColor(int id, const std::string& texturePath);
 	void SetBaseColor(int id, glm::vec4 color);
@@ -379,8 +406,21 @@ public:
 
 	void AssignMaterialEditorNode(int mesh_id, int mat_id);
 
-	void SetMaterialFromEditorNode(int id, rpr_material_node mat);
+	void QuitMaterialEditor(int id);
+	void DestroyAllMaterialEditors();
 
+	void ShowMaterialEditor(int id);
+
+	void OpenMaterialEditor(int id);
+	void OpenMaterialEditorBrowser();
+	void OpenMaterialEditorCreateMenu();
+
+	void CloseMaterialEditor(int id);
+	void CloseMaterialEditorBrowser();
+	void CloseMaterialEditorCreateMenu();
+
+	int SetMaterialEditorToShow(int id);
+	void SetMaterialFromEditorNode(int id, rpr_material_node mat);
 	int SetMaterialEditorMeshToSetMaterial(int id)
 	{
 		m_MaterialEditorMeshToSetMaterial_[m_MaterialEditorToShow_] = id;
@@ -388,31 +428,11 @@ public:
 		return id;
 	}
 
+	int GetMaterialEditorToShow();
 	int GetMeshIdToSetMaterial()
 	{
 		return m_MaterialEditorMeshToSetMaterial_[m_MaterialEditorToShow_];
 	}
-
-	void ShowMaterialEditor(int id);
-
-	void OpenMaterialEditor(int id);
-
-	void CloseMaterialEditor(int id);
-
-	void OpenMaterialEditorBrowser();
-
-	void CloseMaterialEditorBrowser();
-
-	void GetMaterialEditorMaterials(std::vector<std::string>& materials)
-	{
-		for (const auto& Key : m_MaterialEditors_ | std::views::keys)
-		{
-			int Id = Key;
-			std::string Name = m_MaterialEditorNames_[Id];
-			materials.push_back(Name);
-		}
-	}
-
 	int GetMaterialEditorIdByName(const char* name)
 	{
 		for (const auto& Key : m_MaterialEditors_ | std::views::keys)
@@ -427,26 +447,21 @@ public:
 
 		return -1;
 	}
-
-	int SetMaterialEditorToShow(int id);
-
-	int GetMaterialEditorToShow();
-
-	void OpenMaterialEditorCreateMenu();
-
-	void CloseMaterialEditorCreateMenu();
-
-	void QuitMaterialEditor(int id);
-
-	void DestroyAllMaterialEditors();
+	void GetMaterialEditorMaterials(std::vector<std::string>& materials)
+	{
+		for (const auto& Key : m_MaterialEditors_ | std::views::keys)
+		{
+			int Id = Key;
+			std::string Name = m_MaterialEditorNames_[Id];
+			materials.push_back(Name);
+		}
+	}
 
 	// ----------------------------------------------
 	// Light object ---------------------------------
 
 	int CreateLight(const std::string& Name, const std::string& LightType, const std::string& ImagePath = "");
-
 	void DestroyLight(int Id);
-
 	void DestroyAllLights();
 
 	std::string& GetLightName(int id);
@@ -502,7 +517,6 @@ public:
 	void SetDiskLightAngle(int id, const float& Angle);
 	void SetDiskLightInnerAngle(int id, const float& InnerAngle);
 
-	// ----------------------------------------------
 	// Scene object ----------------------------------
 
 	int CreateScene(const std::string& name);
@@ -522,6 +536,7 @@ public:
 	void ShowDummyDragon();
 	void ShowDummyPlane();
 	void ShowLookdevScene();
+	void ShowJaguardXKSS();
 
 	// ----------------------------------------------
 
@@ -546,16 +561,29 @@ private:
 	int m_NextRadeonCameraId_ = 0;
 	std::map<int, std::string> m_RadeonCameraNames_;
 
-	// ------------------------------
-	// Mesh object ------------------
+	// Group Shape object ------------------
 
-	std::map<int, HorusMesh> m_Meshes_;
-	int m_ActiveMeshId_ = 0;
-	int m_MeshIndex_ = 0;
-	int m_MeshCount_ = 0;
-	std::map<int, std::string> m_MeshNames_;
+	std::map<std::string, std::vector<rpr_shape>> m_MeshShapeMap_;
+	std::map<int, HorusGroupShape> m_GroupShape_;
+	int m_ActiveGroupShapeId_ = 0;
+	int m_GroupShapeIndex_ = 0;
+	int m_GroupShapeCount_ = 0;
+	std::map<int, std::string> m_GroupShapeNames_;
+	std::map<std::string, std::vector<std::string>> m_GroupObjectOutlinerData_;
 
-	// ------------------------------
+	// Shape object -----------------
+
+	std::map<int, rpr_shape> m_Shapes_;
+	rpr_shape m_ActualShape_;
+	std::string m_ActualShapeName_;
+	glm::mat4 m_ActualShapeTransform_;
+	glm::vec3 m_ActualShapePosition_;
+	glm::vec3 m_ActualShapeRotation_;
+	glm::vec3 m_ActualShapeScale_;
+	int m_ActiveShapeId_ = 0;
+	int m_ShapeIndex_ = 0;
+	int m_ShapeCount_ = 0;
+
 	// Material object --------------
 
 	std::map<int, HorusMaterial> m_Materials_;
@@ -565,7 +593,6 @@ private:
 	int m_MaterialCount_ = 0;
 	std::map<int, std::string> m_MaterialNames_;
 
-	// ------------------------------
 	// Material Editor object -------
 
 	std::map<int, HorusMaterialEditor> m_MaterialEditors_;
@@ -576,12 +603,10 @@ private:
 
 	int m_MaterialEditorToShow_ = 0;
 
-	// ------------------------------
-	// background image
+	// background image -------------
 
 	HorusMaterial m_BackgroundMaterial_;
 
-	// ------------------------------
 	// Light object -----------------
 
 	std::map<int, HorusLight> m_Lights_;
@@ -589,7 +614,7 @@ private:
 	int m_LightIndex_ = 0;
 	int m_LightCount_ = 0;
 	std::map<int, std::string> m_LightNames_;
-	// ------------------------------
+
 	// Scene object -----------------
 
 	std::map<int, HorusScene> m_Scenes_;

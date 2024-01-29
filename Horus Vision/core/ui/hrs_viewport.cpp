@@ -118,6 +118,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 				spdlog::info("Color Space set to : {}", ColorSpaceConfigItems[CurrentColorSpaceConfig]);
 			}
 
+			rpr_color_space ColorSpace = RPR_COLOR_SPACE_SRGB;
 
 
 			ImGui::SameLine();
@@ -670,7 +671,6 @@ void HorusViewportInput::ProcessInput()
 
 	if (io.KeyAlt)
 	{
-
 		if (ImGui::IsMouseDown(0)) // left mouse
 		{
 			IsCameraMove = true;
@@ -680,9 +680,7 @@ void HorusViewportInput::ProcessInput()
 			MouseDelta.x /= WindowSize.x;
 			MouseDelta.y /= WindowSize.y;
 
-			constexpr float CameraSpeed = 2.5f;
-
-			ObjectManager.TumbleCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y, CameraSpeed);
+			ObjectManager.SetTumbleCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y, 4);
 
 			ImGui::ResetMouseDragDelta(0);
 		}
@@ -690,10 +688,9 @@ void HorusViewportInput::ProcessInput()
 		if (ImGui::IsMouseDown(1)) // right mouse
 		{
 			IsCameraMove = true;
-			float CameraSpeed = 0.1f;
 			ImVec2 MouseDelta = ImGui::GetMouseDragDelta(1, 0);
 
-			ObjectManager.ZoomCamera(ObjectManager.GetActiveRadeonCameraId(), CameraSpeed * MouseDelta.y);
+			ObjectManager.SetZoomCamera(ObjectManager.GetActiveRadeonCameraId(), 0.1f * MouseDelta.y);
 
 			ImGui::ResetMouseDragDelta(1);
 		}
@@ -703,7 +700,7 @@ void HorusViewportInput::ProcessInput()
 			IsCameraMove = true;
 			ImVec2 MouseDelta = ImGui::GetMouseDragDelta(2, 0);
 
-			ObjectManager.PanCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y);
+			ObjectManager.SetPanCamera(ObjectManager.GetActiveRadeonCameraId(), MouseDelta.x, MouseDelta.y, 0.01f);
 
 			ImGui::ResetMouseDragDelta(2);
 		}
@@ -712,14 +709,14 @@ void HorusViewportInput::ProcessInput()
 		{
 			IsCameraMove = true;
 			float ScrollDelta = io.MouseWheel;
-			ObjectManager.ScrollCamera(ObjectManager.GetActiveRadeonCameraId(), ScrollDelta);
+			ObjectManager.SetScrollCamera(ObjectManager.GetActiveRadeonCameraId(), ScrollDelta);
 		}
 	}
 
 	if (IsCameraMove)
 	{
 		HorusInspector::GetInstance().CallSetFocusPlaneToFocusPosition();
-		HorusInspector::GetInstance().PopulateCameraInfos();
+		HorusInspector::GetInstance().PopulateSelectedCameraInfos();
 		HorusResetBuffers::GetInstance().CallResetBuffers();
 	}
 }

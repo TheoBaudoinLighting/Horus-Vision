@@ -18,8 +18,6 @@
 #include <string>
 #include <memory>
 
-
-
 class HorusEngine
 {
 public:

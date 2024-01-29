@@ -27,32 +27,11 @@ bool LoadSetupEngineData()
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusTimerManager::GetInstance().StartTimer("LoadData");
 
-	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-
 	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_2k.hdr");
 	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	//int DirectionnalLight = ObjectManager.CreateLight("Lgt_Dir01", "directional");
-
-	//int SkyLight = ObjectManager.CreateLight("Lgt_Sky01", "sky");
-
-	int PointLight01 = ObjectManager.CreateLight("Lgt_Point01", "point");
-	ObjectManager.SetLightPosition(PointLight01, glm::vec3(3.5f, 2.0f, 0.0f));
-
-	//int Directionnal01 = ObjectManager.CreateLight("Lgt_Dir01", "directional");
-
-	int Spotlight = ObjectManager.CreateLight("Lgt_Spot01", "spot");
-	ObjectManager.SetLightPosition(Spotlight, glm::vec3(-5.0f, 1.0f, 0.0f));
-	ObjectManager.SetLightRotation(Spotlight, glm::vec3(-45.0f, 0.0f, 0.0f));
-
-	int SphereLight = ObjectManager.CreateLight("Lgt_Sphere01", "sphere");
-	ObjectManager.SetLightPosition(SphereLight, glm::vec3(8.0f, 1.0f, 0.0f));
-
-	ObjectManager.CreateLight("Lgt_Disk01", "disk");
-
 	auto TimeLoad = HorusTimerManager::GetInstance().StopTimer("LoadData");
 	spdlog::info("Loading Engine data finished in {} ms.", TimeLoad);
-
 	return true;
 }
 

@@ -91,6 +91,8 @@ private:
 		}
 	}
 
+	std::map<std::string, std::vector<std::string>> m_ObjectTypeToName_;
+
 	std::vector<HorusOutlinerObject*> m_RootObjects_;
 
 	std::string m_SelectedObject_;

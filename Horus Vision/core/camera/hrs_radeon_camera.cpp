@@ -346,7 +346,7 @@ void HorusRadeonCamera::Zoom(float distance)
 
 	UpdateCamera();
 }
-void HorusRadeonCamera::Pan(float x, float y)
+void HorusRadeonCamera::Pan(float x, float y,float sensitivity)
 {
 	GetCameraInfo();
 
@@ -354,9 +354,7 @@ void HorusRadeonCamera::Pan(float x, float y)
 	const glm::vec3 Right = glm::normalize(glm::cross(Forward, m_Up_));
 	const glm::vec3 Up = glm::normalize(m_Up_);
 
-	constexpr float PanSensitivity = 0.1f;
-
-	const glm::vec3 Displacement = (Right * x + Up * (-y)) * PanSensitivity;
+	const glm::vec3 Displacement = (Right * x + Up * (-y)) * sensitivity;
 
 	m_Position_ += Displacement;
 	m_LookAt_ += Displacement;

@@ -55,6 +55,7 @@ public:
 	void Init();
 
 	rpr_material_node CreateMaterial();
+	rpr_material_node GetMaterialNode() { return m_Material_; }
 	void DestroyMaterial();
 
 	// Getters

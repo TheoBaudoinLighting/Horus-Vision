@@ -141,6 +141,15 @@
     <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="core\implementations\radeon\hrs_radeon_render.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\implementations\radeon\hrs_radeon_posteffect.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\config\hrs_ocio.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\GLAD\INCLUDE\GLAD\glad.h">
@@ -1557,6 +1566,33 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\radeon\hrs_radeon_render.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\implementations\radeon\hrs_radeon_posteffect.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_ocio.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_cl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_directx12.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_gl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_metal.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

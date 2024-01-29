@@ -73,7 +73,7 @@ public:
 
 	void Tumbling(float x, float y, float sensitivity);
 	void Zoom(float distance);
-	void Pan(float x, float y);
+	void Pan(float x, float y, float sensitivity);
 
 	// Getters
 	CameraType GetMode();

@@ -12,6 +12,13 @@
 #include "hrs_object_manager.h"
 #include "hrs_timer.h"
 
+// Horus libraries
+#include "hrs_opengl_core.h"
+#include "hrs_imgui_core.h"
+#include "hrs_radeon_core.h"
+#include "hrs_engine_core.h"
+#include "hrs_render_core.h"
+
 void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam) 
 {
 	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
@@ -55,6 +62,13 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 
 	m_Logger_.Init();
 
+	// Test print message from library
+	/*HorusOpenGLCore::GetInstance().PrintMessage();
+	HorusImGuiCore::GetInstance().PrintMessage();
+	HorusRadeonCore::GetInstance().PrintMessage();
+	HorusEngineCore::GetInstance().PrintMessage();
+	HorusRenderCore::GetInstance().PrintMessage();*/
+
 	spdlog::info("Horus Engine initialization");
 	Console.AddLog(" [info] Horus Engine initialization");
 
@@ -76,7 +90,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
 
 	glfwSetErrorCallback([]([[maybe_unused]] int Error, const char* Description) { spdlog::error("GLFW error: {}", Description); });
 
@@ -152,7 +166,7 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 
 	//glEnable(GL_DEPTH_TEST);
 
-	OpenGLManager.CreateVAO(0);
+	/*OpenGLManager.CreateVAO(0);
 	OpenGLManager.BindVAO(0);
 
 	OpenGLManager.CreateVBO(0, m_QuadVertexData_, sizeof(m_QuadVertexData_));
@@ -164,7 +178,7 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 
 	OpenGLManager.UnbindVAO(0);
 	OpenGLManager.UnbindVBO(0);
-	OpenGLManager.UnbindEBO(0);
+	OpenGLManager.UnbindEBO(0);*/
 
 	// Texture specially for the Radeon View, to be able to render the image
 	glGenTextures(1, &m_RadeonTextureBufferId_);

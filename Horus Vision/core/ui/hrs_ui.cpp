@@ -15,7 +15,8 @@
 #include "hrs_imgui.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "..\scene\hrs_importer_manager.h"
+
+#include "../scene/hrs_importer_manager.h"
 #include "imgui_internal.h"
 #include "stb_image.h"
 
@@ -110,21 +111,31 @@ void HorusUI::MainMenuBar()
 			if (ImGui::MenuItem("Load test scene", "Ctrl+L"))
 			{
 				HorusObjectManager::GetInstance().ShowLookdevScene();
+				//HorusObjectManager::GetInstance().ShowJaguardXKSS();
 			}
 
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Import mesh.."))
 			{
-				std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus Scene (*.hrs)\0*.hrs\0");
+				std::string FilePath = Utils::HorusFileDialog::OpenFile("3D Files (*.fbx;*.obj;*.dae;*.3ds;*.blend;*.stl;*.gltf;*.ply;*.max;*.c4d)\0*.fbx;*.obj;*.dae;*.3ds;*.blend;*.stl;*.gltf;*.ply;*.max;*.c4d\0");
 
 				if (!FilePath.empty())
 				{
-					spdlog::info("Import mesh : {}", FilePath);
+					// Check if the file is already valid with non UTF-8 characters
+					const std::string MeshName = std::filesystem::path(FilePath).stem().string();
+
+					HorusObjectManager::GetInstance().CreateGroupShape(FilePath.c_str(), MeshName);
 				}
+				else if (FilePath.empty())
+				{
+					spdlog::error("Can't import mesh : {} file path is empty.", FilePath);
+				}
+
 			}
 
-			if (ImGui::MenuItem("Export mesh.."))
+
+			/*if (ImGui::MenuItem("Export mesh.."))
 			{
 				std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus Scene (*.hrs)\0*.hrs\0");
 
@@ -132,7 +143,7 @@ void HorusUI::MainMenuBar()
 				{
 					spdlog::info("Export mesh : {}", FilePath);
 				}
-			}
+			}*/
 
 			ImGui::Separator();
 
@@ -154,7 +165,7 @@ void HorusUI::MainMenuBar()
 			// Import GLTF file
 			if (ImGui::MenuItem("Import GLTF Scene"))
 			{
-				HorusImporterManager::GetInstance().ImportGltf("C:/Users/WS_THEO/Desktop/gltf/exporttest.gltf", HorusRadeon::GetInstance().GetContext(), HorusRadeon::GetInstance().GetMatsys() ,&HorusObjectManager::GetInstance().GetScene());
+				HorusImporterManager::GetInstance().ImportGltf("C:/Users/WS_THEO/Desktop/gltf/exporttest.gltf", HorusRadeon::GetInstance().GetContext(), HorusRadeon::GetInstance().GetMatsys(), &HorusObjectManager::GetInstance().GetScene());
 
 				/*if (std::string FilePath = Utils::HorusFileDialog::OpenFile("Horus GLTF Scene (*.gltf)\0*.gltf\0"); !FilePath.empty())
 				{

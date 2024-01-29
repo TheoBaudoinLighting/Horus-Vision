@@ -25,7 +25,7 @@ public:
 	//-------------------------------------------------------------
 
 	// Import mesh with assimp
-	rpr_shape LoadMesh(const std::string& MeshPath);
+	std::vector<std::tuple<rpr_shape, std::string>> LoadMesh(const std::string& MeshPath);
 	//rpr_shape LoadMeshTOL(const std::string& MeshPath);
 
 private:

@@ -22,7 +22,7 @@ namespace Utils
 	{
 	public:
 
-		static std::string OpenFile(const std::string& filter)
+		static std::string OpenFile(const char* filter)
 		{
 			HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 
@@ -33,7 +33,7 @@ namespace Utils
 			ofn.hwndOwner = glfwGetWin32Window(OpenGL.GetWindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
-			ofn.lpstrFilter = filter.c_str();
+			ofn.lpstrFilter = filter;
 			ofn.nFilterIndex = 1;
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
@@ -44,7 +44,7 @@ namespace Utils
 			return std::string();
 		}
 
-		static std::string SaveFile(const std::string& filter)
+		static std::string SaveFile(const char* filter)
 		{
 			HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 
@@ -55,7 +55,7 @@ namespace Utils
 			ofn.hwndOwner = glfwGetWin32Window(OpenGL.GetWindow());
 			ofn.lpstrFile = szFile;
 			ofn.nMaxFile = sizeof(szFile);
-			ofn.lpstrFilter = filter.c_str();
+			ofn.lpstrFilter = filter;
 			ofn.nFilterIndex = 1;
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 

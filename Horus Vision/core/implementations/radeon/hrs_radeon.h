@@ -52,6 +52,11 @@ public:
 	void SetAdaptiveRender();
 	void CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles);
 	void RenderMultiTiles(HorusFrameBufferMetadata& FbMetadata, rpr_scene, rpr_context Context, rpr_uint MaxIterationRendering);
+	void SetVisualizationRenderMode(int Mode);
+	void SetShowAOVsMode(int AOV);
+
+	void SetPreviewMode(bool Enable);
+	void SetLockPreviewMode(bool Enable);
 
 	float GetClassicRenderProgress();
 	float GetAdaptiveRenderProgress();
@@ -62,9 +67,7 @@ public:
 
 	rpr_context GetContext() { return m_ContextA_; }
 	rpr_material_system GetMatsys() { return m_Matsys_; }
-
 	GLuint GetTextureBuffer() { return m_RadeonTextureBuffer_; } // Buffer to render in ImGui for Radeon
-
 	bool GetIsAdaptiveRender() { return m_IsAdaptativeSampling_; }
 
 	rpr_framebuffer GetClassicRenderFrameBuffer() { return m_FrameBufferA_; }
@@ -77,14 +80,15 @@ public:
 	void SetAdaptiveSamplingThreshold(float Threshold) { m_AdaptiveThreshold_ = Threshold; CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_ADAPTIVE_SAMPLING_THRESHOLD, m_AdaptiveThreshold_)); }
 
 	bool GetIsDirty() { return m_IsDirty_; }
-	bool SetIsDirty(bool IsDirty) { m_IsDirty_ = IsDirty; return m_IsDirty_; }
-
 	bool GetLockingRender() { return m_LockingRender_; }
+
+	bool SetIsDirty(bool IsDirty) { m_IsDirty_ = IsDirty; return m_IsDirty_; }
 	void SetLockingRender(bool LockingRender) { m_LockingRender_ = LockingRender; }
 
 	int GetSampleCount() { return m_SampleCount_; }
 	int GetMinSamples() { return m_MinSamples_; }
 	int GetMaxSamples() { return m_MaxSamples_; }
+	int GetVisualizationRenderMode() { return m_SelectedRenderVizMode_; }
 	int SetMinSamples(int MinSamples) { m_MinSamples_ = MinSamples; return m_MinSamples_; }
 	int SetMaxSamples(int MaxSamples) { m_MaxSamples_ = MaxSamples; return m_MaxSamples_; }
 
@@ -103,17 +107,22 @@ private:
 	// Classic render
 	int m_MinSamples_ = 4;
 	int m_MaxSamples_ = 32;
+	int m_MaxSamplesTemp_ = 32;
 	int m_SampleCount_ = 0;
 	int m_BatchSize_ = 1;
 	int m_MaxIterations_ = 1; // 1 iteration = 1 sample
+	int m_SelectedRenderVizMode_ = 1;
+	bool m_IsPreviewEnabled_ = false;
+	bool m_IsLockPreviewEnabled_ = false;
 
 	// Adaptive render
 	int m_MinAdaptiveTileSize_ = 8;
 	int m_MinSamplesAdaptive_ = 16;
-	int m_MaxIterationsPerSamples_ = 128;
+	int m_MaxIterationsPerSamples_ = 1;
 	float m_AdaptiveThreshold_ = 0.015f;
 	unsigned int m_ActivePixelRemains_ = 0;
 
+	// General render stuff
 	int m_RenderTargetSizeX_ = m_WindowWidth_;
 	int m_RenderTargetSizeY_ = m_WindowHeight_;
 	const int m_MaxIterationTiledRendering_ = 128;
@@ -137,7 +146,6 @@ private:
 	bool m_LockingRender_ = false;
 
 	// Radeon stuff
-
 	GLuint m_Program_;
 
 	GLuint m_RadeonTextureBuffer_ = 0;
@@ -157,11 +165,10 @@ private:
 	// Framebuffer dest
 	rpr_framebuffer m_FrameBufferDest_ = nullptr;
 
-
 	rpr_context m_ContextA_ = nullptr;
 
 	rpr_material_system m_Matsys_ = nullptr;
 	rpr_camera m_Camera_ = nullptr;
 
-	std::shared_ptr<float> m_FbData_ = nullptr;
+	std::shared_ptr<float[]> m_FbData_ = nullptr;
 };

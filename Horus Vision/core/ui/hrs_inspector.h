@@ -2,6 +2,7 @@
 
 // Project includes
 #include "hrs_reset_buffers.h" // nothing
+#include "imgui.h"
 
 class HorusInspector
 {
@@ -12,7 +13,8 @@ public:
 		CAMERA,
 		LIGHT,
 		MATERIAL,
-		MESH,
+		GROUPSHAPE,
+		SHAPE,
 		TEXTURE,
 		SCENE,
 		RENDER,
@@ -37,18 +39,36 @@ public:
 	void InspectorCamera();
 	void InspectorLight();
 	void InspectorMaterial();
-	void InspectorMesh();
+	void InspectorShape();
+	void InspectorGroupShape();
 	void InspectorTexture();
 	void InspectorProjectProperty();
 
 	void ShowHelpMarker(const char* desc);
+	void ShowBigSeparator();
+
+	// --- GroupShape ---
+	void PopulateSelectedGroupShapeInfos();
+	void SetGroupShapeName(std::string name);
+	void SetGroupShapePosition(glm::vec3 position);
+	void SetGroupShapeRotation(glm::vec3 rotation_axis);
+	void SetGroupShapeScale(glm::vec3 scale);
+
+
+	// --- Shape ---
+	void PopulateSelectedShapeInfos();
+
+	glm::vec3 GetShapePosition();
+	glm::vec3 GetShapeRotation();
+	glm::vec3 GetShapeScale();
+
 
 	// --- Camera ---
 
-	void PopulateCameraInfos();
+	void PopulateSelectedCameraInfos();
 
 	// Getters Camera
-	void CallResetBuffer() { PopulateCameraInfos(); HorusResetBuffers::GetInstance().CallResetBuffers(); }
+	void CallResetBuffer() { PopulateSelectedCameraInfos(); HorusResetBuffers::GetInstance().CallResetBuffers(); }
 	glm::vec3 GetCameraLookAt();
 	glm::vec3 GetCameraPosition();
 	glm::vec3 GetCameraRotation();
@@ -78,9 +98,9 @@ public:
 	// --- Light ---
 
 	// --- Project ---
-	void PopulateProjectInfos();
+	void PopulateSelectedProjectInfos();
 
-	
+
 
 private:
 
@@ -92,6 +112,8 @@ private:
 
 	//--------------------------------------------- GENERAL ---------------------------------------------//
 	InspectorType m_SelectionType_ = InspectorType::PROJECT;
+
+	const ImGuiInputTextFlags InputFloatFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue;
 
 	//--------------------------------------------- CAMERA INSPECTOR ---------------------------------------------//
 	std::string m_CameraName_ = "";
@@ -181,7 +203,23 @@ private:
 	bool m_ReflectionMode_ = false;
 	bool m_CoatingMode_ = false;
 
-	//--------------------------------------------- MESH INSPECTOR ---------------------------------------------//
+	//--------------------------------------------- GROUP SHAPE INSPECTOR ---------------------------------------------//
+
+	std::string m_GroupShapeName_;
+	glm::vec3 m_GroupShapePosition_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_GroupShapeRotation_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_GroupShapeScale_ = { 1.0f, 1.0f, 1.0f };
+
+
+
+
+	//--------------------------------------------- SHAPE INSPECTOR ---------------------------------------------//
+	std::string m_ShapeName_;
+	glm::mat4 m_ShapeTransform_ = glm::mat4(1.0f);
+	glm::vec3 m_ShapePosition_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_ShapeRotation_ = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 m_ShapeScale_ = { 1.0f, 1.0f, 1.0f };
+
 
 	//--------------------------------------------- TEXTURE INSPECTOR ---------------------------------------------//
 
@@ -214,6 +252,70 @@ private:
 	bool m_EnableAa_ = true;
 	bool m_ShowObjectContour_ = false;
 
+	int m_SelectedRenderMode_ = 1;
+
+	enum AOV
+	{
+		COLOR = 0,
+		OPACITY = 1,
+		WORLD_COORDINATE = 2,
+		UV = 3,
+		MATERIAL_ID = 4,
+		GEOMETRIC_NORMAL = 5,
+		SHADING_NORMAL = 6,
+		DEPTH = 7,
+		OBJECT_ID = 8,
+		OBJECT_GROUP_ID = 9,
+		SHADOW_CATCHER = 10,
+		BACKGROUND = 11,
+		EMISSION = 12,
+		VELOCITY = 13,
+		DIRECT_ILLUMINATION = 14,
+		INDIRECT_ILLUMINATION = 15,
+		AO = 16,
+		DIRECT_DIFFUSE = 17,
+		DIRECT_REFLECT = 18,
+		INDIRECT_DIFFUSE = 19,
+		INDIRECT_REFLECT = 20,
+		REFRACT = 21,
+		VOLUME = 22,
+		DIFFUSE_ALBEDO = 23,
+		VARIANCE = 24,
+		VIEW_SHADING_NORMAL = 25,
+		REFLECTION_CATCHER = 26,
+		LIGHT_GROUP0 = 27,
+		LIGHT_GROUP1 = 28,
+		LIGHT_GROUP2 = 29,
+		LIGHT_GROUP3 = 30,
+		LIGHT_GROUP4 = 31,
+		LIGHT_GROUP5 = 32,
+		LIGHT_GROUP6 = 33,
+		LIGHT_GROUP7 = 34,
+		LIGHT_GROUP8 = 35,
+		LIGHT_GROUP9 = 36,
+		LIGHT_GROUP10 = 37,
+		LIGHT_GROUP11 = 38,
+		LIGHT_GROUP12 = 39,
+		LIGHT_GROUP13 = 40,
+		LIGHT_GROUP14 = 41,
+		LIGHT_GROUP15 = 42
+	};
+
+	int m_SelectedAov_ = AOV::COLOR;
+
+	const char* m_RenderModes_[10] = {
+		"Diffuse only lighting",
+		"Normal GI lighting",
+		"Only direct lighting",
+		"Direct lighting with no shadowing",
+		"White objects with black wireframe",
+		"Output only Material indices",
+		"Output P positions for each pixel hit",
+		"Output normal values",
+		"Output UV coordinates",
+		"Output an AO render"
+	};
+
 	int m_SamplerType_ = RPR_CONTEXT_SAMPLER_TYPE_SOBOL;
 	int m_MinSamples_ = 4;
 	int m_MaxSamples_ = 32;
@@ -223,8 +325,9 @@ private:
 	float m_DesiredWidth_ = 800.0f;
 
 	char m_UserInput_[256] = "";
-	std::string m_Gpu00N_;
-	std::string m_Gpu01N_;
+
+	char m_Gpu00N_[1024];
+	char m_Gpu01N_[1024];
 
 	rpr_render_statistics m_RenderStatistics_ = {};
 };

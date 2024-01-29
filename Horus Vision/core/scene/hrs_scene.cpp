@@ -7,6 +7,8 @@
 
 #include <mutex>
 
+#include "hrs_timer.h"
+
 std::mutex m_SceneMutex_;
 
 void HorusScene::Init()
@@ -70,7 +72,7 @@ void HorusScene::ShowDummyDragon()
 
 	glm::vec4 Roughness = { 0.45f, 0.45f, 0.45f, 0.45f };
 
-	int Dragon = ObjectManager.CreateMesh("resources/Meshes/dragon/dragon_clean_low_Scale.obj", "dragon_low_msh");
+	int Dragon = ObjectManager.CreateGroupShape("resources/Meshes/dragon/dragon_clean_low_Scale.obj", "dragon_low_msh");
 	int DragonMat = ObjectManager.CreateMaterial("M_Dragon");
 
 	ObjectManager.SetBaseColor(DragonMat, "resources/Textures/dragon/DRAGON_CLEAN_diffuse.jpg");
@@ -81,14 +83,14 @@ void HorusScene::ShowDummyDragon()
 	//ObjectManager.create_material_editor_node(0, "M_Dragon");
 	/*ObjectManager.assign_material_editor_node(0, 0); */
 
-	ObjectManager.SetShapeRotation(Dragon, { 0.f, 1.f, 0.0f });
+	ObjectManager.SetGroupShapeRotation(Dragon, { 0.f, 1.f, 0.0f });
 }
 
 void HorusScene::ShowDummyPlane()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	int Floor = ObjectManager.CreateMesh("resources/Meshes/florr_test.fbx", "plane_msh");
+	int Floor = ObjectManager.CreateGroupShape("resources/Meshes/florr_test.fbx", "plane_msh");
 	int FloorMat = ObjectManager.CreateMaterial("M_Floor");
 
 	ObjectManager.SetBaseColor(FloorMat, "resources/Textures/ufoieaklw_8K_Albedo.jpg");
@@ -100,7 +102,7 @@ void HorusScene::ShowDummyPlane()
 	//ObjectManager.create_material_editor_node(1, "M_Floor");
 	/*ObjectManager.assign_material_editor_node(1, 1); */// assign material to mesh
 
-	ObjectManager.SetShapeScale(Floor, { 10.0f, 10.0f, 10.0f });
+	ObjectManager.SetGroupShapeScale(Floor, { 10.0f, 10.0f, 10.0f });
 }
 
 void HorusScene::ShowLookdevScene()
@@ -118,16 +120,16 @@ void HorusScene::ShowLookdevScene()
 		std::array<float, 3> RefractionWeight = { 1.f, 1.f, 1.f };
 
 		// Create Background
-		int BackgoundMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
+		int BackgoundMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
 		int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
 
 		ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
 		ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
-		ObjectManager.SetShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
+		ObjectManager.SetGroupShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
 
 		{
 			// Create statue (Arethusa)
-			//int Aretheuse =  ObjectManager.CreateMesh("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
+			//int Aretheuse =  ObjectManager.CreateGroupShape("resources/Lookdev/Downloaded/aretheuse/source/ARETHEUSE/ARETHEUSE.obj", "aretheuse");
 			//int AreMat = ObjectManager.CreateMaterial("M_aretheuse");
 
 			//ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
@@ -136,12 +138,12 @@ void HorusScene::ShowLookdevScene()
 			//ObjectManager.AssignMaterial(Aretheuse, AreMat);
 			//
 
-			//ObjectManager.SetShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
-			//ObjectManager.SetShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
+			//ObjectManager.SetGroupShapeScale(Aretheuse, { 0.25f, 0.25f, 0.25f });
+			//ObjectManager.SetGroupShapeRotation(Aretheuse, { 0.f, -90.f, 0.0f });
 		}
 
 		// Create Gold Sphere
-		int SphereMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
+		int SphereMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
 		int Goldmat = ObjectManager.CreateMaterial("M_Sphere");
 		ObjectManager.SetBaseColor(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_COL_8K_METALNESS.png");
 		ObjectManager.SetNormal(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_NRM_8K_METALNESS.png");
@@ -150,20 +152,14 @@ void HorusScene::ShowLookdevScene()
 		ObjectManager.SetReflectionMode(Goldmat, 1); // 1 = metalness
 		ObjectManager.AssignMaterial(SphereMesh, Goldmat);
 		
-		ObjectManager.SetShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
-		ObjectManager.SetShapeScale(SphereMesh, { 0.5f, 1.2f, 0.5f });
+		ObjectManager.SetGroupShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
+		ObjectManager.SetGroupShapeScale(SphereMesh, { 0.5f, 1.2f, 0.5f });
 
 		{
 			// Create Statue (Arria)
-			//int Arria = ObjectManager.CreateMesh("resources/Lookdev/Downloaded/Arria/source/ARRIA/ARRIA.obj", "Arria");
-			//int ArriaMat = ObjectManager.CreateMaterial("M_Arria");
+			int Arria = ObjectManager.CreateGroupShape("resources/Lookdev/Downloaded/Arria/source/ARRIA/ARRIA.obj", "Arria");
 
-			//ObjectManager.SetBaseColor(ArriaMat, "resources/Lookdev/Downloaded/Arria/textures/ARRIA.jpg");
-			//ObjectManager.SetReflectionMode(ArriaMat, 0); // 0 = PBR
-			//ObjectManager.SetRoughness(ArriaMat, Roughness);
-			//ObjectManager.AssignMaterial(Arria, ArriaMat);
-
-			//ObjectManager.SetShapeScale(Arria, { 0.25f, 0.25f, 0.25f });
+			ObjectManager.SetGroupShapeScale(Arria, { 0.25f, 0.25f, 0.25f });
 		}
 	}
 
@@ -178,7 +174,7 @@ void HorusScene::ShowLookdevScene()
 	glm::vec4 GlassRefractionRoughness = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Create Glass Sphere
-	int SphereMesh = ObjectManager.CreateMesh("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
+	int SphereMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
 	int Glassmat = ObjectManager.CreateMaterial("M_Sphere");
 
 	ObjectManager.SetBaseColor(Glassmat, GlassBaseColor);
@@ -190,6 +186,52 @@ void HorusScene::ShowLookdevScene()
 	ObjectManager.SetTransparency(Glassmat, GlassRefractionRoughness);
 	ObjectManager.AssignMaterial(SphereMesh, Glassmat);
 
-	ObjectManager.SetShapePosition(SphereMesh, { -3.0f, 2.f, 0.0f });
+	ObjectManager.SetGroupShapePosition(SphereMesh, { -3.0f, 2.f, 0.0f });
+
+	// Light part
+
+	//int DirectionnalLight = ObjectManager.CreateLight("Lgt_Dir01", "directional");
+
+	//int SkyLight = ObjectManager.CreateLight("Lgt_Sky01", "sky");
+
+	// Sphere Light (Point)
+	int SphereLight01 = ObjectManager.CreateLight("Lgt_Sphere01", "sphere");
+	ObjectManager.SetLightPosition(SphereLight01, glm::vec3(3.5f, 2.0f, 0.0f));
+	ObjectManager.SetLightIntensity(SphereLight01, glm::vec3(2.0f, 2.0f, 2.0f));
+
+	int SphereLight02 = ObjectManager.CreateLight("Lgt_Sphere02", "sphere");
+	ObjectManager.SetLightPosition(SphereLight02, glm::vec3(8.0f, 1.0f, 0.0f));
+	ObjectManager.SetLightIntensity(SphereLight02, glm::vec3(2.0f, 2.0f, 2.0f));
+
+	// Disk Light (Spot)
+	int Spotlight = ObjectManager.CreateLight("Lgt_Spot01", "disk");
+	ObjectManager.SetLightPosition(Spotlight, glm::vec3(-5.0f, 1.0f, 0.0f));
+	ObjectManager.SetLightRotation(Spotlight, glm::vec3(-45.0f, 0.0f, 0.0f));
+	ObjectManager.SetLightIntensity(Spotlight, glm::vec3(2.0f, 2.0f, 2.0f));
+
+	int DiskLight = ObjectManager.CreateLight("Lgt_Spot02", "disk");
+	ObjectManager.SetLightPosition(DiskLight, glm::vec3(-3.0f, 1.0f, 0.0f));
+	ObjectManager.SetLightIntensity(DiskLight, glm::vec3(2.0f, 2.0f, 2.0f));
+
 	
+
+
+	
+}
+
+void HorusScene::ShowJaguardXKSS()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Create Background
+	int BackgoundMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
+	int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
+
+	ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
+	ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
+	ObjectManager.SetGroupShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
+
+
+	// Create Car
+	int JaguardXKSS = ObjectManager.CreateGroupShape("resources/Scene/Jaguard/jaguard_xkss.fbx", "Jaguard_XKSS");
 }

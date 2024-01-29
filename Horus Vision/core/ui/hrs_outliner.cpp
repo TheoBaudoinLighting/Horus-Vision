@@ -19,8 +19,8 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		// toggle button
 
-		std::vector<std::string> meshes;
-		ObjectManager.GetOutlinerMeshes(meshes);
+		/*std::vector<std::string> meshes;
+		ObjectManager.GetOutlinerGroupShapes(meshes);*/
 
 		std::vector<std::string> materials;
 		ObjectManager.GetOutlinerMaterials(materials);
@@ -37,15 +37,18 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Text("Debug Options");
 
+		ImGui::Spacing();
+
+		if (ImGui::Button("Show Property panel"))
+		{
+			HorusInspector::GetInstance().PopulateSelectedProjectInfos();
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
+		}
+
+		ImGui::Spacing();
+
 		if (ImGui::CollapsingHeader("Debug Tools"))
 		{
-
-			if (ImGui::Button("Show Property panel"))
-			{
-				HorusInspector::GetInstance().PopulateProjectInfos();
-				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
-			}
-
 			if (ImGui::Button("Show Render panel"))
 			{
 				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::RENDER);
@@ -58,7 +61,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 			if (ImGui::Button("Show Mesh panel"))
 			{
-				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::GROUPSHAPE);
 			}
 
 			if (ImGui::Button("Show Material panel"))
@@ -86,31 +89,84 @@ void HorusOutliner::Outliner(bool* p_open)
 		ImGui::Separator();
 		ImGui::Spacing();
 
+
+		ObjectManager.UpdateGroupShapeOutlinerData();
+
 		if (ImGui::TreeNode("Meshes"))
 		{
-			for (const auto& mesh : meshes)
+
+			// Group of shapes section
+			for (auto& OutlinerData = ObjectManager.GetGroupShapeWithShapesAndNames(); const auto & [fst, snd] : OutlinerData)
 			{
-				bool IsSelected = (mesh == m_SelectedObject_);
+				bool IsMeshSelected = (fst == m_SelectedMesh_);
+				bool IsAnyShapeSelected = std::ranges::find(snd, m_SelectedObject_) != snd.end();
 
-				ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+				ImGui::PushStyleColor(ImGuiCol_Text, IsMeshSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
 
-				if (ImGui::Selectable(mesh.c_str(), IsSelected))
+				ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+
+				if (IsMeshSelected && !IsAnyShapeSelected)
 				{
-					m_SelectedObject_ = mesh;
-					spdlog::info("Mesh selected : {}", mesh);
-					Console.AddLog(" [info] Mesh selected : %s ", mesh.c_str());
-					int Id = ObjectManager.GetIdByName(mesh);
-					spdlog::info("Mesh id : {}", Id);
-					Console.AddLog(" [info] Mesh id : %d ", Id);
-
-					ObjectManager.SetActualSelectedId(Id);
-					ObjectManager.SetActiveMesh(Id);
-					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MESH);
+					NodeFlags |= ImGuiTreeNodeFlags_Selected;
 				}
+
+				bool NodeOpen = ImGui::TreeNodeEx(fst.c_str(), NodeFlags);
+
+				if (ImGui::IsItemClicked())
+				{
+					m_SelectedMesh_ = fst;
+					m_SelectedObject_.clear();
+
+					int Id = ObjectManager.GetIdByName(m_SelectedMesh_);
+					spdlog::info("Group of shapes id : {}", Id);
+					Console.AddLog(" [info] Group of shapes id : %d ", Id);
+					spdlog::info("Group of shapes selected : {}", fst);
+					Console.AddLog(" [info] Group of shapes selected : %s ", fst.c_str());
+					ObjectManager.SetActualSelectedId(Id);
+					ObjectManager.SetActiveGroupShape(Id);
+					HorusInspector::GetInstance().PopulateSelectedGroupShapeInfos();
+					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::GROUPSHAPE);
+				}
+
 				ImGui::PopStyleColor();
+
+				// Shape Section
+				if (NodeOpen)
+				{
+					for (const auto& ShapeName : snd)
+					{
+						bool IsShapeSelected = (ShapeName == m_SelectedObject_);
+
+						if (IsShapeSelected)
+						{
+							m_SelectedMesh_.clear();
+						}
+
+						ImGui::PushStyleColor(ImGuiCol_Text, IsShapeSelected ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255));
+
+						if (ImGui::Selectable(ShapeName.c_str(), IsShapeSelected))
+						{
+							m_SelectedObject_ = ShapeName;
+
+							int Id = ObjectManager.GetIdByName(m_SelectedObject_);
+							spdlog::info("Shapes id : {}", Id);
+							Console.AddLog(" [info] Shapes id : %d ", Id);
+							spdlog::info("Shape selected : {}", m_SelectedObject_);
+							Console.AddLog(" [info] Shape selected : %s ", m_SelectedObject_.c_str());
+							ObjectManager.SetActualSelectedId(Id);
+							ObjectManager.SetActiveShapeId(Id);
+							HorusInspector::GetInstance().PopulateSelectedShapeInfos();
+							HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::SHAPE);
+						}
+
+						ImGui::PopStyleColor();
+					}
+					ImGui::TreePop();
+				}
 			}
 			ImGui::TreePop();
 		}
+
 
 		ImGui::Separator();
 
@@ -161,7 +217,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 					ObjectManager.SetActualSelectedId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
-					HorusInspector::GetInstance().PopulateCameraInfos();
+					HorusInspector::GetInstance().PopulateSelectedCameraInfos();
 				}
 				ImGui::PopStyleColor();
 			}
