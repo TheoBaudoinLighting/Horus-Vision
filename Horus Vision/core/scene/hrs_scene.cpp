@@ -14,14 +14,16 @@ std::mutex m_SceneMutex_;
 void HorusScene::Init()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	// create scene
 	CHECK(rprContextCreateScene(Radeon.GetContext(), &m_Scene_));
+	Gc.Add(m_Scene_);
 }
 
 void HorusScene::DestroyScene()
 {
-	CHECK(rprObjectDelete(m_Scene_));
+	//CHECK(rprObjectDelete(m_Scene_));
 }
 
 void HorusScene::CreateDefaultScene()
@@ -59,6 +61,29 @@ void HorusScene::ShowScene()
 	CHECK(rprContextSetScene(Radeon.GetContext(), m_Scene_));
 }
 
+void HorusScene::CreateGrid()
+{
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+
+	rpr_curve curve = nullptr;
+
+	size_t num_control_points = 4;
+	rpr_float control_points[] = { -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f };
+	rpr_int control_points_stride = 3 * sizeof(rpr_float);
+
+	size_t num_indices = 4;
+	rpr_uint curveCount = 1;
+	rpr_uint indices[] = { 0, 1, 2, 3 };
+	rpr_float radius = 0.1f;
+	rpr_float textureUV = 0.0f;
+	rpr_int segment_per_curve = 4;
+	rpr_uint creation_flag = 0;
+
+	CHECK(rprContextCreateCurve(Radeon.GetContext(), &curve, num_control_points, control_points, control_points_stride, num_indices, curveCount, indices, &radius, &textureUV, &segment_per_curve, creation_flag));
+
+
+}
+
 void HorusScene::ClearScene()
 {
 	CHECK(rprSceneClear(m_Scene_));
@@ -76,8 +101,8 @@ void HorusScene::ShowDummyDragon()
 	int DragonMat = ObjectManager.CreateMaterial("M_Dragon");
 
 	ObjectManager.SetBaseColor(DragonMat, "resources/Textures/dragon/DRAGON_CLEAN_diffuse.jpg");
-	ObjectManager.SetNormal(DragonMat, "resources/Textures/dragon/DRAGON_CLEAN_normal.png");
-	ObjectManager.SetRoughness(DragonMat, Roughness);
+	ObjectManager.SetNormalMap(DragonMat, "resources/Textures/dragon/DRAGON_CLEAN_normal.png");
+	ObjectManager.SetReflectionRoughness(DragonMat, Roughness);
 	ObjectManager.AssignMaterial(Dragon, DragonMat);
 
 	//ObjectManager.create_material_editor_node(0, "M_Dragon");
@@ -95,8 +120,8 @@ void HorusScene::ShowDummyPlane()
 
 	ObjectManager.SetBaseColor(FloorMat, "resources/Textures/ufoieaklw_8K_Albedo.jpg");
 	//g_object_manager.set_base_color(FloorMat, debug_color); // debug purpose
-	ObjectManager.SetNormal(FloorMat, "resources/Textures/ufoieaklw_8K_Normal.jpg");
-	ObjectManager.SetRoughness(FloorMat, "resources/Textures/ufoieaklw_8K_Roughness.jpg");
+	ObjectManager.SetNormalMap(FloorMat, "resources/Textures/ufoieaklw_8K_Normal.jpg");
+	ObjectManager.SetReflectionRoughness(FloorMat, "resources/Textures/ufoieaklw_8K_Roughness.jpg");
 	ObjectManager.AssignMaterial(Floor, FloorMat);
 
 	//ObjectManager.create_material_editor_node(1, "M_Floor");
@@ -123,7 +148,7 @@ void HorusScene::ShowLookdevScene()
 		int BackgoundMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
 		int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
 
-		ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
+		ObjectManager.SetReflectionMode(BackgroundMat, HorusMaterial::ReflectionTypePBR); // 0 = PBR
 		ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
 		ObjectManager.SetGroupShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
 
@@ -134,7 +159,7 @@ void HorusScene::ShowLookdevScene()
 
 			//ObjectManager.SetBaseColor(AreMat, "resources/Lookdev/Downloaded/aretheuse/textures/ARETHEUSE.jpg");
 			//ObjectManager.SetReflectionMode(AreMat, 0); // 0 = PBR
-			//ObjectManager.SetRoughness(AreMat, Roughness);
+			//ObjectManager.SetReflectionRoughness(AreMat, Roughness);
 			//ObjectManager.AssignMaterial(Aretheuse, AreMat);
 			//
 
@@ -146,10 +171,10 @@ void HorusScene::ShowLookdevScene()
 		int SphereMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Sphere.fbx", "Sphere");
 		int Goldmat = ObjectManager.CreateMaterial("M_Sphere");
 		ObjectManager.SetBaseColor(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_COL_8K_METALNESS.png");
-		ObjectManager.SetNormal(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_NRM_8K_METALNESS.png");
-		ObjectManager.SetRoughness(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_ROUGHNESS_8K_METALNESS.png");
-		ObjectManager.SetMetallic(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_METALNESS_8K_METALNESS.png");
-		ObjectManager.SetReflectionMode(Goldmat, 1); // 1 = metalness
+		ObjectManager.SetNormalMap(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_NRM_8K_METALNESS.png");
+		ObjectManager.SetReflectionRoughness(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_ROUGHNESS_8K_METALNESS.png");
+		//ObjectManager.SetMetallic(Goldmat, "resources/Lookdev/Material/MetalGoldPaint002/MetalGoldPaint002_METALNESS_8K_METALNESS.png");
+		ObjectManager.SetReflectionMode(Goldmat, HorusMaterial::ReflectionTypeMetalness); // 1 = metalness
 		ObjectManager.AssignMaterial(SphereMesh, Goldmat);
 		
 		ObjectManager.SetGroupShapePosition(SphereMesh, { 5.0f, 2.f, 0.0f });
@@ -178,8 +203,8 @@ void HorusScene::ShowLookdevScene()
 	int Glassmat = ObjectManager.CreateMaterial("M_Sphere");
 
 	ObjectManager.SetBaseColor(Glassmat, GlassBaseColor);
-	ObjectManager.SetRoughness(Glassmat, GlassRoughness);
-	ObjectManager.SetReflectionMode(Glassmat, 0); // 0 = PBR
+	ObjectManager.SetReflectionRoughness(Glassmat, GlassRoughness);
+	ObjectManager.SetReflectionMode(Glassmat, HorusMaterial::ReflectionTypePBR); // 0 = PBR
 	ObjectManager.SetRefractionColor(Glassmat, GlassTransmissionColor);
 	ObjectManager.SetRefractionWeight(Glassmat, GlassRefractionWeight);
 	ObjectManager.SetRefractionRoughness(Glassmat, GlassRefractionRoughness);
@@ -227,7 +252,7 @@ void HorusScene::ShowJaguardXKSS()
 	int BackgoundMesh = ObjectManager.CreateGroupShape("resources/Lookdev/Basic_Assets/Background.fbx", "Background");
 	int BackgroundMat = ObjectManager.CreateMaterial("M_Background");
 
-	ObjectManager.SetReflectionMode(BackgroundMat, 0); // 0 = PBR
+	ObjectManager.SetReflectionMode(BackgroundMat, HorusMaterial::ReflectionTypePBR); // 0 = PBR
 	ObjectManager.AssignMaterial(BackgoundMesh, BackgroundMat);
 	ObjectManager.SetGroupShapeScale(BackgoundMesh, { 20.0f, 10.0f, 10.0f });
 

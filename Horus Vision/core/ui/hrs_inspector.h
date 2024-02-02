@@ -1,12 +1,36 @@
 #pragma once
 
 // Project includes
+#include "hrs_material.h"
 #include "hrs_reset_buffers.h" // nothing
 #include "imgui.h"
 
 class HorusInspector
 {
 public:
+
+	struct PerformanceData
+	{
+		static const int DataLength = 60;
+		int ms_per_frame_idx = 0;
+		float ms_per_frame[DataLength] = { 0 };
+		float ms_per_frame_accum = 0.0f;
+		float fps_values[DataLength] = { 0 };
+
+		void Update(float deltaTime, float framerate)
+		{
+			ms_per_frame_accum -= ms_per_frame[ms_per_frame_idx];
+			ms_per_frame[ms_per_frame_idx] = deltaTime * 1000.0f;
+			ms_per_frame_accum += ms_per_frame[ms_per_frame_idx];
+			fps_values[ms_per_frame_idx] = framerate;
+			ms_per_frame_idx = (ms_per_frame_idx + 1) % DataLength;
+		}
+
+		float GetAverageMsPerFrame() const
+		{
+			return ms_per_frame_accum / DataLength;
+		}
+	};
 
 	enum class InspectorType
 	{
@@ -97,6 +121,34 @@ public:
 
 	// --- Light ---
 
+	// --- Texture ---
+
+	// --- Material ---
+	void DrawSwitchColorToTextureButton(bool& switchVariable, const char* id);
+	void DrawParameterWithFileDialog(std::string& filePath, bool& parameterEnabled, const std::string& buttonID, const char* fileFilter, const std::string&
+		parameterName, std::function<void(const std::string&)> onUpdate, std::function<void(const std::string&)>
+		onEnable);
+	void PopulateSelectedMaterialInfos();
+
+	void DrawBaseColorSection();
+	void DrawReflectionSection();
+	void DrawSheenSection();
+	void DrawRefractionSection();
+	void DrawSssSection();
+	void DrawCoatingSection();
+	void DrawOtherSection();
+
+	// Preset
+	void SetMaterialDefault();
+	void SetMaterialPlastic();
+	void SetMaterialMetal();
+	void SetMaterialGlass();
+	void SetMaterialEmissive();
+	void SetMaterialMatte();
+	void SetMaterialSkin();
+	void SetMaterialSSS();
+
+
 	// --- Project ---
 	void PopulateSelectedProjectInfos();
 
@@ -104,7 +156,7 @@ public:
 
 private:
 
-
+	PerformanceData m_PerformanceData_;
 
 	HorusInspector() : m_Gpu00N_{}, m_Gpu01N_{}
 	{
@@ -113,7 +165,10 @@ private:
 	//--------------------------------------------- GENERAL ---------------------------------------------//
 	InspectorType m_SelectionType_ = InspectorType::PROJECT;
 
-	const ImGuiInputTextFlags InputFloatFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue;
+	const ImGuiInputTextFlags m_InputFloatFlags_ = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue;
+	const ImGuiTreeNodeFlags m_TreeNodeFlags_ = ImGuiTreeNodeFlags_Framed;
+	const ImGuiTreeNodeFlags m_TreeNodeFlagsOpen_ = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed;
+	const char m_ImageFilters_[59] = { "Image (*.jpg;*.png;*.exr;*.tiff)\0*.jpg;*.png;*.exr;*.tiff\0" };
 
 	//--------------------------------------------- CAMERA INSPECTOR ---------------------------------------------//
 	std::string m_CameraName_ = "";
@@ -174,34 +229,310 @@ private:
 
 	//--------------------------------------------- MATERIAL INSPECTOR ---------------------------------------------//
 
-	glm::vec4 m_DiffuseColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glm::vec4 m_DiffuseWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_DiffuseRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Roughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Normal_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Metallic_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Emissive_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Opacity_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_ReflectionColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_ReflectionWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_ReflectionRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_RefractionColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_RefractionWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_RefractionRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_CoatingColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_CoatingWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_CoatingRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_Sheen_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_SheenWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_SssScatterColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_SssScatterDistance_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	glm::vec4 m_BackscatterColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+	// Parameters are stored here in order of their appearance in the material inspector
+	std::string m_MaterialName_;
+	int m_PresetIndex_ = 0;
+	const char* m_Presets_[8] = { "Default", "Plastic", "Metal", "Glass", "Emissive", "Matte", "Skin", "Subsurface" };
+
+	// Base color secion --------------------------------------------------------------------------------//
+	// Base color - Done
+	bool m_BaseColorImageColor_ = false;
+	bool m_UseTextureBaseColorInsteadOfColor_ = false;
+	bool m_EnableBaseColorImage_ = false;
+	std::string m_BaseColorPath_ = "path/to/BaseColor.jpg";
+	glm::vec4 m_BaseColor_ = { 0.5f, 0.5f, 0.5f,1.0f };
+
+	// Base color weight - Done
+	bool m_BaseColorImageWeight_ = false;
+	bool m_UseTextureBaseColorWeightInsteadOfWeight_ = false;
+	bool m_EnableBaseColorWeightImage_ = false;
+	std::string m_BaseColorWeightPath_ = "path/to/BaseColorWeight.jpg";
+	glm::vec4 m_BaseColorWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Base color roughness - Done
+	bool m_BaseColorImageRoughness_ = false;
+	bool m_UseTextureBaseColorRoughnessInsteadOfRoughness_ = false;
+	bool m_EnableBaseColorRoughnessImage_ = false;
+	std::string m_BaseColorRoughnessPath_ = "path/to/BaseColorRoughness.jpg";
+	glm::vec4 m_BaseColorRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Backscatter weight - Done
+	bool m_BackscatterImageWeight_ = false;
+	bool m_UseTextureBackscatterWeightInsteadOfWeight_ = false;
+	bool m_EnableBackscatterWeightImage_ = false;
+	std::string m_BackscatterWeightPath_ = "path/to/BackscatterWeight.jpg";
 	glm::vec4 m_BackscatterWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Backscatter color - Done
+	bool m_BackscatterImageColor_ = false;
+	bool m_UseTextureBackscatterColorInsteadOfColor_ = false;
+	bool m_EnableBackscatterColorImage_ = false;
+	std::string m_BackscatterColorPath_ = "path/to/BackscatterColor.jpg";
+	glm::vec4 m_BackscatterColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+
+	// Reflection Section --------------------------------------------------------------------------------//
+	// Reflection color
+	bool m_ReflectionImageColor_ = false;
+	bool m_UseTextureReflectionColorInsteadOfColor_ = false;
+	bool m_EnableReflectionColorImage_ = false;
+	std::string m_ReflectionColorPath_ = "path/to/ReflectionColor.jpg";
+	glm::vec4 m_ReflectionColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Reflection weight
+	bool m_ReflectionImageWeight_ = false;
+	bool m_UseTextureReflectionWeightInsteadOfWeight_ = false;
+	bool m_EnableReflectionWeightImage_ = false;
+	std::string m_ReflectionWeightPath_ = "path/to/ReflectionWeight.jpg";
+	glm::vec4 m_ReflectionWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Reflection roughness
+	bool m_ReflectionImageRoughness_ = false;
+	bool m_UseTextureReflectionRoughnessInsteadOfRoughness_ = false;
+	bool m_EnableReflectionRoughnessImage_ = false;
+	std::string m_ReflectionRoughnessPath_ = "path/to/ReflectionRoughness.jpg";
+	glm::vec4 m_ReflectionRoughness_ = { 0.5f, 0.5f, 0.5f, 0.5f };
+
+	// Reflection anisotropy
+	bool m_ReflectionImageAnisotropy_ = false;
+	bool m_UseTextureReflectionAnisotropyInsteadOfAnisotropy_ = false;
+	bool m_EnableReflectionAnisotropyImage_ = false;
+	std::string m_ReflectionAnisotropyPath_ = "path/to/ReflectionAnisotropy.jpg";
+	glm::vec4 m_ReflectionAnisotropy_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Reflection anisotropy rotation
+	bool m_ReflectionImageAnisotropyRotation_ = false;
+	bool m_UseTextureReflectionAnisotropyRotationInsteadOfAnisotropyRotation_ = false;
+	bool m_EnableReflectionAnisotropyRotationImage_ = false;
+	std::string m_ReflectionAnisotropyRotationPath_ = "path/to/ReflectionAnisotropyRotation.jpg";
+	glm::vec4 m_ReflectionAnisotropyRotation_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	int m_ReflectionModeIndex_ = 0;
+	const char* m_ReflectionModes_[2] = { "PBR", "Metalness" };
+	bool m_ReflectionMode_ = HorusMaterial::ReflectionTypePBR;
+	bool m_ShowMetallicUi_ = false;
+	float m_Ior_ = 1.36f;
+
+	// reflection metalness
+	bool m_ReflectionImageMetalness_ = false;
+	bool m_UseTextureReflectionMetalnessInsteadOfMetalness_ = false;
+	bool m_EnableReflectionMetalnessImage_ = false;
+	std::string m_ReflectionMetalnessPath_ = "path/to/ReflectionMetalness.jpg";
+	glm::vec4 m_ReflectionMetalness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+
+	// Sheen Section --------------------------------------------------------------------------------//
+	// Sheen color
+	bool m_SheenImageColor_ = false;
+	bool m_UseTextureSheenColorInsteadOfColor_ = false;
+	bool m_EnableSheenColorImage_ = false;
+	std::string m_SheenColorPath_ = "path/to/SheenColor.jpg";
+	glm::vec4 m_SheenColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Sheen weight
+	bool m_SheenImageWeight_ = false;
+	bool m_UseTextureSheenWeightInsteadOfWeight_ = false;
+	bool m_EnableSheenWeightImage_ = false;
+	std::string m_SheenWeightPath_ = "path/to/SheenWeight.jpg";
+	glm::vec4 m_SheenWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Sheen Tint
+	bool m_SheenImageTint_ = false;
+	bool m_UseTextureSheenTintInsteadOfTint_ = false;
+	bool m_EnableSheenTintImage_ = false;
+	std::string m_SheenTintPath_ = "path/to/SheenTint.jpg";
+	glm::vec4 m_SheenTint_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Refraction Section --------------------------------------------------------------------------------//
+	// Refraction color
+	bool m_RefractionImageColor_ = false;
+	bool m_UseTextureRefractionColorInsteadOfColor_ = false;
+	bool m_EnableRefractionColorImage_ = false;
+	std::string m_RefractionColorPath_ = "path/to/RefractionColor.jpg";
+	glm::vec4 m_RefractionColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Refraction weight
+	bool m_RefractionImageWeight_ = false;
+	bool m_UseTextureRefractionWeightInsteadOfWeight_ = false;
+	bool m_EnableRefractionWeightImage_ = false;
+	std::string m_RefractionWeightPath_ = "path/to/RefractionWeight.jpg";
+	glm::vec4 m_RefractionWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Refraction NormalMap
+	bool m_RefractionImageNormalMap_ = false;
+	bool m_UseTextureRefractionNormalMapInsteadOfNormalMap_ = false;
+	bool m_EnableRefractionNormalMapImage_ = false;
+	std::string m_RefractionNormalMapPath_ = "path/to/RefractionNormalMap.jpg";
+	glm::vec4 m_RefractionNormalMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Refraction NormalMap weight
+	float m_RefractionNormalMapWeight_ = 0.0f;
+
+	// Refraction roughness
+	bool m_RefractionImageRoughness_ = false;
+	bool m_UseTextureRefractionRoughnessInsteadOfRoughness_ = false;
+	bool m_EnableRefractionRoughnessImage_ = false;
+	std::string m_RefractionRoughnessPath_ = "path/to/RefractionRoughness.jpg";
+	glm::vec4 m_RefractionRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	float m_RefractionIor_ = 1.5f;
+	bool m_RefractionThinSurface_ = false;
+
+	// Refraction absorption
+	bool m_RefractionAbsorptionImageColor_ = false;
+	bool m_UseTextureRefractionAbsorptionColorInsteadOfColor_ = false;
+	bool m_EnableRefractionAbsorptionColorImage_ = false;
+	std::string m_RefractionAbsorptionColorPath_ = "path/to/RefractionAbsorptionColor.jpg";
+	glm::vec4 m_RefractionAbsorptionColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Refraction absorption distance
+	bool m_RefractionAbsorptionImageDistance_ = false;
+	bool m_UseTextureRefractionAbsorptionDistanceInsteadOfDistance_ = false;
+	bool m_EnableRefractionAbsorptionDistanceImage_ = false;
+	std::string m_RefractionAbsorptionDistancePath_ = "path/to/RefractionAbsorptionDistance.jpg";
+	glm::vec4 m_RefractionAbsorptionDistance_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+	bool m_RefractionCaustics_ = false;
+
+	// SSS Section --------------------------------------------------------------------------------//
+	// SSS color
+	bool m_SssImageColor_ = false;
+	bool m_UseTextureSssColorInsteadOfColor_ = false;
+	bool m_EnableSssColorImage_ = false;
+	std::string m_SssColorPath_ = "path/to/SssColor.jpg";
+	glm::vec4 m_SssScatterColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// SSS weight
+	bool m_SssImageWeight_ = false;
+	bool m_UseTextureSssWeightInsteadOfWeight_ = false;
+	bool m_EnableSssWeightImage_ = false;
+	std::string m_SssWeightPath_ = "path/to/SssWeight.jpg";
+	glm::vec4 m_SssScatterWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// SSS radius
+	bool m_SssImageRadius_ = false;
+	bool m_UseTextureSssRadiusInsteadOfRadius_ = false;
+	bool m_EnableSssRadiusImage_ = false;
+	std::string m_SssRadiusPath_ = "path/to/SssRadius.jpg";
+	glm::vec4 m_SssScatterDistance_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// SSS direction
+	bool m_SssImageDirection_ = false;
+	bool m_UseTextureSssDirectionInsteadOfDirection_ = false;
+	bool m_EnableSssDirectionImage_ = false;
+	std::string m_SssDirectionPath_ = "path/to/SssDirection.jpg";
+	glm::vec4 m_SssScatterDirection_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	bool m_SssUseMultiScattering_ = false;
+	bool m_SssUseSchlickApproximation_ = true;
+
+	// Coating Section --------------------------------------------------------------------------------//
+	// Coating color
+	bool m_CoatingImageColor_ = false;
+	bool m_UseTextureCoatingColorInsteadOfColor_ = false;
+	bool m_EnableCoatingColorImage_ = false;
+	std::string m_CoatingColorPath_ = "path/to/CoatingColor.jpg";
+	glm::vec4 m_CoatingColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Coating weight
+	bool m_CoatingImageWeight_ = false;
+	bool m_UseTextureCoatingWeightInsteadOfWeight_ = false;
+	bool m_EnableCoatingWeightImage_ = false;
+	std::string m_CoatingWeightPath_ = "path/to/CoatingWeight.jpg";
+	glm::vec4 m_CoatingWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Coating Normal map
+	bool m_CoatingImageNormalMap_ = false;
+	bool m_UseTextureCoatingNormalMapInsteadOfNormalMap_ = false;
+	bool m_EnableCoatingNormalMapImage_ = false;
+	std::string m_CoatingNormalMapPath_ = "path/to/CoatingNormalMap.jpg";
+	glm::vec4 m_CoatingNormalMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Coating Normal weight
+	float m_CoatingNormalMapWeight_ = 0.0f;
+
+	// Coating roughness
+	bool m_CoatingImageRoughness_ = false;
+	bool m_UseTextureCoatingRoughnessInsteadOfRoughness_ = false;
+	bool m_EnableCoatingRoughnessImage_ = false;
+	std::string m_CoatingRoughnessPath_ = "path/to/CoatingRoughness.jpg";
+	glm::vec4 m_CoatingRoughness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	float m_CoatingIor_ = 1.46f;
+
+	// Coating thickness
+	bool m_CoatingImageThickness_ = false;
+	bool m_UseTextureCoatingThicknessInsteadOfThickness_ = false;
+	bool m_EnableCoatingThicknessImage_ = false;
+	std::string m_CoatingThicknessPath_ = "path/to/CoatingThickness.jpg";
+	glm::vec4 m_CoatingThickness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Coating metalness
+	bool m_CoatingImageMetalness_ = false;
+	bool m_UseTextureCoatingMetalnessInsteadOfMetalness_ = false;
+	bool m_EnableCoatingMetalnessImage_ = false;
+	std::string m_CoatingMetalnessPath_ = "path/to/CoatingMetalness.jpg";
+	glm::vec4 m_CoatingMetalness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Coating Transmission color
+	bool m_CoatingImageTransmissionColor_ = false;
+	bool m_UseTextureCoatingTransmissionColorInsteadOfTransmissionColor_ = false;
+	bool m_EnableCoatingTransmissionColorImage_ = false;
+	std::string m_CoatingTransmissionColorPath_ = "path/to/CoatingTransmissionColor.jpg";
+	glm::vec4 m_CoatingTransmissionColor_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	int m_CoatingModeIndex_ = 0;
+	const char* m_CoatingModes_[2] = { "PBR", "Metalness" };
+	bool m_CoatingMetalnessUI_ = false;
+	bool m_CoatingMode_ = HorusMaterial::CoatingTypePBR;
+
+	// Other Section --------------------------------------------------------------------------------//
+	// Normal map
+	bool m_NormalMapImage_ = false;
+	bool m_UseTextureNormalMapInsteadOfNormalMap_ = false;
+	bool m_EnableNormalMapImage_ = false;
+	std::string m_NormalMapPath_ = "path/to/NormalMap.jpg";
+	glm::vec4 m_NormalMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Normal weight
+	glm::vec4 m_NormalMapWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Displacement map
+	bool m_DisplacementMapImage_ = false;
+	bool m_UseTextureDisplacementMapInsteadOfDisplacementMap_ = false;
+	bool m_EnableDisplacementMapImage_ = false;
+	std::string m_DisplacementMapPath_ = "path/to/DisplacementMap.jpg";
+	glm::vec4 m_DisplacementMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Displacement map weight
+	glm::vec4 m_DisplacementMapWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Emissive
+	bool m_EmissiveImage_ = false;
+	bool m_UseTextureEmissiveInsteadOfEmissive_ = false;
+	bool m_EnableEmissiveImage_ = false;
+	std::string m_EmissivePath_ = "path/to/Emissive.jpg";
+	glm::vec4 m_Emissive_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Emissive weight
+	bool m_EmissiveWeightImage_ = false;
+	bool m_UseTextureEmissiveWeightInsteadOfEmissiveWeight_ = false;
+	bool m_EnableEmissiveWeightImage_ = false;
+	std::string m_EmissiveWeightPath_ = "path/to/EmissiveWeight.jpg";
 	glm::vec4 m_EmissionWeight_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Opacity
+	bool m_OpacityImage_ = false;
+	bool m_UseTextureOpacityInsteadOfOpacity_ = false;
+	bool m_EnableOpacityImage_ = false;
+	std::string m_OpacityPath_ = "path/to/Opacity.jpg";
+	glm::vec4 m_Opacity_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Transparency
+	bool m_TransparencyImage_ = false;
+	bool m_UseTextureTransparencyInsteadOfTransparency_ = false;
+	bool m_EnableTransparencyImage_ = false;
+	std::string m_TransparencyPath_ = "path/to/Transparency.jpg";
 	glm::vec4 m_Transparency_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	float m_Ior_ = 0.0f;
-	bool m_ReflectionMode_ = false;
-	bool m_CoatingMode_ = false;
 
 	//--------------------------------------------- GROUP SHAPE INSPECTOR ---------------------------------------------//
 

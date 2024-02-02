@@ -92,7 +92,9 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ObjectManager.UpdateGroupShapeOutlinerData();
 
-		if (ImGui::TreeNode("Meshes"))
+		ImGuiTreeNodeFlags TreeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAllColumns;
+
+		if (ImGui::TreeNodeEx("Meshes", TreeFlags))
 		{
 
 			// Group of shapes section
@@ -170,7 +172,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Separator();
 
-		if (ImGui::TreeNode("Materials"))
+		if (ImGui::TreeNodeEx("Materials", TreeFlags))
 		{
 			for (const auto& material : materials)
 			{
@@ -189,6 +191,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 					ObjectManager.SetActualSelectedId(Id);
 					ObjectManager.SetActiveMaterialId(Id);
+					HorusInspector::GetInstance().PopulateSelectedMaterialInfos();
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
 				}
 				ImGui::PopStyleColor();
@@ -198,7 +201,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Separator();
 
-		if (ImGui::TreeNode("Cameras"))
+		if (ImGui::TreeNodeEx("Cameras", TreeFlags))
 		{
 			for (const auto& Camera : cameras)
 			{
@@ -226,7 +229,7 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Separator();
 
-		if (ImGui::TreeNode("Lights"))
+		if (ImGui::TreeNodeEx("Lights", TreeFlags))
 		{
 			for (const auto& Light : lights)
 			{

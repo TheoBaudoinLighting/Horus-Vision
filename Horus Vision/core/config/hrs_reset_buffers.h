@@ -17,6 +17,9 @@ public:
 	HorusResetBuffers(HorusResetBuffers const&) = delete;
 	void operator=(HorusResetBuffers const&) = delete;
 
+	// Mutex
+	std::mutex Mutex;
+
 	void CallResetBuffers()
 	{
 		HorusRadeon& Radeon = HorusRadeon::GetInstance();

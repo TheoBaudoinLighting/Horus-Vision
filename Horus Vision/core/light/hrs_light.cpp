@@ -486,7 +486,7 @@ void HorusLight::DestroyLight()
 			HorusConsole::GetInstance().AddLog(" [error] Failed to detach light : %s ", e.what());
 		}
 
-		CHECK(rprObjectDelete(m_Light_))
+		//CHECK(rprObjectDelete(m_Light_))
 			m_Light_ = nullptr;
 		m_IsLightHdri_ = false;
 

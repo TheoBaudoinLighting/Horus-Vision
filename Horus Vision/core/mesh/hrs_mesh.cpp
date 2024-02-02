@@ -58,7 +58,7 @@ void HorusGroupShape::DestroyGroupShape()
 		rpr_shape shape = std::get<0>(ShapeAndName);
 		std::string name = std::get<1>(ShapeAndName);
 
-		rprSceneDetachShape(GScene, shape);
+		CHECK(rprSceneDetachShape(GScene, shape));
 		// Don't delete shape, it's done by the garbage collector
 	}
 

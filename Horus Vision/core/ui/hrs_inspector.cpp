@@ -6,9 +6,12 @@
 #include "hrs_utils.h"
 
 #include <string>
+#include <functional> 
 
 #include <filesystem>
 #include <hrs_console.h>
+
+using UpdateCallback = std::function<void(const std::string&)>; // Callback for update Color or File path
 
 void HorusInspector::Inspector(bool* p_open)
 {
@@ -1219,6 +1222,294 @@ void HorusInspector::InspectorLight()
 
 }
 
+//-------------------------------------- GROUP SHAPE INSPECTOR --------------------------------------
+
+void HorusInspector::InspectorGroupShape()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group Shape Inspector");
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group : ");
+	ImGui::SameLine();
+	ImGui::Text(m_GroupShapeName_.c_str());
+	ImGui::PopStyleColor();
+
+	// TODO : Show a text input for the name of the group shape
+	//ImGui::Text("Group Shape name: %s ", MeshName.c_str());
+
+	// Only Transform 
+	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Reset Transform"))
+		{
+			ObjectManager.SetGroupShapeResetTransform(ObjectManager.GetActiveGroupShapeId());
+
+			PopulateSelectedGroupShapeInfos();
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the group shape.");
+
+		ImGui::Separator();
+
+		if (ImGui::InputFloat3("Position", &m_GroupShapePosition_[0]))
+		{
+			ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), m_GroupShapePosition_);
+
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Rotation", &m_GroupShapeRotation_[0]))
+		{
+			ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeRotation_);
+
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Scale", &m_GroupShapeScale_[0]))
+		{
+			ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeScale_);
+
+			CallResetBuffer();
+		}
+	}
+
+	// TODO : Make visibility mesh options -> rprSetVisibilityFlag
+
+	// Visualisation
+	static bool showNormals = false;
+	ImGui::Checkbox("Show Normals", &showNormals);
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Group Shape Infos");
+	ImGui::PopStyleColor();
+
+	ImGui::Separator();
+
+	ImGui::Text("Group shape id: %d ", ObjectManager.GetActiveGroupShapeId());
+	ImGui::Text("Group shape name: %s ", m_GroupShapeName_.c_str());
+	ImGui::Text("Group shape position: %.2f %.2f %.2f ", m_GroupShapePosition_.x, m_GroupShapePosition_.y, m_GroupShapePosition_.z);
+	ImGui::Text("Group shape rotation: %.2f %.2f %.2f ", m_GroupShapeRotation_.x, m_GroupShapeRotation_.y, m_GroupShapeRotation_.z);
+	ImGui::Text("Group shape scale: %.2f %.2f %.2f ", m_GroupShapeScale_.x, m_GroupShapeScale_.y, m_GroupShapeScale_.z);
+	ImGui::Text("Group shape number of shapes count: %d ", 0);
+	ImGui::Text("Group shape all cumuled vertices count: %d ", 0);
+	ImGui::Text("Group shape number of materials in : %d ", 0);
+
+	ImGui::Separator();
+}
+
+void HorusInspector::PopulateSelectedGroupShapeInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	m_GroupShapeName_ = ObjectManager.GetGroupShapeName(ObjectManager.GetActiveGroupShapeId());
+
+	m_GroupShapePosition_ = ObjectManager.GetGroupShapePosition(ObjectManager.GetActiveGroupShapeId());
+	m_GroupShapeRotation_ = ObjectManager.GetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId());
+	m_GroupShapeScale_ = ObjectManager.GetGroupShapeScale(ObjectManager.GetActiveGroupShapeId());
+
+
+
+
+
+}
+
+void HorusInspector::SetGroupShapeName(std::string name)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeName(ObjectManager.GetActiveGroupShapeId(), name.c_str());
+
+	//CallResetBuffer();
+}
+void HorusInspector::SetGroupShapePosition(glm::vec3 position)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), position);
+
+	CallResetBuffer();
+}
+void HorusInspector::SetGroupShapeRotation(glm::vec3 rotation)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), rotation);
+
+	CallResetBuffer();
+}
+void HorusInspector::SetGroupShapeScale(glm::vec3 scale)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), scale);
+
+	CallResetBuffer();
+}
+
+// -------------------------------------- SHAPE INSPECTOR --------------------------------------
+
+void HorusInspector::InspectorShape()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	//ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Green");
+	//ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Pink");
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Shape Inspector");
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("General Informations");
+	ImGui::PopStyleColor();
+
+	int vertexCount = 0;
+	int faceCount = 0;
+	ImGui::Text("Vertices: %d", vertexCount);
+	ImGui::Text("Faces: %d", faceCount);
+
+	// TODO : Make visibility mesh options -> rprSetVisibilityFlag
+
+	// Delete shape button
+	if (ImGui::Button("Delete Shape"))
+	{
+		ObjectManager.DeleteSelectedShape(ObjectManager.GetActiveShapeId());
+
+		CallResetBuffer();
+	}
+	ImGui::SameLine(); ShowHelpMarker("Delete the selected shape. Attention! No undo possible.");
+
+	if (ImGui::CollapsingHeader("Transform", m_InputFloatFlags_))
+	{
+		if (ImGui::Button("Reset Transform"))
+		{
+			ObjectManager.SetShapeResetTransformById(ObjectManager.GetActiveShapeId());
+
+			CallResetBuffer();
+		}
+		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the shape.");
+
+		ImGui::Separator();
+
+		if (ImGui::InputFloat3("Position", &m_ShapePosition_[0], "%.1f", m_InputFloatFlags_))
+		{
+			ObjectManager.SetShapePositionById(ObjectManager.GetActiveShapeId(), m_ShapePosition_);
+
+			spdlog::debug("Shape ID: {}", ObjectManager.GetActiveShapeId());
+
+			spdlog::debug("Shape position set : {0} {1} {2}", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Rotation", &m_ShapeRotation_[0], "%.1f", m_InputFloatFlags_))
+		{
+			ObjectManager.SetShapeRotationById(ObjectManager.GetActiveShapeId(), m_ShapeRotation_);
+			spdlog::debug("Shape rotation set : {0} {1} {2}", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
+			CallResetBuffer();
+		}
+
+		if (ImGui::InputFloat3("Scale", &m_ShapeScale_[0], "%.1f", m_InputFloatFlags_))
+		{
+			ObjectManager.SetShapeScaleById(ObjectManager.GetActiveShapeId(), m_ShapeScale_);
+			spdlog::debug("Shape scale set : {0} {1} {2}", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
+			CallResetBuffer();
+		}
+	}
+
+	ImGui::Text("Materials");
+	// TODO : See the assigned materials here
+
+	if (ImGui::Button("Recalculate Normals"))
+	{
+
+	}
+	ImGui::SameLine(); ShowHelpMarker("Recalculate the normals of the shape.");
+
+	// Visualisation
+	static bool showNormals = false;
+	ImGui::Checkbox("Show Normals", &showNormals);
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Shape Infos");
+	ImGui::PopStyleColor();
+
+	ImGui::Separator();
+
+	ImGui::Text("Shape id: %d ", ObjectManager.GetActiveShapeId());
+	ImGui::Text("Shape name: %s ", m_ShapeName_.c_str());
+	ImGui::Text("Shape position: %.2f %.2f %.2f ", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
+	ImGui::Text("Shape rotation: %.2f %.2f %.2f ", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
+	ImGui::Text("Shape scale: %.2f %.2f %.2f ", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
+	ImGui::Text("Shape vertex count: %d ", vertexCount);
+	ImGui::Text("Shape face count: %d ", faceCount);
+	ImGui::Text("Shape materials: %d ", 0);
+
+	ImGui::Separator();
+}
+
+void HorusInspector::PopulateSelectedShapeInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	m_ShapeName_ = ObjectManager.GetShapeNameById(ObjectManager.GetActiveShapeId());
+	m_ShapePosition_ = ObjectManager.GetShapePositionById(ObjectManager.GetActiveShapeId());
+	m_ShapeRotation_ = ObjectManager.GetShapeRotationById(ObjectManager.GetActiveShapeId());
+	m_ShapeScale_ = ObjectManager.GetShapeScaleById(ObjectManager.GetActiveShapeId());
+
+
+
+}
+
+//-------------------------------------- TEXTURE INSPECTOR --------------------------------------
+
+void HorusInspector::InspectorTexture()
+{
+	ImGui::Text("Texture Inspector");
+	ImGui::Separator();
+
+	/*GLuint textureId = 0;
+	ImGui::Image((void*)(intptr_t)textureId, ImVec2(100, 100));
+
+	static char texturePath[128] = "path/to/texture.png";
+	ImGui::InputText("Path", texturePath, IM_ARRAYSIZE(texturePath));
+
+	int width = 0;
+	int height = 0;
+	ImGui::Text("Resolution: %dx%d", width, height);
+
+	static bool repeat = true;
+	ImGui::Checkbox("Repeat", &repeat);
+
+	static bool mirror = false;
+	ImGui::Checkbox("Mirror", &mirror);
+
+	static bool useMipmaps = false;
+	ImGui::Checkbox("Use Mipmaps", &useMipmaps);
+
+	if (ImGui::Button("Reload Texture")) {
+
+	}
+	if (ImGui::Button("Save Changes")) {
+
+	}
+
+	ImGui::Spacing();*/
+}
+
 //-------------------------------------- MATERIAL INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorMaterial()
@@ -1226,6 +1517,176 @@ void HorusInspector::InspectorMaterial()
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	// TODO : Add a checkbox for freeze the value of the material
+
+	// Collapsing HeaderFlag
+
+	// Getters Material
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Material Inspector");
+	ImGui::PopStyleColor();
+
+	ShowBigSeparator();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
+	ImGui::Text("Presets : ");
+	ImGui::PopStyleColor();
+	ImGui::SameLine();
+	if (ImGui::Combo(" ", &m_PresetIndex_, m_Presets_, IM_ARRAYSIZE(m_Presets_)))
+	{
+		if (m_PresetIndex_ == 0)
+		{
+			SetMaterialDefault();
+		}
+		else if (m_PresetIndex_ == 1)
+		{
+			SetMaterialPlastic();
+		}
+		else if (m_PresetIndex_ == 2)
+		{
+			SetMaterialMetal();
+		}
+		else if (m_PresetIndex_ == 3)
+		{
+			SetMaterialGlass();
+		}
+		else if (m_PresetIndex_ == 4)
+		{
+			SetMaterialEmissive();
+		}
+		else if (m_PresetIndex_ == 5)
+		{
+			SetMaterialMatte();
+		}
+		else if (m_PresetIndex_ == 6)
+		{
+			SetMaterialSkin();
+		}
+		else if (m_PresetIndex_ == 7)
+		{
+			SetMaterialSSS();
+		}
+
+		CallResetBuffer();
+	}
+
+	ShowBigSeparator();
+
+	ImGui::Text("Material : ");
+	ImGui::SameLine();
+	ImGui::Text(m_MaterialName_.c_str());
+
+	ShowBigSeparator();
+
+	const char Filters[] = { "Image (*.jpg;*.png;*.exr;*.tiff)\0*.jpg;*.png;*.exr;*.tiff\0" };
+
+	// Base Color - Done
+	DrawBaseColorSection();
+	ShowBigSeparator();
+
+	// Reflection
+	DrawReflectionSection();
+	ShowBigSeparator();
+
+	// Sheen
+	DrawSheenSection();
+	ShowBigSeparator();
+
+	// Refraction
+	DrawRefractionSection();
+	ShowBigSeparator();
+
+	// SSS
+	DrawSssSection();
+	ShowBigSeparator();
+
+	// Coating
+	DrawCoatingSection();
+	ShowBigSeparator();
+
+	// Other (Normal map - Displacement - Emissive - Transparancy)
+	DrawOtherSection();
+	ShowBigSeparator();
+
+	// Collapsing Header
+	if (ImGui::CollapsingHeader("Material Info"))
+	{
+		ImGui::Text("Material id: %d", ObjectManager.GetActiveMaterialId());
+		ImGui::Text("Material Name: %s", m_MaterialName_.c_str());
+		ImGui::Separator();
+
+		// Base Color
+		{
+			ImGui::Text("Base color parameters");
+			ImGui::Text("Material Base color : %.2f, %.2f, %.2f, %.2f", m_BaseColor_.x, m_BaseColor_.y, m_BaseColor_.z, m_BaseColor_.w);
+			ImGui::Text("Material Base color weight : %.2f, %.2f, %.2f, %.2f", m_BaseColorWeight_.x, m_BaseColorWeight_.y, m_BaseColorWeight_.z, m_BaseColorWeight_.w);
+			ImGui::Text("Material Base color roughness : %.2f, %.2f, %.2f, %.2f", m_BaseColorRoughness_.x, m_BaseColorRoughness_.y, m_BaseColorRoughness_.z, m_BaseColorRoughness_.w);
+			ImGui::Text("Material Backscatter color : %.2f, %.2f, %.2f, %.2f", m_BackscatterColor_.x, m_BackscatterColor_.y, m_BackscatterColor_.z, m_BackscatterColor_.w);
+			ImGui::Text("Material Backscatter weight : %.2f, %.2f, %.2f, %.2f", m_BackscatterWeight_.x, m_BackscatterWeight_.y, m_BackscatterWeight_.z, m_BackscatterWeight_.w);
+			ImGui::Separator();
+		}
+
+		// Reflection
+		{
+			ImGui::Text("Material Reflection color : %.2f, %.2f, %.2f, %.2f", m_ReflectionColor_.x, m_ReflectionColor_.y, m_ReflectionColor_.z, m_ReflectionColor_.w);
+			ImGui::Text("Material Reflection roughness : %.2f, %.2f, %.2f, %.2f", m_ReflectionRoughness_.x, m_ReflectionRoughness_.y, m_ReflectionRoughness_.z, m_ReflectionRoughness_.w);
+			ImGui::Text("Material Reflection weight : %.2f, %.2f, %.2f, %.2f", m_ReflectionWeight_.x, m_ReflectionWeight_.y, m_ReflectionWeight_.z, m_ReflectionWeight_.w);
+			ImGui::Text("Material Reflection mode : %d", m_ReflectionMode_);
+			ImGui::Text("Material IOR : %.2f", m_Ior_);
+			ImGui::Separator();
+		}
+
+		// Sheen
+		{
+			ImGui::Text("Material Sheen color : %.2f, %.2f, %.2f, %.2f", m_SheenColor_.x, m_SheenColor_.y, m_SheenColor_.z, m_SheenColor_.w);
+			ImGui::Text("Material Sheen weight : %.2f, %.2f, %.2f, %.2f", m_SheenWeight_.x, m_SheenWeight_.y, m_SheenWeight_.z, m_SheenWeight_.w);
+			ImGui::Text("Material Sheen tint : %.2f, %.2f, %.2f, %.2f", m_SheenTint_.x, m_SheenTint_.y, m_SheenTint_.z, m_SheenTint_.w);
+			ImGui::Separator();
+		}
+
+		// Refraction
+		{
+			ImGui::Text("Material Refraction color : %.2f, %.2f, %.2f, %.2f", m_RefractionColor_.x, m_RefractionColor_.y, m_RefractionColor_.z, m_RefractionColor_.w);
+			ImGui::Text("Material Refraction roughness : %.2f, %.2f, %.2f, %.2f", m_RefractionRoughness_.x, m_RefractionRoughness_.y, m_RefractionRoughness_.z, m_RefractionRoughness_.w);
+			ImGui::Text("Material Refraction weight : %.2f, %.2f, %.2f, %.2f", m_RefractionWeight_.x, m_RefractionWeight_.y, m_RefractionWeight_.z, m_RefractionWeight_.w);
+			ImGui::Text("Material Refraction IOR : %.2f", m_Ior_);
+			ImGui::Text("Material Refraction thin surface : %d", m_RefractionThinSurface_);
+			ImGui::Text("Material Refraction absorption color : %.2f, %.2f, %.2f, %.2f", m_RefractionAbsorptionColor_.x, m_RefractionAbsorptionColor_.y, m_RefractionAbsorptionColor_.z, m_RefractionAbsorptionColor_.w);
+			ImGui::Text("Material Refraction absorption distance : %.2f, %.2f, %.2f, %.2f", m_RefractionAbsorptionDistance_.x, m_RefractionAbsorptionDistance_.y, m_RefractionAbsorptionDistance_.z, m_RefractionAbsorptionDistance_.w);
+			ImGui::Text("Material Refraction caustics : %d", m_RefractionCaustics_);
+			ImGui::Separator();
+		}
+
+		// SSS
+		{
+			ImGui::Text("Material SSS scatter color : %.2f, %.2f, %.2f, %.2f", m_SssScatterColor_.x, m_SssScatterColor_.y, m_SssScatterColor_.z, m_SssScatterColor_.w);
+			ImGui::Text("Material SSS scatter weight : %.2f, %.2f, %.2f, %.2f", m_SssScatterWeight_.x, m_SssScatterWeight_.y, m_SssScatterWeight_.z, m_SssScatterWeight_.w);
+			ImGui::Text("Material SSS scatter distance : %.2f, %.2f, %.2f, %.2f", m_SssScatterDistance_.x, m_SssScatterDistance_.y, m_SssScatterDistance_.z, m_SssScatterDistance_.w);
+			ImGui::Text("Material SSS scatter direction : %.2f, %.2f, %.2f, %.2f", m_SssScatterDirection_.x, m_SssScatterDirection_.y, m_SssScatterDirection_.z, m_SssScatterDirection_.w);
+			ImGui::Text("Material SSS use multi scattering : %d", m_SssUseMultiScattering_);
+			ImGui::Text("Material SSS use schlick approximation : %d", m_SssUseSchlickApproximation_);
+			ImGui::Separator();
+		}
+
+		// Coating
+		{
+			ImGui::Text("Material Coating color : %.2f, %.2f, %.2f, %.2f", m_CoatingColor_.x, m_CoatingColor_.y, m_CoatingColor_.z, m_CoatingColor_.w);
+			ImGui::Text("Material Coating weight : %.2f, %.2f, %.2f, %.2f", m_CoatingWeight_.x, m_CoatingWeight_.y, m_CoatingWeight_.z, m_CoatingWeight_.w);
+			ImGui::Text("Material Coating roughness : %.2f, %.2f, %.2f, %.2f", m_CoatingRoughness_.x, m_CoatingRoughness_.y, m_CoatingRoughness_.z, m_CoatingRoughness_.w);
+			ImGui::Text("Material Coating IOR : %.2f", m_CoatingIor_);
+			ImGui::Text("Material Coating thickness : %.2f, %.2f, %.2f, %.2f", m_CoatingThickness_.x, m_CoatingThickness_.y, m_CoatingThickness_.z, m_CoatingThickness_.w);
+			ImGui::Text("Material Coating transmission color : %.2f, %.2f, %.2f, %.2f", m_CoatingTransmissionColor_.x, m_CoatingTransmissionColor_.y, m_CoatingTransmissionColor_.z, m_CoatingTransmissionColor_.w);
+			ImGui::Text("Material Coating metalness : %.2f, %.2f, %.2f, %.2f", m_CoatingMetalness_.x, m_CoatingMetalness_.y, m_CoatingMetalness_.z, m_CoatingMetalness_.w);
+			ImGui::Text("Material Coating mode : %d", m_CoatingMode_);
+			ImGui::Separator();
+		}
+
+	}
+
+	ShowBigSeparator();
+
+	{
+		// TODO : Add a checkbox for freeze the value of the material
 
 	// Getters Material
 	//std::string& MaterialName = ObjectManager.GetMaterialName(ObjectManager.GetActiveMaterialId());
@@ -1316,18 +1777,18 @@ void HorusInspector::InspectorMaterial()
 	//{
 	//	if (ImGui::CollapsingHeader("Diffuse", ImGuiTreeNodeFlags_DefaultOpen))
 	//	{
-	//		if (ImGui::ColorEdit3("Color", &m_DiffuseColor_[0]))
+	//		if (ImGui::ColorEdit3("Color", &m_BaseColor_[0]))
 	//		{
-	//			ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), m_DiffuseColor_);
+	//			ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), m_BaseColor_);
 
 	//			CallResetBuffer();
 	//		}
 
 	//		if (ImGui::CollapsingHeader("Weight"))
 	//		{
-	//			if (ImGui::SliderFloat("Weight", &m_DiffuseWeight_[0], 0.0f, 1.0f))
+	//			if (ImGui::SliderFloat("Weight", &m_BaseColorWeight_[0], 0.0f, 1.0f))
 	//			{
-	//				ObjectManager.SetDiffuseWeight(ObjectManager.GetActiveMaterialId(), m_DiffuseWeight_);
+	//				ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), m_BaseColorWeight_);
 
 	//				CallResetBuffer();
 	//			}
@@ -1340,9 +1801,9 @@ void HorusInspector::InspectorMaterial()
 
 	//	if (ImGui::CollapsingHeader("Roughness", ImGuiTreeNodeFlags_DefaultOpen))
 	//	{
-	//		if (ImGui::SliderFloat("Roughness", &m_Roughness_[0], 0.0f, 1.0f))
+	//		if (ImGui::SliderFloat("Roughness", &m_ReflectionRoughness_[0], 0.0f, 1.0f))
 	//		{
-	//			ObjectManager.SetRoughness(ObjectManager.GetActiveMaterialId(), m_Roughness_);
+	//			ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), m_ReflectionRoughness_);
 
 	//			CallResetBuffer();
 	//		}
@@ -1368,9 +1829,9 @@ void HorusInspector::InspectorMaterial()
 
 	//	if (ImGui::CollapsingHeader("Normal", ImGuiTreeNodeFlags_DefaultOpen))
 	//	{
-	//		if (ImGui::SliderFloat("Normal", &m_Normal_[0], 0.0f, 1.0f))
+	//		if (ImGui::SliderFloat("Normal", &m_NormalMap_[0], 0.0f, 1.0f))
 	//		{
-	//			ObjectManager.SetNormal(ObjectManager.GetActiveMaterialId(), m_Normal_);
+	//			ObjectManager.SetNormalMap(ObjectManager.GetActiveMaterialId(), m_NormalMap_);
 
 	//			CallResetBuffer();
 	//		}
@@ -1505,9 +1966,9 @@ void HorusInspector::InspectorMaterial()
 	//	// Sheen
 	//	if (ImGui::CollapsingHeader("Sheen", ImGuiTreeNodeFlags_DefaultOpen))
 	//	{
-	//		if (ImGui::SliderFloat("Sheen Color", &m_Sheen_[0], 0.0f, 1.0f))
+	//		if (ImGui::SliderFloat("Sheen Color", &m_SheenColor_[0], 0.0f, 1.0f))
 	//		{
-	//			ObjectManager.SetSheen(ObjectManager.GetActiveMaterialId(), m_Sheen_);
+	//			ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), m_SheenColor_);
 
 	//			CallResetBuffer();
 	//		}
@@ -1547,303 +2008,1937 @@ void HorusInspector::InspectorMaterial()
 	//			}
 	//		}
 	//	}
-
-
-
-	//}
-
-
-
-
-
+	}
 
 }
 
-//-------------------------------------- GROUP SHAPE INSPECTOR --------------------------------------
 
-void HorusInspector::InspectorGroupShape()
+using UpdateCallback = std::function<void(const std::string&)>;
+
+void HorusInspector::DrawParameterWithFileDialog(std::string& filePath, bool& parameterEnabled, const std::string& buttonID, const char* fileFilter, const std::string& parameterName, UpdateCallback onUpdate, UpdateCallback onEnable)
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Group Shape Inspector");
-	ImGui::PopStyleColor();
-	ImGui::Separator();
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Group : ");
+	ImGui::PushID(buttonID.c_str());
+	ImGui::TextUnformatted((parameterName + " Path: ").c_str());
 	ImGui::SameLine();
-	ImGui::Text(m_GroupShapeName_.c_str());
-	ImGui::PopStyleColor();
+	ImGui::InputText(("##path" + buttonID).c_str(), filePath.data(), filePath.size());
+	ImGui::SameLine();
 
-	// TODO : Show a text input for the name of the group shape
-	//ImGui::Text("Group Shape name: %s ", MeshName.c_str());
-
-	// Only Transform 
-	if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::Button(("Browse##" + buttonID).c_str()))
 	{
-		if (ImGui::Button("Reset Transform"))
+		std::string FilePath = Utils::HorusFileDialog::OpenFile(fileFilter);
+		if (!FilePath.empty())
 		{
-			ObjectManager.SetGroupShapeResetTransform(ObjectManager.GetActiveGroupShapeId());
-
-			PopulateSelectedGroupShapeInfos();
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the group shape.");
-
-		ImGui::Separator();
-
-		if (ImGui::InputFloat3("Position", &m_GroupShapePosition_[0]))
-		{
-			ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), m_GroupShapePosition_);
-
-			CallResetBuffer();
-		}
-
-		if (ImGui::InputFloat3("Rotation", &m_GroupShapeRotation_[0]))
-		{
-			ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeRotation_);
-
-			CallResetBuffer();
-		}
-
-		if (ImGui::InputFloat3("Scale", &m_GroupShapeScale_[0]))
-		{
-			ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), m_GroupShapeScale_);
-
-			CallResetBuffer();
+			spdlog::info("Open file : {}", FilePath);
+			filePath = FilePath;
+			onUpdate(filePath);
 		}
 	}
+	ImGui::SameLine();
 
-	// Visualisation
-	static bool showNormals = false;
-	ImGui::Checkbox("Show Normals", &showNormals);
-
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Group Shape Infos");
-	ImGui::PopStyleColor();
-
-	ImGui::Separator();
-
-	ImGui::Text("Group shape id: %d ", ObjectManager.GetActiveGroupShapeId());
-	ImGui::Text("Group shape name: %s ", m_GroupShapeName_.c_str());
-	ImGui::Text("Group shape position: %.2f %.2f %.2f ", m_GroupShapePosition_.x, m_GroupShapePosition_.y, m_GroupShapePosition_.z);
-	ImGui::Text("Group shape rotation: %.2f %.2f %.2f ", m_GroupShapeRotation_.x, m_GroupShapeRotation_.y, m_GroupShapeRotation_.z);
-	ImGui::Text("Group shape scale: %.2f %.2f %.2f ", m_GroupShapeScale_.x, m_GroupShapeScale_.y, m_GroupShapeScale_.z);
-	ImGui::Text("Group shape number of shapes count: %d ", 0);
-	ImGui::Text("Group shape all cumuled vertices count: %d ", 0);
-	ImGui::Text("Group shape number of materials in : %d ", 0);
-
-	ImGui::Separator();
-}
-
-void HorusInspector::PopulateSelectedGroupShapeInfos()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	m_GroupShapeName_ = ObjectManager.GetGroupShapeName(ObjectManager.GetActiveGroupShapeId());
-
-	m_GroupShapePosition_ = ObjectManager.GetGroupShapePosition(ObjectManager.GetActiveGroupShapeId());
-	m_GroupShapeRotation_ = ObjectManager.GetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId());
-	m_GroupShapeScale_ = ObjectManager.GetGroupShapeScale(ObjectManager.GetActiveGroupShapeId());
-
-
-
-
-
-}
-
-void HorusInspector::SetGroupShapeName(std::string name)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	ObjectManager.SetGroupShapeName(ObjectManager.GetActiveGroupShapeId(), name.c_str());
-
-	//CallResetBuffer();
-}
-void HorusInspector::SetGroupShapePosition(glm::vec3 position)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	ObjectManager.SetGroupShapePosition(ObjectManager.GetActiveGroupShapeId(), position);
-
-	CallResetBuffer();
-}
-void HorusInspector::SetGroupShapeRotation(glm::vec3 rotation)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	ObjectManager.SetGroupShapeRotation(ObjectManager.GetActiveGroupShapeId(), rotation);
-
-	CallResetBuffer();
-}
-void HorusInspector::SetGroupShapeScale(glm::vec3 scale)
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	ObjectManager.SetGroupShapeScale(ObjectManager.GetActiveGroupShapeId(), scale);
-
-	CallResetBuffer();
-}
-
-
-
-// -------------------------------------- SHAPE INSPECTOR --------------------------------------
-
-void HorusInspector::InspectorShape()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	//ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Green");
-	//ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Pink");
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Shape Inspector");
-	ImGui::PopStyleColor();
-	ImGui::Separator();
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("General Informations");
-	ImGui::PopStyleColor();
-
-	int vertexCount = 0;
-	int faceCount = 0;
-	ImGui::Text("Vertices: %d", vertexCount);
-	ImGui::Text("Faces: %d", faceCount);
-
-	// Delete shape button
-	if (ImGui::Button("Delete Shape"))
+	if (ImGui::Button(("Clear##" + buttonID).c_str()))
 	{
-		ObjectManager.DeleteSelectedShape(ObjectManager.GetActiveShapeId());
-
-		CallResetBuffer();
+		filePath.clear();
+		onUpdate(filePath);
 	}
-	ImGui::SameLine(); ShowHelpMarker("Delete the selected shape. Attention! No undo possible.");
 
-	if (ImGui::CollapsingHeader("Transform", InputFloatFlags))
+	/*if (ImGui::Checkbox(("Enable##" + buttonID).c_str(), &parameterEnabled))
 	{
-		if (ImGui::Button("Reset Transform"))
-		{
-			ObjectManager.SetShapeResetTransformById(ObjectManager.GetActiveShapeId());
+		spdlog::info("Enable parameter : {}", parameterEnabled);
+		onEnable(filePath);
+	}*/
 
-			CallResetBuffer();
-		}
-		ImGui::SameLine(); ShowHelpMarker("Reset the transform of the shape.");
-
-		ImGui::Separator();
-
-		if (ImGui::InputFloat3("Position", &m_ShapePosition_[0], "%.1f", InputFloatFlags))
-		{
-			ObjectManager.SetShapePositionById(ObjectManager.GetActiveShapeId(), m_ShapePosition_);
-
-			spdlog::debug("Shape ID: {}", ObjectManager.GetActiveShapeId());
-
-			spdlog::debug("Shape position set : {0} {1} {2}", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
-			CallResetBuffer();
-		}
-
-		if (ImGui::InputFloat3("Rotation", &m_ShapeRotation_[0], "%.1f", InputFloatFlags))
-		{
-			ObjectManager.SetShapeRotationById(ObjectManager.GetActiveShapeId(), m_ShapeRotation_);
-			spdlog::debug("Shape rotation set : {0} {1} {2}", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
-			CallResetBuffer();
-		}
-
-		if (ImGui::InputFloat3("Scale", &m_ShapeScale_[0], "%.1f", InputFloatFlags))
-		{
-			ObjectManager.SetShapeScaleById(ObjectManager.GetActiveShapeId(), m_ShapeScale_);
-			spdlog::debug("Shape scale set : {0} {1} {2}", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
-			CallResetBuffer();
-		}
-	}
-
-	ImGui::Text("Materials");
-	// TODO : See the assigned materials here
-
-	if (ImGui::Button("Recalculate Normals"))
-	{
-
-	}
-	ImGui::SameLine(); ShowHelpMarker("Recalculate the normals of the shape.");
-
-	// Visualisation
-	static bool showNormals = false;
-	ImGui::Checkbox("Show Normals", &showNormals);
-
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
-	ImGui::Text("Shape Infos");
-	ImGui::PopStyleColor();
-
-	ImGui::Separator();
-
-	ImGui::Text("Shape id: %d ", ObjectManager.GetActiveShapeId());
-	ImGui::Text("Shape name: %s ", m_ShapeName_.c_str());
-	ImGui::Text("Shape position: %.2f %.2f %.2f ", m_ShapePosition_.x, m_ShapePosition_.y, m_ShapePosition_.z);
-	ImGui::Text("Shape rotation: %.2f %.2f %.2f ", m_ShapeRotation_.x, m_ShapeRotation_.y, m_ShapeRotation_.z);
-	ImGui::Text("Shape scale: %.2f %.2f %.2f ", m_ShapeScale_.x, m_ShapeScale_.y, m_ShapeScale_.z);
-	ImGui::Text("Shape vertex count: %d ", vertexCount);
-	ImGui::Text("Shape face count: %d ", faceCount);
-	ImGui::Text("Shape materials: %d ", 0);
-
-	ImGui::Separator();
+	ImGui::PopID();
 }
 
-void HorusInspector::PopulateSelectedShapeInfos()
+void HorusInspector::DrawSwitchColorToTextureButton(bool& switchVariable, const char* id)
+{
+	ImGui::PushID(id);
+	if (ImGui::Button(switchVariable ? "C" : "T")) {
+		switchVariable = !switchVariable;
+	}
+	ImGui::PopID();
+}
+
+void HorusInspector::PopulateSelectedMaterialInfos()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	m_ShapeName_ = ObjectManager.GetShapeNameById(ObjectManager.GetActiveShapeId());
-	m_ShapePosition_ = ObjectManager.GetShapePositionById(ObjectManager.GetActiveShapeId());
-	m_ShapeRotation_ = ObjectManager.GetShapeRotationById(ObjectManager.GetActiveShapeId());
-	m_ShapeScale_ = ObjectManager.GetShapeScaleById(ObjectManager.GetActiveShapeId());
+	m_MaterialName_ = ObjectManager.GetMaterialName(ObjectManager.GetActiveMaterialId());
 
+	// Base color Section - Done
+	{
+		// Base color - Done
+		m_BaseColorImageColor_ = ObjectManager.GetBaseColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureBaseColorInsteadOfColor_ = ObjectManager.GetUseTextureBaseColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableBaseColorImage_ = ObjectManager.GetEnableBaseColorImage(ObjectManager.GetActiveMaterialId());
+		m_BaseColorPath_ = ObjectManager.GetBaseColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_BaseColor_ = ObjectManager.GetBaseColor(ObjectManager.GetActiveMaterialId());
 
+		// Base color weight - Done
+		m_BaseColorImageWeight_ = ObjectManager.GetBaseColorWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureBaseColorWeightInsteadOfWeight_ = ObjectManager.GetUseTextureBaseColorWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableBaseColorWeightImage_ = ObjectManager.GetEnableBaseColorWeightImage(ObjectManager.GetActiveMaterialId());
+		m_BaseColorWeightPath_ = ObjectManager.GetBaseColorWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_BaseColorWeight_ = ObjectManager.GetBaseColorWeight(ObjectManager.GetActiveMaterialId());
 
+		// Base color roughness - Done
+		m_BaseColorImageRoughness_ = ObjectManager.GetBaseColorRoughnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureBaseColorRoughnessInsteadOfRoughness_ = ObjectManager.GetUseTextureBaseColorRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableBaseColorRoughnessImage_ = ObjectManager.GetEnableBaseColorRoughnessImage(ObjectManager.GetActiveMaterialId());
+		m_BaseColorRoughnessPath_ = ObjectManager.GetBaseColorRoughnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_BaseColorRoughness_ = ObjectManager.GetBaseColorRoughness(ObjectManager.GetActiveMaterialId());
+
+		// Backscatter Section - Done
+		m_BackscatterImageWeight_ = ObjectManager.GetBackscatterWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureBackscatterWeightInsteadOfWeight_ = ObjectManager.GetUseTextureBackscatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableBackscatterWeightImage_ = ObjectManager.GetEnableBackscatterWeightImage(ObjectManager.GetActiveMaterialId());
+		m_BackscatterColorPath_ = ObjectManager.GetBackscatterColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_BackscatterColor_ = ObjectManager.GetBackscatterColor(ObjectManager.GetActiveMaterialId());
+
+		// Backscatter weight - Done
+		m_BackscatterImageColor_ = ObjectManager.GetBackscatterWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureBackscatterColorInsteadOfColor_ = ObjectManager.GetUseTextureBackscatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableBackscatterWeightImage_ = ObjectManager.GetEnableBackscatterWeightImage(ObjectManager.GetActiveMaterialId());
+		m_BackscatterWeightPath_ = ObjectManager.GetBackscatterWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_BackscatterWeight_ = ObjectManager.GetBackscatterWeight(ObjectManager.GetActiveMaterialId());
+		// TODO : Color normal and color normal weight
+	}
+
+	// Reflection Section - Done
+	{
+		// Reflection Color - Done
+		m_ReflectionImageColor_ = ObjectManager.GetReflectionColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionColorInsteadOfColor_ = ObjectManager.GetUseTextureReflectionColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionColorImage_ = ObjectManager.GetEnableReflectionColorImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionColorPath_ = ObjectManager.GetReflectionColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionColor_ = ObjectManager.GetReflectionColor(ObjectManager.GetActiveMaterialId());
+
+		// Reflection Weight - Done
+		m_ReflectionImageWeight_ = ObjectManager.GetReflectionWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionWeightInsteadOfWeight_ = ObjectManager.GetUseTextureReflectionWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionWeightImage_ = ObjectManager.GetEnableReflectionWeightImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionWeightPath_ = ObjectManager.GetReflectionWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionWeight_ = ObjectManager.GetReflectionWeight(ObjectManager.GetActiveMaterialId());
+
+		// Reflection Roughness - Done
+		m_ReflectionImageRoughness_ = ObjectManager.GetReflectionRoughnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionRoughnessInsteadOfRoughness_ = ObjectManager.GetUseTextureReflectionRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionRoughnessImage_ = ObjectManager.GetEnableReflectionRoughnessImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionRoughnessPath_ = ObjectManager.GetReflectionRoughnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionRoughness_ = ObjectManager.GetReflectionRoughness(ObjectManager.GetActiveMaterialId());
+
+		// Anisotropy - Done
+		m_ReflectionImageAnisotropy_ = ObjectManager.GetReflectionAnisotropyImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionAnisotropyInsteadOfAnisotropy_ = ObjectManager.GetUseTextureReflectionAnisotropyInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionAnisotropyImage_ = ObjectManager.GetEnableReflectionAnisotropyImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionAnisotropyPath_ = ObjectManager.GetReflectionAnisotropyPath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionAnisotropy_ = ObjectManager.GetReflectionAnisotropy(ObjectManager.GetActiveMaterialId());
+
+		// Anisotropy Rotation - Done
+		m_ReflectionImageAnisotropyRotation_ = ObjectManager.GetReflectionAnisotropyRotationImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionAnisotropyRotationInsteadOfAnisotropyRotation_ = ObjectManager.GetUseTextureReflectionAnisotropyRotationInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionAnisotropyRotationImage_ = ObjectManager.GetEnableReflectionAnisotropyRotationImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionAnisotropyRotationPath_ = ObjectManager.GetReflectionAnisotropyRotationPath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionAnisotropyRotation_ = ObjectManager.GetReflectionAnisotropyRotation(ObjectManager.GetActiveMaterialId());
+
+		// Reflection Metalness - Done
+		m_ReflectionImageMetalness_ = ObjectManager.GetReflectionMetalnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureReflectionMetalnessInsteadOfMetalness_ = ObjectManager.GetUseTextureReflectionMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableReflectionMetalnessImage_ = ObjectManager.GetEnableReflectionMetalnessImage(ObjectManager.GetActiveMaterialId());
+		m_ReflectionMetalnessPath_ = ObjectManager.GetReflectionMetalnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_ReflectionMetalness_ = ObjectManager.GetReflectionMetalness(ObjectManager.GetActiveMaterialId());
+
+		// Reflection Mode - Done
+		m_ReflectionMode_ = ObjectManager.GetReflectionMode(ObjectManager.GetActiveMaterialId());
+
+		if (m_ReflectionMode_ == HorusMaterial::ReflectionTypePBR)
+		{
+			m_ReflectionModeIndex_ = 0;
+		}
+		else if (m_ReflectionMode_ == HorusMaterial::ReflectionTypeMetalness)
+		{
+			m_ReflectionModeIndex_ = 1;
+		}
+
+		// IOR - Done
+		m_Ior_ = ObjectManager.GetIor(ObjectManager.GetActiveMaterialId());
+		// TODO : Implement reflection normal and reflection normal weight
+	}
+
+	// Sheen Section - Done
+	{
+		// Sheen Color - Done
+		m_SheenImageColor_ = ObjectManager.GetSheenColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSheenColorInsteadOfColor_ = ObjectManager.GetUseTextureSheenColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSheenColorImage_ = ObjectManager.GetEnableSheenColorImage(ObjectManager.GetActiveMaterialId());
+		m_SheenColorPath_ = ObjectManager.GetSheenColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SheenColor_ = ObjectManager.GetSheenColor(ObjectManager.GetActiveMaterialId());
+
+		// Sheen Weight - Done
+		m_SheenImageWeight_ = ObjectManager.GetSheenWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSheenWeightInsteadOfWeight_ = ObjectManager.GetUseTextureSheenWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSheenWeightImage_ = ObjectManager.GetEnableSheenWeightImage(ObjectManager.GetActiveMaterialId());
+		m_SheenWeightPath_ = ObjectManager.GetSheenWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SheenWeight_ = ObjectManager.GetSheenWeight(ObjectManager.GetActiveMaterialId());
+
+		// Sheen Tint - Done
+		m_SheenImageTint_ = ObjectManager.GetSheenTintImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSheenTintInsteadOfTint_ = ObjectManager.GetUseTextureSheenTintInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSheenTintImage_ = ObjectManager.GetEnableSheenTintImage(ObjectManager.GetActiveMaterialId());
+		m_SheenTintPath_ = ObjectManager.GetSheenTintTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SheenTint_ = ObjectManager.GetSheenTint(ObjectManager.GetActiveMaterialId());
+	}
+
+	// Refraction Section - Done
+	{
+		// Refraction Color - Done
+		m_RefractionImageColor_ = ObjectManager.GetRefractionColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionColorInsteadOfColor_ = ObjectManager.GetUseTextureRefractionColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionColorImage_ = ObjectManager.GetEnableRefractionColorImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionColorPath_ = ObjectManager.GetRefractionColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionColor_ = ObjectManager.GetRefractionColor(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Weight - Done
+		m_RefractionImageWeight_ = ObjectManager.GetRefractionWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionWeightInsteadOfWeight_ = ObjectManager.GetUseTextureRefractionWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionWeightImage_ = ObjectManager.GetEnableRefractionWeightImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionWeightPath_ = ObjectManager.GetRefractionWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionWeight_ = ObjectManager.GetRefractionWeight(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Normal map
+		m_RefractionImageNormalMap_ = ObjectManager.GetRefractionNormalImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionNormalMapInsteadOfNormalMap_ = ObjectManager.GetUseTextureRefractionNormalInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionNormalMapImage_ = ObjectManager.GetEnableRefractionNormalImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionNormalMapPath_ = ObjectManager.GetRefractionNormalTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionNormalMap_ = ObjectManager.GetRefractionNormal(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Normal map weight
+		m_RefractionNormalMapWeight_ = ObjectManager.GetRefractionNormalWeight(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Roughness - Done
+		m_RefractionImageRoughness_ = ObjectManager.GetRefractionRoughnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionRoughnessInsteadOfRoughness_ = ObjectManager.GetUseTextureRefractionRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionRoughnessImage_ = ObjectManager.GetEnableRefractionRoughnessImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionRoughnessPath_ = ObjectManager.GetRefractionRoughnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionRoughness_ = ObjectManager.GetRefractionRoughness(ObjectManager.GetActiveMaterialId());
+
+		// Refraction IOR - Done
+		m_RefractionIor_ = ObjectManager.GetRefractionIor(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Thin Surface - Done
+		m_RefractionThinSurface_ = ObjectManager.GetRefractionThinSurface(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Absorption Color - Done
+		m_RefractionAbsorptionImageColor_ = ObjectManager.GetRefractionAbsorptionColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionAbsorptionColorInsteadOfColor_ = ObjectManager.GetUseTextureRefractionAbsorptionColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionAbsorptionColorImage_ = ObjectManager.GetEnableRefractionAbsorptionColorImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionAbsorptionColorPath_ = ObjectManager.GetRefractionAbsorptionDistanceTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionAbsorptionColor_ = ObjectManager.GetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Absorption Distance - Done
+		m_RefractionAbsorptionImageDistance_ = ObjectManager.GetRefractionAbsorptionDistanceImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureRefractionAbsorptionDistanceInsteadOfDistance_ = ObjectManager.GetUseTextureRefractionAbsorptionDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableRefractionAbsorptionDistanceImage_ = ObjectManager.GetEnableRefractionAbsorptionDistanceImage(ObjectManager.GetActiveMaterialId());
+		m_RefractionAbsorptionDistancePath_ = ObjectManager.GetRefractionAbsorptionDistanceTexturePath(ObjectManager.GetActiveMaterialId());
+		m_RefractionAbsorptionDistance_ = ObjectManager.GetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId());
+
+		// Refraction Caustics - Done
+		m_RefractionCaustics_ = ObjectManager.GetRefractionCaustics(ObjectManager.GetActiveMaterialId());
+	}
+
+	// SSS Section - Done
+	{
+		// SSS Color - Done
+		m_SssImageColor_ = ObjectManager.GetSssScatterColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSssColorInsteadOfColor_ = ObjectManager.GetUseTextureSssScatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSssColorImage_ = ObjectManager.GetEnableSssScatterColorImage(ObjectManager.GetActiveMaterialId());
+		m_SssColorPath_ = ObjectManager.GetSssScatterColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SssScatterColor_ = ObjectManager.GetSssScatterColor(ObjectManager.GetActiveMaterialId());
+
+		// SSS Weight - Done
+		m_SssImageWeight_ = ObjectManager.GetSssScatterWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSssWeightInsteadOfWeight_ = ObjectManager.GetUseTextureSssScatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSssWeightImage_ = ObjectManager.GetEnableSssScatterWeightImage(ObjectManager.GetActiveMaterialId());
+		m_SssWeightPath_ = ObjectManager.GetSssScatterWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SssScatterWeight_ = ObjectManager.GetSssScatterWeight(ObjectManager.GetActiveMaterialId());
+
+		// SSS Distance - Done
+		m_SssImageRadius_ = ObjectManager.GetSssScatterDistanceImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSssRadiusInsteadOfRadius_ = ObjectManager.GetUseTextureSssScatterDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSssRadiusImage_ = ObjectManager.GetEnableSssScatterDistanceImage(ObjectManager.GetActiveMaterialId());
+		m_SssRadiusPath_ = ObjectManager.GetSssScatterDistanceTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SssScatterDistance_ = ObjectManager.GetSssScatterDistance(ObjectManager.GetActiveMaterialId());
+
+		// SSS Direction - Done
+		m_SssImageDirection_ = ObjectManager.GetSssScatterDirectionImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureSssDirectionInsteadOfDirection_ = ObjectManager.GetUseTextureSssScatterDirectionInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableSssDirectionImage_ = ObjectManager.GetEnableSssScatterDirectionImage(ObjectManager.GetActiveMaterialId());
+		m_SssDirectionPath_ = ObjectManager.GetSssScatterDirectionTexturePath(ObjectManager.GetActiveMaterialId());
+		m_SssScatterDirection_ = ObjectManager.GetSssScatterDirection(ObjectManager.GetActiveMaterialId());
+
+		// SSS Use Multi Scattering - Done
+		m_SssUseMultiScattering_ = ObjectManager.GetSssUseMultiScattering(ObjectManager.GetActiveMaterialId());
+
+		// SSS Use Schlick Approximation - Done
+		m_SssUseSchlickApproximation_ = ObjectManager.GetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId());
+
+	}
+
+	// Coating Section - Done
+	{
+		// Coating Color - Done
+		m_CoatingImageColor_ = ObjectManager.GetCoatingColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingColorInsteadOfColor_ = ObjectManager.GetUseTextureCoatingColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingColorImage_ = ObjectManager.GetEnableCoatingColorImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingColorPath_ = ObjectManager.GetCoatingColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingColor_ = ObjectManager.GetCoatingColor(ObjectManager.GetActiveMaterialId());
+
+		// Coating Weight - Done
+		m_CoatingImageWeight_ = ObjectManager.GetCoatingWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingWeightInsteadOfWeight_ = ObjectManager.GetUseTextureCoatingWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingWeightImage_ = ObjectManager.GetEnableCoatingWeightImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingWeightPath_ = ObjectManager.GetCoatingWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingWeight_ = ObjectManager.GetCoatingWeight(ObjectManager.GetActiveMaterialId());
+
+		// Coating normal map
+		m_CoatingImageNormalMap_ = ObjectManager.GetCoatingNormalImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingNormalMapInsteadOfNormalMap_ = ObjectManager.GetUseTextureCoatingNormalInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingNormalMapImage_ = ObjectManager.GetEnableCoatingNormalImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingNormalMapPath_ = ObjectManager.GetCoatingNormalTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingNormalMap_ = ObjectManager.GetCoatingNormal(ObjectManager.GetActiveMaterialId());
+
+		// Coating normal map weight
+		m_CoatingNormalMapWeight_ = ObjectManager.GetCoatingNormalWeight(ObjectManager.GetActiveMaterialId());
+
+		// Coating Roughness - Done
+		m_CoatingImageRoughness_ = ObjectManager.GetCoatingRoughnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingRoughnessInsteadOfRoughness_ = ObjectManager.GetUseTextureCoatingRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingRoughnessImage_ = ObjectManager.GetEnableCoatingRoughnessImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingRoughnessPath_ = ObjectManager.GetCoatingRoughnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingRoughness_ = ObjectManager.GetCoatingRoughness(ObjectManager.GetActiveMaterialId());
+
+		// Coating IOR - Done
+		m_CoatingIor_ = ObjectManager.GetCoatingIor(ObjectManager.GetActiveMaterialId());
+
+		// Coating Thickness - Done
+		m_CoatingImageThickness_ = ObjectManager.GetCoatingThicknessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingThicknessInsteadOfThickness_ = ObjectManager.GetUseTextureCoatingThicknessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingThicknessImage_ = ObjectManager.GetEnableCoatingThicknessImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingThicknessPath_ = ObjectManager.GetCoatingThicknessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingThickness_ = ObjectManager.GetCoatingThickness(ObjectManager.GetActiveMaterialId());
+
+		// Coating Transmission Color - Done
+		m_CoatingImageTransmissionColor_ = ObjectManager.GetCoatingTransmissionColorImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingTransmissionColorInsteadOfTransmissionColor_ = ObjectManager.GetUseTextureCoatingTransmissionColorInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingTransmissionColorImage_ = ObjectManager.GetEnableCoatingTransmissionColorImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingTransmissionColorPath_ = ObjectManager.GetCoatingTransmissionColorTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingTransmissionColor_ = ObjectManager.GetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId());
+
+		// Coating Transmission Distance - Done
+		m_CoatingMode_ = ObjectManager.GetCoatingMode(ObjectManager.GetActiveMaterialId());
+
+		// Coating Metalness - Done
+		m_CoatingImageMetalness_ = ObjectManager.GetCoatingMetalnessImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureCoatingMetalnessInsteadOfMetalness_ = ObjectManager.GetUseTextureCoatingMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableCoatingMetalnessImage_ = ObjectManager.GetEnableCoatingMetalnessImage(ObjectManager.GetActiveMaterialId());
+		m_CoatingMetalnessPath_ = ObjectManager.GetCoatingMetalnessTexturePath(ObjectManager.GetActiveMaterialId());
+		m_CoatingMetalness_ = ObjectManager.GetCoatingMetalness(ObjectManager.GetActiveMaterialId());
+
+		if (m_CoatingMode_ == HorusMaterial::CoatingTypePBR)
+		{
+			m_CoatingModeIndex_ = 0;
+		}
+		else if (m_CoatingMode_ == HorusMaterial::CoatingTypeMetalness)
+		{
+			m_CoatingModeIndex_ = 1;
+		}
+	}
+
+	// Other Section - Done	
+	{
+		// Normal Map - Done
+		m_NormalMapImage_ = ObjectManager.GetNormalImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureNormalMapInsteadOfNormalMap_ = ObjectManager.GetUseTextureNormalInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableNormalMapImage_ = ObjectManager.GetEnableNormalImage(ObjectManager.GetActiveMaterialId());
+		m_NormalMapPath_ = ObjectManager.GetNormalTexturePath(ObjectManager.GetActiveMaterialId());
+		m_NormalMap_ = ObjectManager.GetNormalMap(ObjectManager.GetActiveMaterialId());
+
+		// Normal Map Weight - Done
+		m_NormalMapWeight_ = ObjectManager.GetNormalWeight(ObjectManager.GetActiveMaterialId());
+
+		// Displacement Map - Done
+		m_DisplacementMapImage_ = ObjectManager.GetDisplacementImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureDisplacementMapInsteadOfDisplacementMap_ = ObjectManager.GetUseTextureDisplacementInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableDisplacementMapImage_ = ObjectManager.GetEnableDisplacementImage(ObjectManager.GetActiveMaterialId());
+		m_DisplacementMapPath_ = ObjectManager.GetDisplacementTexturePath(ObjectManager.GetActiveMaterialId());
+		m_DisplacementMap_ = ObjectManager.GetDisplacementMap(ObjectManager.GetActiveMaterialId());
+
+		// Displacement Map Weight - Done
+		m_DisplacementMapWeight_ = ObjectManager.GetDisplacementWeight(ObjectManager.GetActiveMaterialId());
+
+		// Emissive Map - Done
+		m_EmissiveImage_ = ObjectManager.GetEmissiveImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureEmissiveInsteadOfEmissive_ = ObjectManager.GetUseTextureEmissiveInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableEmissiveImage_ = ObjectManager.GetEnableEmissiveImage(ObjectManager.GetActiveMaterialId());
+		m_EmissivePath_ = ObjectManager.GetEmissiveTexturePath(ObjectManager.GetActiveMaterialId());
+		m_Emissive_ = ObjectManager.GetEmissive(ObjectManager.GetActiveMaterialId());
+
+		// Emissive Weight - Done
+		m_EmissiveWeightImage_ = ObjectManager.GetEmissiveWeightImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureEmissiveWeightInsteadOfEmissiveWeight_ = ObjectManager.GetUseTextureEmissiveWeightInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableEmissiveWeightImage_ = ObjectManager.GetEnableEmissiveWeightImage(ObjectManager.GetActiveMaterialId());
+		m_EmissiveWeightPath_ = ObjectManager.GetEmissiveWeightTexturePath(ObjectManager.GetActiveMaterialId());
+		m_EmissionWeight_ = ObjectManager.GetEmissiveWeight(ObjectManager.GetActiveMaterialId());
+
+		// Opacity Map - Done
+		m_OpacityImage_ = ObjectManager.GetOpacityImageColor(ObjectManager.GetActiveMaterialId());
+		m_UseTextureOpacityInsteadOfOpacity_ = ObjectManager.GetUseTextureOpacityInsteadOfColor(ObjectManager.GetActiveMaterialId());
+		m_EnableOpacityImage_ = ObjectManager.GetEnableOpacityImage(ObjectManager.GetActiveMaterialId());
+		m_OpacityPath_ = ObjectManager.GetOpacityTexturePath(ObjectManager.GetActiveMaterialId());
+		m_Opacity_ = ObjectManager.GetOpacity(ObjectManager.GetActiveMaterialId());
+	}
 }
 
-//-------------------------------------- TEXTURE INSPECTOR --------------------------------------
-
-void HorusInspector::InspectorTexture()
+// Draw Material Inspector Section
+void HorusInspector::DrawBaseColorSection()
 {
-	ImGui::Text("Texture Inspector");
-	ImGui::Separator();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
-	/*GLuint textureId = 0;
-	ImGui::Image((void*)(intptr_t)textureId, ImVec2(100, 100));
+	ImGui::PushID("BaseColor"); // Push ID -> required for naming same widgets with different values
+	if (ImGui::CollapsingHeader("Base Color", m_TreeNodeFlagsOpen_))
+	{
+		// Base Color - Done
+		DrawSwitchColorToTextureButton(m_UseTextureBaseColorInsteadOfColor_, "BCSwitch");
+		ImGui::SameLine();
+		if (m_UseTextureBaseColorInsteadOfColor_)
+		{
+			DrawParameterWithFileDialog(
+				m_BaseColorPath_,
+				m_EnableBaseColorImage_,
+				"BaseColorPath",
+				m_ImageFilters_,
+				"Base Color",
+				[this, &ObjectManager](const std::string& path)
+				{
+					ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), path);
+					ObjectManager.SetUseTextureBaseColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+					ObjectManager.SetEnableBaseColorImage(ObjectManager.GetActiveMaterialId(), true);
 
-	static char texturePath[128] = "path/to/texture.png";
-	ImGui::InputText("Path", texturePath, IM_ARRAYSIZE(texturePath));
+					CallResetBuffer();
+				},
+				[this, &ObjectManager](const std::string& path)
+				{
 
-	int width = 0;
-	int height = 0;
-	ImGui::Text("Resolution: %dx%d", width, height);
+				}
+			);
+			ImGui::SameLine(); ShowHelpMarker("To re set a simple color instead of a texture, click on the switch button and select a color. if you don't select a color, the texture will be used instead.");
+		}
+		else
+		{
+			if (ImGui::ColorEdit3("Color", &m_BaseColor_[0]))
+			{
+				ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), m_BaseColor_);
+				ObjectManager.SetUseTextureBaseColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+				ObjectManager.SetEnableBaseColorImage(ObjectManager.GetActiveMaterialId(), false);
 
-	static bool repeat = true;
-	ImGui::Checkbox("Repeat", &repeat);
+				CallResetBuffer();
 
-	static bool mirror = false;
-	ImGui::Checkbox("Mirror", &mirror);
+			}
+			ImGui::SameLine();  ShowHelpMarker("The base color of the material.");
+		}
 
-	static bool useMipmaps = false;
-	ImGui::Checkbox("Use Mipmaps", &useMipmaps);
+		// Weight - Done
+		DrawSwitchColorToTextureButton(m_UseTextureBaseColorWeightInsteadOfWeight_, "BCWheightSwitch");
+		ImGui::SameLine();
+		if (m_UseTextureBaseColorWeightInsteadOfWeight_)
+		{
+			DrawParameterWithFileDialog(
+				m_BaseColorWeightPath_,
+				m_EnableBaseColorWeightImage_,
+				"BaseColorWeightPath",
+				m_ImageFilters_,
+				"Weight",
+				[this, &ObjectManager](const std::string& path)
+				{
+					ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), path);
+					ObjectManager.SetUseTextureBaseColorWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+					ObjectManager.SetEnableBaseColorWeightImage(ObjectManager.GetActiveMaterialId(), true);
 
-	if (ImGui::Button("Reload Texture")) {
+					CallResetBuffer();
+				},
+				[this, &ObjectManager](const std::string& path)
+				{
 
+				}
+			);
+		}
+		else
+		{
+			if (ImGui::SliderFloat("Weight", &m_BaseColorWeight_.x, 0.0f, 1.0f))
+			{
+				m_BaseColorWeight_.y = m_BaseColorWeight_.z = m_BaseColorWeight_.w = m_BaseColorWeight_.x;
+				ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), m_BaseColorWeight_);
+				ObjectManager.SetUseTextureBaseColorWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+				ObjectManager.SetEnableBaseColorWeightImage(ObjectManager.GetActiveMaterialId(), false);
+				CallResetBuffer();
+			}
+		}
+
+		// Roughness - Done
+		DrawSwitchColorToTextureButton(m_UseTextureBaseColorRoughnessInsteadOfRoughness_, "BCRoughnessSwitch");
+		ImGui::SameLine();
+		if (m_UseTextureBaseColorRoughnessInsteadOfRoughness_)
+		{
+			DrawParameterWithFileDialog(
+				m_BaseColorRoughnessPath_,
+				m_EnableBaseColorRoughnessImage_,
+				"BaseColorRoughnessPath",
+				m_ImageFilters_,
+				"Roughness",
+				[this, &ObjectManager](const std::string& path)
+				{
+					ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), path);
+					ObjectManager.SetUseTextureBaseColorRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+					ObjectManager.SetEnableBaseColorRoughnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+					CallResetBuffer();
+				},
+				[this, &ObjectManager](const std::string& path)
+				{
+
+				}
+			);
+		}
+		else
+		{
+			if (ImGui::SliderFloat("Roughness", &m_BaseColorRoughness_.x, 0.0f, 1.0f))
+			{
+				m_BaseColorRoughness_.y = m_BaseColorRoughness_.z = m_BaseColorRoughness_.w = m_BaseColorRoughness_.x;
+				ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), m_BaseColorRoughness_);
+				ObjectManager.SetUseTextureBaseColorRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+				ObjectManager.SetEnableBaseColorRoughnessImage(ObjectManager.GetActiveMaterialId(), false);
+				CallResetBuffer();
+			}
+		}
+
+		// Backscattering - Done
+		if (ImGui::CollapsingHeader("Backscattering", m_TreeNodeFlags_))
+		{
+			// Backscattering Color - Done
+			DrawSwitchColorToTextureButton(m_UseTextureBackscatterColorInsteadOfColor_, "BSCSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureBackscatterColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_BackscatterColorPath_,
+					m_EnableBackscatterColorImage_,
+					"BackscatteringColorPath",
+					m_ImageFilters_,
+					"Backscattering Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureBackscatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableBackscatterColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Backscattering Color", &m_BackscatterColor_[0]))
+				{
+					ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), m_BackscatterColor_);
+					ObjectManager.SetUseTextureBackscatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableBackscatterColorImage(ObjectManager.GetActiveMaterialId(), false);
+					CallResetBuffer();
+				}
+			}
+
+			// Backscattering Weight - Done
+			DrawSwitchColorToTextureButton(m_UseTextureBackscatterWeightInsteadOfWeight_, "BSWheightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureBackscatterWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_BackscatterWeightPath_,
+					m_EnableBackscatterWeightImage_,
+					"BackscatteringWeightPath",
+					m_ImageFilters_,
+					"Backscattering Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureBackscatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableBackscatterWeightImage(ObjectManager.GetActiveMaterialId(), true);
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Backscattering Weight", &m_BackscatterWeight_.x, 0.0f, 1.0f))
+				{
+					m_BackscatterWeight_.y = m_BackscatterWeight_.z = m_BackscatterWeight_.w = m_BackscatterWeight_.x;
+					ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), m_BackscatterWeight_);
+					ObjectManager.SetUseTextureBackscatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableBackscatterWeightImage(ObjectManager.GetActiveMaterialId(), false);
+					CallResetBuffer();
+				}
+			}
+		}
 	}
-	if (ImGui::Button("Save Changes")) {
-
-	}
-
-	ImGui::Spacing();*/
+	ImGui::PopID();
 }
+void HorusInspector::DrawReflectionSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Reflection Section
+	{
+		ImGui::PushID("Reflection");
+		if (ImGui::CollapsingHeader("Reflection", m_TreeNodeFlagsOpen_))
+		{
+			// Reflection Color
+			DrawSwitchColorToTextureButton(m_UseTextureReflectionColorInsteadOfColor_, "ReflectionColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureReflectionColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_ReflectionColorPath_,
+					m_EnableReflectionColorImage_,
+					"ReflectionColorPath",
+					m_ImageFilters_,
+					"Reflection Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureReflectionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableReflectionColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Color", &m_ReflectionColor_[0]))
+				{
+					ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), m_ReflectionColor_);
+					ObjectManager.SetUseTextureReflectionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableReflectionColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Reflection Weight
+			DrawSwitchColorToTextureButton(m_UseTextureReflectionWeightInsteadOfWeight_, "ReflectionWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureReflectionWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_ReflectionWeightPath_,
+					m_EnableReflectionWeightImage_,
+					"ReflectionWeightPath",
+					m_ImageFilters_,
+					"Reflection Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureReflectionWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableReflectionWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Weight", &m_ReflectionWeight_.x, 0.0f, 1.0f))
+				{
+					m_ReflectionWeight_.y = m_ReflectionWeight_.z = m_ReflectionWeight_.w = m_ReflectionWeight_.x;
+					ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), m_ReflectionWeight_);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Reflection Roughness
+			DrawSwitchColorToTextureButton(m_UseTextureReflectionRoughnessInsteadOfRoughness_, "ReflectionRoughnessSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureReflectionRoughnessInsteadOfRoughness_)
+			{
+				DrawParameterWithFileDialog(
+					m_ReflectionRoughnessPath_,
+					m_EnableReflectionRoughnessImage_,
+					"ReflectionRoughnessPath",
+					m_ImageFilters_,
+					"Reflection Roughness",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureReflectionRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableReflectionRoughnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Roughness", &m_ReflectionRoughness_.x, 0.0f, 1.0f))
+				{
+					m_ReflectionRoughness_.y = m_ReflectionRoughness_.z = m_ReflectionRoughness_.w = m_ReflectionRoughness_.x;
+					ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), m_ReflectionRoughness_);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Reflection Mode
+			if (ImGui::Combo("Reflection Mode", &m_ReflectionModeIndex_, m_ReflectionModes_, IM_ARRAYSIZE(m_ReflectionModes_)))
+			{
+				if (m_ReflectionModeIndex_ == 0)
+				{
+					ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypePBR);
+				}
+				else if (m_ReflectionModeIndex_ == 1)
+				{
+					ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+				}
+
+				CallResetBuffer();
+			}
+
+			// If metalness mode
+			{
+				if (m_ReflectionModeIndex_ == 0)
+				{
+					m_ShowMetallicUi_ = false;
+				}
+				else if (m_ReflectionModeIndex_ == 1)
+				{
+					m_ShowMetallicUi_ = true;
+				}
+
+				if (m_ShowMetallicUi_)
+				{
+					DrawSwitchColorToTextureButton(m_UseTextureReflectionMetalnessInsteadOfMetalness_, "MetallicSwitch");
+					ImGui::SameLine();
+					if (m_UseTextureReflectionMetalnessInsteadOfMetalness_)
+					{
+						DrawParameterWithFileDialog(
+							m_ReflectionMetalnessPath_,
+							m_EnableReflectionMetalnessImage_,
+							"MetallicPath",
+							m_ImageFilters_,
+							"Metallic",
+							[this, &ObjectManager](const std::string& path)
+							{
+								ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), path);
+								ObjectManager.SetUseTextureReflectionMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+								ObjectManager.SetEnableReflectionMetalnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+								CallResetBuffer();
+							},
+							[this, &ObjectManager](const std::string& path)
+							{
+
+							}
+						);
+					}
+					else
+					{
+						if (ImGui::SliderFloat("Metallic", &m_ReflectionMetalness_.x, 0.0f, 1.0f))
+						{
+							m_ReflectionMetalness_.y = m_ReflectionMetalness_.z = m_ReflectionMetalness_.w = m_ReflectionMetalness_.x;
+							ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), m_ReflectionMetalness_);
+							ObjectManager.SetUseTextureReflectionMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+							ObjectManager.SetEnableReflectionMetalnessImage(ObjectManager.GetActiveMaterialId(), false);
+							CallResetBuffer();
+						}
+					}
+				}
+			}
+
+			// Set IOR
+
+			if (ImGui::SliderFloat("IOR", &m_Ior_, 0.0f, 2.0f, "%.3f"))
+			{
+				ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), m_Ior_);
+
+				CallResetBuffer();
+			}
+
+		}
+		ImGui::PopID();
+	}
+}
+void HorusInspector::DrawSheenSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Sheen Section
+	{
+		ImGui::PushID("Sheen");
+		if (ImGui::CollapsingHeader("Sheen"))
+		{
+			// Sheen Color
+			DrawSwitchColorToTextureButton(m_UseTextureSheenColorInsteadOfColor_, "SheenColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSheenColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_SheenColorPath_,
+					m_EnableSheenColorImage_,
+					"SheenColorPath",
+					m_ImageFilters_,
+					"Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSheenColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSheenColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Color", &m_SheenColor_[0]))
+				{
+					ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), m_SheenColor_);
+					ObjectManager.SetUseTextureSheenColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSheenColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Sheen Weight
+			DrawSwitchColorToTextureButton(m_UseTextureSheenWeightInsteadOfWeight_, "SheenWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSheenWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_SheenWeightPath_,
+					m_EnableSheenWeightImage_,
+					"SheenWeightPath",
+					m_ImageFilters_,
+					"Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSheenWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSheenWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Weight", &m_SheenWeight_.x, 0.0f, 1.0f))
+				{
+					m_SheenWeight_.y = m_SheenWeight_.z = m_SheenWeight_.w = m_SheenWeight_.x;
+					ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), m_SheenWeight_);
+					ObjectManager.SetUseTextureSheenWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSheenWeightImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Sheen Tint
+			DrawSwitchColorToTextureButton(m_UseTextureSheenTintInsteadOfTint_, "SheenTintSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSheenTintInsteadOfTint_)
+			{
+				DrawParameterWithFileDialog(
+					m_SheenTintPath_,
+					m_EnableSheenTintImage_,
+					"SheenTintPath",
+					m_ImageFilters_,
+					"Tint",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSheenTintInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSheenTintImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Tint", &m_SheenTint_[0]))
+				{
+					ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), m_SheenTint_);
+					ObjectManager.SetUseTextureSheenTintInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSheenTintImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+		}
+		ImGui::PopID();
+	}
+}
+void HorusInspector::DrawRefractionSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Refraction Section
+	{
+		ImGui::PushID("Refraction");
+		if (ImGui::CollapsingHeader("Refraction"))
+		{
+			// Refraction Color
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionColorInsteadOfColor_, "RefractionColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionColorPath_,
+					m_EnableRefractionColorImage_,
+					"RefractionColorPath",
+					m_ImageFilters_,
+					"Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Color", &m_RefractionColor_[0]))
+				{
+					ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), m_RefractionColor_);
+					ObjectManager.SetUseTextureRefractionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Refraction Weigh
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionWeightInsteadOfWeight_, "RefractionWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionWeightPath_,
+					m_EnableRefractionWeightImage_,
+					"RefractionWeightPath",
+					m_ImageFilters_,
+					"Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Weight", &m_RefractionWeight_.x, 0.0f, 1.0f))
+				{
+					m_RefractionWeight_.y = m_RefractionWeight_.z = m_RefractionWeight_.w = m_RefractionWeight_.x;
+					ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), m_RefractionWeight_);
+					ObjectManager.SetUseTextureRefractionWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionWeightImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Refraction Normal Map Weigh
+			if (ImGui::SliderFloat("Normal Map Weight", &m_RefractionNormalMapWeight_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetRefractionNormalWeight(ObjectManager.GetActiveMaterialId(), m_RefractionNormalMapWeight_);
+
+				CallResetBuffer();
+			}
+
+			// Refraction Normal Map
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionNormalMapInsteadOfNormalMap_, "RefractionNormalMapSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionNormalMapInsteadOfNormalMap_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionNormalMapPath_,
+					m_EnableRefractionNormalMapImage_,
+					"RefractionNormalMapPath",
+					m_ImageFilters_,
+					"Normal Map",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionNormalImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Normal Map", &m_RefractionNormalMap_.x, 0.0f, 1.0f))
+				{
+					m_RefractionNormalMap_.y = m_RefractionNormalMap_.z = m_RefractionNormalMap_.w = m_RefractionNormalMap_.x;
+					ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), m_RefractionNormalMap_);
+					ObjectManager.SetUseTextureRefractionNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionNormalImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Refraction Roughness
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionRoughnessInsteadOfRoughness_, "RefractionRoughnessSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionRoughnessInsteadOfRoughness_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionRoughnessPath_,
+					m_EnableRefractionRoughnessImage_,
+					"RefractionRoughnessPath",
+					m_ImageFilters_,
+					"Roughness",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionRoughnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Roughness", &m_RefractionRoughness_.x, 0.0f, 1.0f))
+				{
+					m_RefractionRoughness_.y = m_RefractionRoughness_.z = m_RefractionRoughness_.w = m_RefractionRoughness_.x;
+					ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), m_RefractionRoughness_);
+					ObjectManager.SetUseTextureRefractionRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionRoughnessImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// IOR
+			if (ImGui::SliderFloat("IOR", &m_Ior_, 0.0f, 2.0f, "%.3f"))
+			{
+				ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), m_Ior_);
+
+				CallResetBuffer();
+			}
+
+			// Thin Surface
+			if (ImGui::Checkbox("Thin Surface", &m_RefractionThinSurface_))
+			{
+				ObjectManager.SetRefractionThinSurface(ObjectManager.GetActiveMaterialId(), m_RefractionThinSurface_);
+
+				CallResetBuffer();
+			}
+
+			// Absorption Color
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionAbsorptionColorInsteadOfColor_, "RefractionAbsorptionColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionAbsorptionColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionAbsorptionColorPath_,
+					m_EnableRefractionAbsorptionColorImage_,
+					"RefractionAbsorptionColorPath",
+					m_ImageFilters_,
+					"Absorption Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionAbsorptionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionAbsorptionColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Absorption Color", &m_RefractionAbsorptionColor_[0]))
+				{
+					ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), m_RefractionAbsorptionColor_);
+					ObjectManager.SetUseTextureRefractionAbsorptionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionAbsorptionColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Absorption Distance
+			DrawSwitchColorToTextureButton(m_UseTextureRefractionAbsorptionDistanceInsteadOfDistance_, "RefractionAbsorptionDistanceSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureRefractionAbsorptionDistanceInsteadOfDistance_)
+			{
+				DrawParameterWithFileDialog(
+					m_RefractionAbsorptionDistancePath_,
+					m_EnableRefractionAbsorptionDistanceImage_,
+					"RefractionAbsorptionDistancePath",
+					m_ImageFilters_,
+					"Absorption Distance",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureRefractionAbsorptionDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableRefractionAbsorptionDistanceImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Absorption Distance", &m_RefractionAbsorptionDistance_.x, 0.0f, 1.0f))
+				{
+					m_RefractionAbsorptionDistance_.y = m_RefractionAbsorptionDistance_.z = m_RefractionAbsorptionDistance_.w = m_RefractionAbsorptionDistance_.x;
+					ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), m_RefractionAbsorptionDistance_);
+					ObjectManager.SetUseTextureRefractionAbsorptionDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableRefractionAbsorptionDistanceImage(ObjectManager.GetActiveMaterialId(), false);
+					CallResetBuffer();
+				}
+			}
+
+			// Caustics
+			if (ImGui::Checkbox("Caustics", &m_RefractionCaustics_))
+			{
+				ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), m_RefractionCaustics_);
+
+				CallResetBuffer();
+			}
+		}
+		ImGui::PopID();
+	}
+}
+void HorusInspector::DrawSssSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Sub-Surface Scattering Section
+	{
+		ImGui::PushID("Sub-Surface Scattering");
+		if (ImGui::CollapsingHeader("Sub-Surface Scattering"))
+		{
+			// SSS Color
+			DrawSwitchColorToTextureButton(m_UseTextureSssColorInsteadOfColor_, "SSSColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSssColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_SssColorPath_,
+					m_EnableSssColorImage_,
+					"SSSColorPath",
+					m_ImageFilters_,
+					"Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSssScatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSssScatterColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Color", &m_SssScatterColor_[0]))
+				{
+					ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), m_SssScatterColor_);
+					ObjectManager.SetUseTextureSssScatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSssScatterColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+
+			// SSS Weight
+			DrawSwitchColorToTextureButton(m_UseTextureSssWeightInsteadOfWeight_, "SSSWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSssWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_SssWeightPath_,
+					m_EnableSssWeightImage_,
+					"SSSWeightPath",
+					m_ImageFilters_,
+					"Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSssScatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSssScatterWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Weight", &m_SssScatterWeight_.x, 0.0f, 1.0f))
+				{
+					m_SssScatterWeight_.y = m_SssScatterWeight_.z = m_SssScatterWeight_.w = m_SssScatterWeight_.x;
+					ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), m_SssScatterWeight_);
+					ObjectManager.SetUseTextureSssScatterWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSssScatterWeightImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// SSS Distance
+			DrawSwitchColorToTextureButton(m_UseTextureSssRadiusInsteadOfRadius_, "SSSDistanceSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSssRadiusInsteadOfRadius_)
+			{
+				DrawParameterWithFileDialog(
+					m_SssRadiusPath_,
+					m_EnableSssRadiusImage_,
+					"SSSDistancePath",
+					m_ImageFilters_,
+					"Distance",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSssScatterDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSssScatterDistanceImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Distance", &m_SssScatterDistance_.x, 0.0f, 1.0f))
+				{
+					m_SssScatterDistance_.y = m_SssScatterDistance_.z = m_SssScatterDistance_.w = m_SssScatterDistance_.x;
+					ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), m_SssScatterDistance_);
+					ObjectManager.SetUseTextureSssScatterDistanceInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSssScatterDistanceImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// SSS Direction
+			DrawSwitchColorToTextureButton(m_UseTextureSssDirectionInsteadOfDirection_, "SSSDirectionSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureSssDirectionInsteadOfDirection_)
+			{
+				DrawParameterWithFileDialog(
+					m_SssDirectionPath_,
+					m_EnableSssDirectionImage_,
+					"SSSDirectionPath",
+					m_ImageFilters_,
+					"Direction",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureSssScatterDirectionInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableSssScatterDirectionImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Direction", &m_SssScatterDirection_.x, 0.0f, 1.0f))
+				{
+					m_SssScatterDirection_.y = m_SssScatterDirection_.z = m_SssScatterDirection_.w = m_SssScatterDirection_.x;
+					ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), m_SssScatterDirection_);
+					ObjectManager.SetUseTextureSssScatterDirectionInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableSssScatterDirectionImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// SSS Use Multi Scattering
+			if (ImGui::Checkbox("Multiple Scattering", &m_SssUseMultiScattering_))
+			{
+				ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), m_SssUseMultiScattering_);
+
+				CallResetBuffer();
+			}
+
+			// Checkbox use schlick approx
+			if (ImGui::Checkbox("Use Schlick Approximation", &m_SssUseSchlickApproximation_))
+			{
+				ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), m_SssUseSchlickApproximation_);
+
+				CallResetBuffer();
+			}
+		}
+		ImGui::PopID();
+	}
+}
+void HorusInspector::DrawCoatingSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Coating Section
+	{
+		ImGui::PushID("Coating");
+		if (ImGui::CollapsingHeader("Coating"))
+		{
+			// Coating Color
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingColorInsteadOfColor_, "CoatingColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingColorInsteadOfColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingColorPath_,
+					m_EnableCoatingColorImage_,
+					"CoatingColorPath",
+					m_ImageFilters_,
+					"Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Color", &m_CoatingColor_[0]))
+				{
+					ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), m_CoatingColor_);
+					ObjectManager.SetUseTextureCoatingColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Coating Weight
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingWeightInsteadOfWeight_, "CoatingWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingWeightInsteadOfWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingWeightPath_,
+					m_EnableCoatingWeightImage_,
+					"CoatingWeightPath",
+					m_ImageFilters_,
+					"Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Weight", &m_CoatingWeight_.x, 0.0f, 1.0f))
+				{
+					m_CoatingWeight_.y = m_CoatingWeight_.z = m_CoatingWeight_.w = m_CoatingWeight_.x;
+					ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), m_CoatingWeight_);
+					ObjectManager.SetUseTextureCoatingWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingWeightImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Coating Normal Map
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingNormalMapInsteadOfNormalMap_, "CoatingNormalMapSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingNormalMapInsteadOfNormalMap_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingNormalMapPath_,
+					m_EnableCoatingNormalMapImage_,
+					"CoatingNormalMapPath",
+					m_ImageFilters_,
+					"Normal Map",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingNormalImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Normal Map", &m_CoatingNormalMap_.x, 0.0f, 1.0f))
+				{
+					m_CoatingNormalMap_.y = m_CoatingNormalMap_.z = m_CoatingNormalMap_.w = m_CoatingNormalMap_.x;
+					ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), m_CoatingNormalMap_);
+					ObjectManager.SetUseTextureCoatingNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingNormalImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Coating Normal Map Weight
+			if (ImGui::SliderFloat("Normal Map Weight", &m_CoatingNormalMapWeight_, 0.0f, 1.0f))
+			{
+				ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), m_CoatingNormalMapWeight_);
+
+				CallResetBuffer();
+			}
+
+			// Coating Roughness
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingRoughnessInsteadOfRoughness_, "CoatingRoughnessSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingRoughnessInsteadOfRoughness_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingRoughnessPath_,
+					m_EnableCoatingRoughnessImage_,
+					"CoatingRoughnessPath",
+					m_ImageFilters_,
+					"Roughness",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingRoughnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Roughness", &m_CoatingRoughness_.x, 0.0f, 1.0f))
+				{
+					m_CoatingRoughness_.y = m_CoatingRoughness_.z = m_CoatingRoughness_.w = m_CoatingRoughness_.x;
+					ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), m_CoatingRoughness_);
+					ObjectManager.SetUseTextureCoatingRoughnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingRoughnessImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Coating IOR
+			if (ImGui::SliderFloat("IOR", &m_CoatingIor_, 0.0f, 2.0f, "%.3f"))
+			{
+				ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), m_CoatingIor_);
+
+				CallResetBuffer();
+			}
+
+			// Coating Thickness
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingThicknessInsteadOfThickness_, "CoatingThicknessSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingThicknessInsteadOfThickness_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingThicknessPath_,
+					m_EnableCoatingThicknessImage_,
+					"CoatingThicknessPath",
+					m_ImageFilters_,
+					"Thickness",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingThicknessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingThicknessImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Thickness", &m_CoatingThickness_.x, 0.0f, 1.0f))
+				{
+					m_CoatingThickness_.y = m_CoatingThickness_.z = m_CoatingThickness_.w = m_CoatingThickness_.x;
+					ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), m_CoatingThickness_);
+					ObjectManager.SetUseTextureCoatingThicknessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingThicknessImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Coating Transmission Color
+			DrawSwitchColorToTextureButton(m_UseTextureCoatingTransmissionColorInsteadOfTransmissionColor_, "CoatingTransmissionColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureCoatingTransmissionColorInsteadOfTransmissionColor_)
+			{
+				DrawParameterWithFileDialog(
+					m_CoatingTransmissionColorPath_,
+					m_EnableCoatingTransmissionColorImage_,
+					"CoatingTransmissionColorPath",
+					m_ImageFilters_,
+					"Transmission Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureCoatingTransmissionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableCoatingTransmissionColorImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Transmission Color", &m_CoatingTransmissionColor_[0]))
+				{
+					ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), m_CoatingTransmissionColor_);
+					ObjectManager.SetUseTextureCoatingTransmissionColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableCoatingTransmissionColorImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Combo Coating Mode
+			if (ImGui::Combo("Coating Mode", &m_CoatingModeIndex_, m_CoatingModes_, IM_ARRAYSIZE(m_CoatingModes_)))
+			{
+				if (m_CoatingModeIndex_ == 0)
+				{
+					ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypePBR);
+				}
+				else if (m_CoatingModeIndex_ == 1)
+				{
+					ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+				}
+
+				CallResetBuffer();
+			}
+
+			// If metalness
+			if (m_CoatingModeIndex_ == 0)
+			{
+				m_CoatingMetalnessUI_ = false;
+			}
+			else if (m_CoatingModeIndex_ == 1)
+			{
+				m_CoatingMetalnessUI_ = true;
+			}
+
+			if (m_CoatingMetalnessUI_)
+			{
+				// Coating Metalness
+				DrawSwitchColorToTextureButton(m_UseTextureCoatingMetalnessInsteadOfMetalness_, "CoatingMetalnessSwitch");
+				ImGui::SameLine();
+				if (m_UseTextureCoatingMetalnessInsteadOfMetalness_)
+				{
+					DrawParameterWithFileDialog(
+						m_CoatingMetalnessPath_,
+						m_EnableCoatingMetalnessImage_,
+						"CoatingMetalnessPath",
+						m_ImageFilters_,
+						"Metallic",
+						[this, &ObjectManager](const std::string& path)
+						{
+							ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), path);
+							ObjectManager.SetUseTextureCoatingMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+							ObjectManager.SetEnableCoatingMetalnessImage(ObjectManager.GetActiveMaterialId(), true);
+
+							CallResetBuffer();
+						},
+						[this, &ObjectManager](const std::string& path)
+						{
+
+						}
+					);
+				}
+				else
+				{
+					if (ImGui::SliderFloat("Metallic", &m_CoatingMetalness_.x, 0.0f, 1.0f))
+					{
+						m_CoatingMetalness_.y = m_CoatingMetalness_.z = m_CoatingMetalness_.w = m_CoatingMetalness_.x;
+						ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), m_CoatingMetalness_);
+						ObjectManager.SetUseTextureCoatingMetalnessInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+						ObjectManager.SetEnableCoatingMetalnessImage(ObjectManager.GetActiveMaterialId(), false);
+
+						CallResetBuffer();
+					}
+				}
+			}
+
+		}
+		ImGui::PopID();
+	}
+}
+void HorusInspector::DrawOtherSection()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Other Section
+	{
+		ImGui::PushID("Other");
+		if (ImGui::CollapsingHeader("Other"))
+		{
+			// Normal Map
+			DrawSwitchColorToTextureButton(m_UseTextureNormalMapInsteadOfNormalMap_, "NormalMapSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureNormalMapInsteadOfNormalMap_)
+			{
+				DrawParameterWithFileDialog(
+					m_NormalMapPath_,
+					m_EnableNormalMapImage_,
+					"NormalMapPath",
+					m_ImageFilters_,
+					"Normal Map",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetNormalMap(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableNormalImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Normal Map", &m_NormalMap_.x, 0.0f, 1.0f))
+				{
+					m_NormalMap_.y = m_NormalMap_.z = m_NormalMap_.w = m_NormalMap_.x;
+					ObjectManager.SetNormalMap(ObjectManager.GetActiveMaterialId(), m_NormalMap_);
+					ObjectManager.SetUseTextureNormalInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableNormalImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Normal Map Weight
+			if (ImGui::SliderFloat("Normal Map Weight", &m_NormalMapWeight_.x, 0.0f, 0.1f))
+			{
+				m_NormalMapWeight_.y = m_NormalMapWeight_.z = m_NormalMapWeight_.w = m_NormalMapWeight_.x;
+				ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), m_NormalMapWeight_);
+
+				CallResetBuffer();
+			}
+
+			// Disabling this part
+			ImGui::BeginDisabled();
+			// Displacement Map
+			DrawSwitchColorToTextureButton(m_UseTextureDisplacementMapInsteadOfDisplacementMap_, "DisplacementMapSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureDisplacementMapInsteadOfDisplacementMap_)
+			{
+				DrawParameterWithFileDialog(
+					m_DisplacementMapPath_,
+					m_EnableDisplacementMapImage_,
+					"DisplacementMapPath",
+					m_ImageFilters_,
+					"Displacement Map",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureDisplacementInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableDisplacementImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Displacement Map", &m_DisplacementMap_.x, 0.0f, 1.0f))
+				{
+					m_DisplacementMap_.y = m_DisplacementMap_.z = m_DisplacementMap_.w = m_DisplacementMap_.x;
+					ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), m_DisplacementMap_);
+					ObjectManager.SetUseTextureDisplacementInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableDisplacementImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Displacement Map Weight
+			if (ImGui::SliderFloat("Displacement Map Weight", &m_DisplacementMapWeight_.x, 0.0f, 1.0f))
+			{
+				m_DisplacementMapWeight_.y = m_DisplacementMapWeight_.z = m_DisplacementMapWeight_.w = m_DisplacementMapWeight_.x;
+				ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), m_DisplacementMapWeight_);
+
+				CallResetBuffer();
+			}
+			ImGui::EndDisabled();
+
+			// Emissive Color
+			DrawSwitchColorToTextureButton(m_UseTextureEmissiveInsteadOfEmissive_, "EmissiveColorSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureEmissiveInsteadOfEmissive_)
+			{
+				DrawParameterWithFileDialog(
+					m_EmissivePath_,
+					m_EnableEmissiveImage_,
+					"EmissivePath",
+					m_ImageFilters_,
+					"Emissive Color",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureEmissiveInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableEmissiveImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::ColorEdit3("Emissive Color", &m_Emissive_[0]))
+				{
+					ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), m_Emissive_);
+					ObjectManager.SetUseTextureEmissiveInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableEmissiveImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Emissive Weight
+			DrawSwitchColorToTextureButton(m_UseTextureEmissiveWeightInsteadOfEmissiveWeight_, "EmissiveWeightSwitch");
+			ImGui::SameLine();
+			if (m_UseTextureEmissiveWeightInsteadOfEmissiveWeight_)
+			{
+				DrawParameterWithFileDialog(
+					m_EmissiveWeightPath_,
+					m_EnableEmissiveWeightImage_,
+					"EmissiveWeightPath",
+					m_ImageFilters_,
+					"Emissive Weight",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureEmissiveWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableEmissiveWeightImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Emissive Weight", &m_EmissionWeight_.x, 0.0f, 1.0f))
+				{
+					m_EmissionWeight_.y = m_EmissionWeight_.z = m_EmissionWeight_.w = m_EmissionWeight_.x;
+					ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), m_EmissionWeight_);
+					ObjectManager.SetUseTextureEmissiveWeightInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableEmissiveWeightImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+
+			// Opacity
+			DrawSwitchColorToTextureButton(m_UseTextureOpacityInsteadOfOpacity_, "OpacitySwitch");
+			ImGui::SameLine();
+			if (m_UseTextureOpacityInsteadOfOpacity_)
+			{
+				DrawParameterWithFileDialog(
+					m_OpacityPath_,
+					m_EnableOpacityImage_,
+					"OpacityPath",
+					m_ImageFilters_,
+					"Opacity",
+					[this, &ObjectManager](const std::string& path)
+					{
+						ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), path);
+						ObjectManager.SetUseTextureOpacityInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
+						ObjectManager.SetEnableOpacityImage(ObjectManager.GetActiveMaterialId(), true);
+
+						CallResetBuffer();
+					},
+					[this, &ObjectManager](const std::string& path)
+					{
+
+					}
+				);
+			}
+			else
+			{
+				if (ImGui::SliderFloat("Opacity", &m_Opacity_.x, 0.0f, 1.0f))
+				{
+					m_Opacity_.y = m_Opacity_.z = m_Opacity_.w = m_Opacity_.x;
+					ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), m_Opacity_);
+					ObjectManager.SetUseTextureOpacityInsteadOfColor(ObjectManager.GetActiveMaterialId(), false);
+					ObjectManager.SetEnableOpacityImage(ObjectManager.GetActiveMaterialId(), false);
+
+					CallResetBuffer();
+				}
+			}
+		}
+		ImGui::PopID();
+	}
+}
+
+// Preset Material system (TODO)
+void HorusInspector::SetMaterialDefault()
+{
+}
+void HorusInspector::SetMaterialPlastic()
+{
+}
+void HorusInspector::SetMaterialMetal()
+{
+}
+void HorusInspector::SetMaterialGlass()
+{
+}
+void HorusInspector::SetMaterialEmissive()
+{
+}
+void HorusInspector::SetMaterialMatte()
+{
+}
+void HorusInspector::SetMaterialSkin()
+{
+}
+void HorusInspector::SetMaterialSSS()
+{
+}
+
 
 //-------------------------------------- PROJECT INSPECTOR --------------------------------------
 
@@ -1888,11 +3983,29 @@ void HorusInspector::InspectorProjectProperty()
 			ImGui::Text("GPU N02 : %s", m_Gpu01N_);
 			ImGui::Separator();
 			ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
-			ImGui::Separator();
+
 			/*ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
 			ImGui::Text("GPU Memory usage : %d MB", MemoryUsage);
 			ImGui::Text("GPU max allocation : %d MB", GpuMaxAllocation);
 			ImGui::Text("GPU total : %d MB", GpuTotal);*/
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			float deltaTime = ImGui::GetIO().DeltaTime;
+			float framerate = ImGui::GetIO().Framerate;
+
+			m_PerformanceData_.Update(deltaTime, framerate);
+
+			//float avgMsPerFrame = m_PerformanceData_.GetAverageMsPerFrame();
+			//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", avgMsPerFrame, 1000.0f / avgMsPerFrame);
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / framerate, framerate);
+			ImGui::PushStyleColor(ImGuiCol_PlotLines, IM_COL32(255, 0, 0, 255));
+			ImGui::PlotLines("FPS", m_PerformanceData_.fps_values, PerformanceData::DataLength, 0, "FPS", 0.0f, 100.0f, ImVec2(0, 80));
+			ImGui::PopStyleColor();
+
 		}
 
 		ImGui::Spacing();

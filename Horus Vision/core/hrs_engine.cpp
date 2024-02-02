@@ -22,17 +22,19 @@
 #include "hrs_inspector.h"
 #include "hrs_timer.h"
 
-bool LoadSetupEngineData()
+void LoadSetupEngineData()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusResetBuffers& ResetBuffers = HorusResetBuffers::GetInstance();
 	HorusTimerManager::GetInstance().StartTimer("LoadData");
 
-	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_2k.hdr");
+	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.hdr");
 	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto TimeLoad = HorusTimerManager::GetInstance().StopTimer("LoadData");
 	spdlog::info("Loading Engine data finished in {} ms.", TimeLoad);
-	return true;
+
+	ResetBuffers.CallResetBuffers();
 }
 
 int HorusEngine::ContextInfo(rpr_context& Context)
@@ -247,26 +249,22 @@ void HorusEngine::PostRender()
 	OpenGL.PostRender();
 	Radeon.PostRender();
 
-	/*if (m_EngineIsReady_)
+
+	if (m_EngineIsReady_)
 	{
 		if (m_IsFirstLaunch_)
 		{
-			m_LoadingThread_ = std::async(std::launch::async, ::LoadSetupEngineData);
+			m_LoadingThread_ = std::jthread(LoadSetupEngineData);
+			m_LoadingThread_.detach();
+
+			m_IsFirstLaunch_ = false;
 		}
-	}*/
 
-	if (m_IsFirstLaunch_)
-	{
-		m_LoadingThread_ = std::async(std::launch::async, LoadSetupEngineData);
-		m_IsFirstLaunch_ = false;
+		
 	}
 
-	if (m_LoadingThread_.valid() && m_LoadingThread_.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
-	{
-		// The thread has finished, let's get the result (if any) and reset the future
-		m_LoadingThread_.get();
-		m_LaunchLoadData_ = false;
-	}
+	/*if (m_IsFirstLaunch_)
+	{}*/
 
 	if (m_IsClosing_)
 	{

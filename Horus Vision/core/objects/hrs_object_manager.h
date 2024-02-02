@@ -299,12 +299,291 @@ public:
 	void DestroyAllMaterial();
 
 	// Getters for inspector
-	glm::vec4 GetBaseColor(int id);
-	glm::vec4 GetMetallic(int id);
-	glm::vec4 GetRoughness(int id);
-	glm::vec4 GetNormal(int id);
-	glm::vec4 GetOpacity(int id);
-	glm::vec4 GetEmissive(int id);
+
+	// Base Color Section ---------------------------------------------------------------------//
+	// Base Color
+	bool GetBaseColorImageColor(int id) { return m_Materials_[id].GetBaseColorImageColor(); }
+	bool GetUseTextureBaseColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureBaseColorInsteadOfColor(); }
+	bool GetEnableBaseColorImage(int id) { return m_Materials_[id].GetEnableBaseColorImage(); }
+	std::string GetBaseColorTexturePath(int id) { return m_Materials_[id].GetBaseColorPath(); }
+	glm::vec4 GetBaseColor(int id) { return m_Materials_[id].GetBaseColor(); }
+
+	// Base Color Weight
+	bool GetBaseColorWeightImageColor(int id) { return m_Materials_[id].GetBaseColorImageWeight(); }
+	bool GetUseTextureBaseColorWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureBaseColorWeightInsteadOfWeight(); }
+	bool GetEnableBaseColorWeightImage(int id) { return m_Materials_[id].GetEnableBaseColorWeightImage(); }
+	std::string GetBaseColorWeightTexturePath(int id) { return m_Materials_[id].GetBaseColorWeightPath(); }
+	glm::vec4 GetBaseColorWeight(int GetActiveMaterialId) { return m_Materials_[GetActiveMaterialId].GetBaseColorWeight(); }
+
+	// Base Color Roughness
+	bool GetBaseColorRoughnessImageColor(int id) { return m_Materials_[id].GetBaseColorImageRoughness(); }
+	bool GetUseTextureBaseColorRoughnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureBaseColorRoughnessInsteadOfRoughness(); }
+	bool GetEnableBaseColorRoughnessImage(int id) { return m_Materials_[id].GetEnableBaseColorRoughnessImage(); }
+	std::string GetBaseColorRoughnessTexturePath(int id) { return m_Materials_[id].GetBaseColorRoughnessPath(); }
+	glm::vec4 GetBaseColorRoughness(int GetActiveMaterialId) { return m_Materials_[GetActiveMaterialId].GetBaseColorRoughness(); }
+
+	// Backscatter
+	bool GetBackscatterColorImageColor(int id) { return m_Materials_[id].GetBackscatterImageColor(); }
+	bool GetUseTextureBackscatterColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureBackscatterColorInsteadOfColor(); }
+	bool GetEnableBackscatterColorImage(int id) { return m_Materials_[id].GetEnableBackscatterColorImage(); }
+	std::string GetBackscatterColorTexturePath(int id) { return m_Materials_[id].GetBackscatterColorPath(); }
+	glm::vec4 GetBackscatterColor(int id) { return m_Materials_[id].GetBackscatterColor(); }
+
+	// Backscatter Weight
+	bool GetBackscatterWeightImageColor(int id) { return m_Materials_[id].GetBackscatterImageWeight(); }
+	bool GetUseTextureBackscatterWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureBackscatterWeightInsteadOfWeight(); }
+	bool GetEnableBackscatterWeightImage(int id) { return m_Materials_[id].GetEnableBackscatterWeightImage(); }
+	std::string GetBackscatterWeightTexturePath(int id) { return m_Materials_[id].GetBackscatterWeightPath(); }
+	glm::vec4 GetBackscatterWeight(int id) { return m_Materials_[id].GetBackscatterWeight(); }
+
+	// Reflection Section ---------------------------------------------------------------------//
+	// Reflection Color
+	bool GetReflectionColorImageColor(int id) { return m_Materials_[id].GetReflectionImageColor(); }
+	bool GetUseTextureReflectionColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionColorInsteadOfColor(); }
+	bool GetEnableReflectionColorImage(int id) { return m_Materials_[id].GetEnableReflectionColorImage(); }
+	std::string GetReflectionColorTexturePath(int id) { return m_Materials_[id].GetReflectionColorPath(); }
+	glm::vec4 GetReflectionColor(int id) { return m_Materials_[id].GetReflectionColor(); }
+
+	// Reflection Weight
+	bool GetReflectionWeightImageColor(int id) { return m_Materials_[id].GetReflectionImageWeight(); }
+	bool GetUseTextureReflectionWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionWeightInsteadOfWeight(); }
+	bool GetEnableReflectionWeightImage(int id) { return m_Materials_[id].GetEnableReflectionWeightImage(); }
+	std::string GetReflectionWeightTexturePath(int id) { return m_Materials_[id].GetReflectionWeightPath(); }
+	glm::vec4 GetReflectionWeight(int id) { return m_Materials_[id].GetReflectionWeight(); }
+
+	// Reflection Roughness
+	bool GetReflectionRoughnessImageColor(int id) { return m_Materials_[id].GetReflectionImageRoughness(); }
+	bool GetUseTextureReflectionRoughnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionRoughnessInsteadOfRoughness(); }
+	bool GetEnableReflectionRoughnessImage(int id) { return m_Materials_[id].GetEnableReflectionRoughnessImage(); }
+	std::string GetReflectionRoughnessTexturePath(int id) { return m_Materials_[id].GetReflectionRoughnessPath(); }
+	glm::vec4 GetReflectionRoughness(int id) { return m_Materials_[id].GetReflectionRoughness(); }
+
+	// Reflection Anisotropy
+	bool GetReflectionAnisotropyImageColor(int id) { return m_Materials_[id].GetReflectionImageAnisotropy(); }
+	bool GetUseTextureReflectionAnisotropyInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionAnisotropyInsteadOfAnisotropy(); }
+	bool GetEnableReflectionAnisotropyImage(int id) { return m_Materials_[id].GetEnableReflectionAnisotropyImage(); }
+	std::string GetReflectionAnisotropyPath(int id) { return m_Materials_[id].GetReflectionAnisotropyPath(); }
+	glm::vec4 GetReflectionAnisotropy(int id) { return m_Materials_[id].GetReflectionAnisotropy(); }
+
+	// Reflection Anisotropy Rotation
+	bool GetReflectionAnisotropyRotationImageColor(int id) { return m_Materials_[id].GetReflectionImageAnisotropyRotation(); }
+	bool GetUseTextureReflectionAnisotropyRotationInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionAnisotropyRotationInsteadOfAnisotropyRotation(); }
+	bool GetEnableReflectionAnisotropyRotationImage(int id) { return m_Materials_[id].GetEnableReflectionAnisotropyRotationImage(); }
+	std::string GetReflectionAnisotropyRotationPath(int id) { return m_Materials_[id].GetReflectionAnisotropyRotationPath(); }
+	glm::vec4 GetReflectionAnisotropyRotation(int id) { return m_Materials_[id].GetReflectionAnisotropyRotation(); }
+
+	HorusMaterial::ReflectionType GetReflectionMode(int id) { return m_Materials_[id].GetReflectionMode(); }
+	float GetIor(int id) { return m_Materials_[id].GetIor(); }
+
+	// Reflection Metalness
+	bool GetReflectionMetalnessImageColor(int id) { return m_Materials_[id].GetReflectionImageMetalness(); }
+	bool GetUseTextureReflectionMetalnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureReflectionMetalnessInsteadOfMetalness(); }
+	bool GetEnableReflectionMetalnessImage(int id) { return m_Materials_[id].GetEnableReflectionMetalnessImage(); }
+	std::string GetReflectionMetalnessTexturePath(int id) { return m_Materials_[id].GetReflectionMetalnessPath(); }
+	glm::vec4 GetReflectionMetalness(int id) { return m_Materials_[id].GetReflectionMetalness(); }
+
+	// Sheen Section ---------------------------------------------------------------------//
+// Sheen Color
+	bool GetSheenColorImageColor(int id) { return m_Materials_[id].GetSheenImageColor(); }
+	bool GetUseTextureSheenColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSheenColorInsteadOfColor(); }
+	bool GetEnableSheenColorImage(int id) { return m_Materials_[id].GetEnableSheenColorImage(); }
+	std::string GetSheenColorTexturePath(int id) { return m_Materials_[id].GetSheenColorPath(); }
+	glm::vec4 GetSheenColor(int id) { return m_Materials_[id].GetSheenColor(); }
+
+	// Sheen Weight
+	bool GetSheenWeightImageColor(int id) { return m_Materials_[id].GetSheenImageWeight(); }
+	bool GetUseTextureSheenWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSheenWeightInsteadOfWeight(); }
+	bool GetEnableSheenWeightImage(int id) { return m_Materials_[id].GetEnableSheenWeightImage(); }
+	std::string GetSheenWeightTexturePath(int id) { return m_Materials_[id].GetSheenWeightPath(); }
+	glm::vec4 GetSheenWeight(int id) { return m_Materials_[id].GetSheenWeight(); }
+
+	// Sheen Tint
+	bool GetSheenTintImageColor(int id) { return m_Materials_[id].GetSheenImageTint(); }
+	bool GetUseTextureSheenTintInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSheenTintInsteadOfTint(); }
+	bool GetEnableSheenTintImage(int id) { return m_Materials_[id].GetEnableSheenTintImage(); }
+	std::string GetSheenTintTexturePath(int id) { return m_Materials_[id].GetSheenTintPath(); }
+	glm::vec4 GetSheenTint(int id) { return m_Materials_[id].GetSheenTint(); }
+
+	// Refraction Section ---------------------------------------------------------------------//
+// Refraction Color
+	bool GetRefractionColorImageColor(int id) { return m_Materials_[id].GetRefractionImageColor(); }
+	bool GetUseTextureRefractionColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionColorInsteadOfColor(); }
+	bool GetEnableRefractionColorImage(int id) { return m_Materials_[id].GetEnableRefractionColorImage(); }
+	std::string GetRefractionColorTexturePath(int id) { return m_Materials_[id].GetRefractionColorPath(); }
+	glm::vec4 GetRefractionColor(int id) { return m_Materials_[id].GetRefractionColor(); }
+
+	// Refraction Weight
+	bool GetRefractionWeightImageColor(int id) { return m_Materials_[id].GetRefractionImageWeight(); }
+	bool GetUseTextureRefractionWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionWeightInsteadOfWeight(); }
+	bool GetEnableRefractionWeightImage(int id) { return m_Materials_[id].GetEnableRefractionWeightImage(); }
+	std::string GetRefractionWeightTexturePath(int id) { return m_Materials_[id].GetRefractionWeightPath(); }
+	glm::vec4 GetRefractionWeight(int id) { return m_Materials_[id].GetRefractionWeight(); }
+
+	// Refraction Normal map
+	bool GetRefractionNormalImageColor(int id) { return m_Materials_[id].GetRefractionImageNormal(); }
+	bool GetUseTextureRefractionNormalInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionNormalInsteadOfNormal(); }
+	bool GetEnableRefractionNormalImage(int id) { return m_Materials_[id].GetEnableRefractionNormalImage(); }
+	std::string GetRefractionNormalTexturePath(int id) { return m_Materials_[id].GetRefractionNormalPath(); }
+	glm::vec4 GetRefractionNormal(int id) { return m_Materials_[id].GetRefractionNormal(); }
+
+	// Refraction Normal Map weight
+	float GetRefractionNormalWeight(int id) { return m_Materials_[id].GetRefractionNormalWeight(); }
+
+	// Refraction Roughness
+	bool GetRefractionRoughnessImageColor(int id) { return m_Materials_[id].GetRefractionImageRoughness(); }
+	bool GetUseTextureRefractionRoughnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionRoughnessInsteadOfRoughness(); }
+	bool GetEnableRefractionRoughnessImage(int id) { return m_Materials_[id].GetEnableRefractionRoughnessImage(); }
+	std::string GetRefractionRoughnessTexturePath(int id) { return m_Materials_[id].GetRefractionRoughnessPath(); }
+	glm::vec4 GetRefractionRoughness(int id) { return m_Materials_[id].GetRefractionRoughness(); }
+
+	float GetRefractionIor(int id) { return m_Materials_[id].GetRefractionIor(); }
+	bool GetRefractionThinSurface(int id) { return m_Materials_[id].GetRefractionThinSurface(); }
+
+	// Refraction Absorption
+	bool GetRefractionAbsorptionColorImageColor(int id) { return m_Materials_[id].GetRefractionImageAbsorptionColor(); }
+	bool GetUseTextureRefractionAbsorptionColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionAbsorptionColorInsteadOfAbsorptionColor(); }
+	bool GetEnableRefractionAbsorptionColorImage(int id) { return m_Materials_[id].GetEnableRefractionAbsorptionColorImage(); }
+	std::string GetRefractionAbsorptionDistanceTexturePath(int id) { return m_Materials_[id].GetRefractionAbsorptionDistancePath(); }
+	glm::vec4 GetRefractionAbsorptionColor(int id) { return m_Materials_[id].GetRefractionAbsorptionColor(); }
+
+	// Refraction Absorption Distance
+	bool GetRefractionAbsorptionDistanceImageColor(int id) { return m_Materials_[id].GetRefractionImageAbsorptionDistance(); }
+	bool GetUseTextureRefractionAbsorptionDistanceInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureRefractionAbsorptionDistanceInsteadOfAbsorptionDistance(); }
+	bool GetEnableRefractionAbsorptionDistanceImage(int id) { return m_Materials_[id].GetEnableRefractionAbsorptionDistanceImage(); }
+	glm::vec4 GetRefractionAbsorptionDistance(int id) { return m_Materials_[id].GetRefractionAbsorptionDistance(); }
+	bool GetRefractionCaustics(int id) { return m_Materials_[id].GetRefractionCaustics(); }
+
+	// SSS Section ---------------------------------------------------------------------//
+// SSS Scatter Color
+	bool GetSssScatterColorImageColor(int id) { return m_Materials_[id].GetSssImageScatterColor(); }
+	bool GetUseTextureSssScatterColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSssScatterColorInsteadOfScatterColor(); }
+	bool GetEnableSssScatterColorImage(int id) { return m_Materials_[id].GetEnableSssScatterColorImage(); }
+	std::string GetSssScatterColorTexturePath(int id) { return m_Materials_[id].GetSssScatterColorPath(); }
+	glm::vec4 GetSssScatterColor(int id) { return m_Materials_[id].GetSssScatterColor(); }
+
+	// SSS Scatter Weight
+	bool GetSssScatterWeightImageColor(int id) { return m_Materials_[id].GetSssImageScatterWeight(); }
+	bool GetUseTextureSssScatterWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSssScatterWeightInsteadOfScatterWeight(); }
+	bool GetEnableSssScatterWeightImage(int id) { return m_Materials_[id].GetEnableSssScatterWeightImage(); }
+	std::string GetSssScatterWeightTexturePath(int id) { return m_Materials_[id].GetSssScatterWeightPath(); }
+	glm::vec4 GetSssScatterWeight(int id) { return m_Materials_[id].GetSssScatterWeight(); }
+
+	// SSS Scatter Distance
+	bool GetSssScatterDistanceImageColor(int id) { return m_Materials_[id].GetSssImageScatterDistance(); }
+	bool GetUseTextureSssScatterDistanceInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSssScatterDistanceInsteadOfScatterDistance(); }
+	bool GetEnableSssScatterDistanceImage(int id) { return m_Materials_[id].GetEnableSssScatterDistanceImage(); }
+	std::string GetSssScatterDistanceTexturePath(int id) { return m_Materials_[id].GetSssScatterDistancePath(); }
+	glm::vec4 GetSssScatterDistance(int id) { return m_Materials_[id].GetSssScatterDistance(); }
+
+	// SSS Scatter Direction
+	bool GetSssScatterDirectionImageColor(int id) { return m_Materials_[id].GetSssImageScatterDirection(); }
+	bool GetUseTextureSssScatterDirectionInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureSssScatterDirectionInsteadOfScatterDirection(); }
+	bool GetEnableSssScatterDirectionImage(int id) { return m_Materials_[id].GetEnableSssScatterDirectionImage(); }
+	std::string GetSssScatterDirectionTexturePath(int id) { return m_Materials_[id].GetSssScatterDirectionPath(); }
+	glm::vec4 GetSssScatterDirection(int id) { return m_Materials_[id].GetSssScatterDirection(); }
+
+	bool GetSssUseMultiScattering(int id) { return m_Materials_[id].GetSssUseMultiScattering(); }
+	bool GetSssUseSchlickApproximation(int id) { return m_Materials_[id].GetSssUseSchlickApproximation(); }
+
+	// Coating Section ---------------------------------------------------------------------//
+// Coating Color
+	bool GetCoatingColorImageColor(int id) { return m_Materials_[id].GetCoatingImageColor(); }
+	bool GetUseTextureCoatingColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingColorInsteadOfColor(); }
+	bool GetEnableCoatingColorImage(int id) { return m_Materials_[id].GetEnableCoatingColorImage(); }
+	std::string GetCoatingColorTexturePath(int id) { return m_Materials_[id].GetCoatingColorPath(); }
+	glm::vec4 GetCoatingColor(int id) { return m_Materials_[id].GetCoatingColor(); }
+
+	// Coating Weight
+	bool GetCoatingWeightImageColor(int id) { return m_Materials_[id].GetCoatingImageWeight(); }
+	bool GetUseTextureCoatingWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingWeightInsteadOfWeight(); }
+	bool GetEnableCoatingWeightImage(int id) { return m_Materials_[id].GetEnableCoatingWeightImage(); }
+	std::string GetCoatingWeightTexturePath(int id) { return m_Materials_[id].GetCoatingWeightPath(); }
+	glm::vec4 GetCoatingWeight(int id) { return m_Materials_[id].GetCoatingWeight(); }
+
+	// Coating normal map
+	bool GetCoatingNormalImageColor(int id) { return m_Materials_[id].GetCoatingImageNormal(); }
+	bool GetUseTextureCoatingNormalInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingNormalInsteadOfNormal(); }
+	bool GetEnableCoatingNormalImage(int id) { return m_Materials_[id].GetEnableCoatingNormalImage(); }
+	std::string GetCoatingNormalTexturePath(int id) { return m_Materials_[id].GetCoatingNormalPath(); }
+	glm::vec4 GetCoatingNormal(int id) { return m_Materials_[id].GetCoatingNormal(); }
+
+	// Coating normal map weight
+	float GetCoatingNormalWeight(int id) { return m_Materials_[id].GetCoatingNormalWeight(); }
+
+	// Coating Roughness
+	bool GetCoatingRoughnessImageColor(int id) { return m_Materials_[id].GetCoatingImageRoughness(); }
+	bool GetUseTextureCoatingRoughnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingRoughnessInsteadOfRoughness(); }
+	bool GetEnableCoatingRoughnessImage(int id) { return m_Materials_[id].GetEnableCoatingRoughnessImage(); }
+	std::string GetCoatingRoughnessTexturePath(int id) { return m_Materials_[id].GetCoatingRoughnessPath(); }
+	glm::vec4 GetCoatingRoughness(int id) { return m_Materials_[id].GetCoatingRoughness(); }
+
+	// Coating Ior
+	float GetCoatingIor(int id) { return m_Materials_[id].GetCoatingIor(); }
+
+	// Coating Thickness
+	bool GetCoatingThicknessImageColor(int id) { return m_Materials_[id].GetCoatingImageThickness(); }
+	bool GetUseTextureCoatingThicknessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingThicknessInsteadOfThickness(); }
+	bool GetEnableCoatingThicknessImage(int id) { return m_Materials_[id].GetEnableCoatingThicknessImage(); }
+	std::string GetCoatingThicknessTexturePath(int id) { return m_Materials_[id].GetCoatingThicknessPath(); }
+	glm::vec4 GetCoatingThickness(int id) { return m_Materials_[id].GetCoatingThickness(); }
+
+	// Coating Transmission Color
+	bool GetCoatingTransmissionColorImageColor(int id) { return m_Materials_[id].GetCoatingImageTransmissionColor(); }
+	bool GetUseTextureCoatingTransmissionColorInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingTransmissionColorInsteadOfTransmissionColor(); }
+	bool GetEnableCoatingTransmissionColorImage(int id) { return m_Materials_[id].GetEnableCoatingTransmissionColorImage(); }
+	std::string GetCoatingTransmissionColorTexturePath(int id) { return m_Materials_[id].GetCoatingTransmissionColorPath(); }
+	glm::vec4 GetCoatingTransmissionColor(int id) { return m_Materials_[id].GetCoatingTransmissionColor(); }
+
+	HorusMaterial::CoatingType GetCoatingMode(int id) { return m_Materials_[id].GetCoatingMode(); }
+
+	// Coating Metalness
+	bool GetCoatingMetalnessImageColor(int id) { return m_Materials_[id].GetCoatingImageMetalness(); }
+	bool GetUseTextureCoatingMetalnessInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureCoatingMetalnessInsteadOfMetalness(); }
+	bool GetEnableCoatingMetalnessImage(int id) { return m_Materials_[id].GetEnableCoatingMetalnessImage(); }
+	std::string GetCoatingMetalnessTexturePath(int id) { return m_Materials_[id].GetCoatingMetalnessPath(); }
+	glm::vec4 GetCoatingMetalness(int id) { return m_Materials_[id].GetCoatingMetalness(); }
+
+	// Other Section ---------------------------------------------------------------------//
+	// Normal Map
+	bool GetNormalImageColor(int id) { return m_Materials_[id].GetNormalMapImage(); }
+	bool GetUseTextureNormalInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureNormalMapInsteadOfNormal(); }
+	bool GetEnableNormalImage(int id) { return m_Materials_[id].GetEnableNormalMapImage(); }
+	std::string GetNormalTexturePath(int id) { return m_Materials_[id].GetNormalMapPath(); }
+	glm::vec4 GetNormalMap(int id) { return m_Materials_[id].GetNormalMap(); }
+
+	// Normal map weight
+	glm::vec4 GetNormalWeight(int id) { return m_Materials_[id].GetNormalMapWeight(); }
+
+	// Displacement Map
+	bool GetDisplacementImageColor(int id) { return m_Materials_[id].GetDisplacementMapImage(); }
+	bool GetUseTextureDisplacementInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureDisplacementMapInsteadOfDisplacement(); }
+	bool GetEnableDisplacementImage(int id) { return m_Materials_[id].GetEnableDisplacementMapImage(); }
+	std::string GetDisplacementTexturePath(int id) { return m_Materials_[id].GetDisplacementMapPath(); }
+	glm::vec4 GetDisplacementMap(int id) { return m_Materials_[id].GetDisplacementMap(); }
+
+	// Displacement map weight
+	glm::vec4 GetDisplacementWeight(int id) { return m_Materials_[id].GetDisplacementMapWeight(); }
+
+	// Emissive
+	bool GetEmissiveImageColor(int id) { return m_Materials_[id].GetEmissiveImage(); }
+	bool GetUseTextureEmissiveInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureEmissiveInsteadOfEmissive(); }
+	bool GetEnableEmissiveImage(int id) { return m_Materials_[id].GetEnableEmissiveImage(); }
+	std::string GetEmissiveTexturePath(int id) { return m_Materials_[id].GetEmissivePath(); }
+	glm::vec4 GetEmissive(int id) { return m_Materials_[id].GetEmissive(); }
+
+	// Emissive Weight
+	bool GetEmissiveWeightImageColor(int id) { return m_Materials_[id].GetEmissionWeightImage(); }
+	bool GetUseTextureEmissiveWeightInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureEmissionWeightInsteadOfEmissionWeight(); }
+	bool GetEnableEmissiveWeightImage(int id) { return m_Materials_[id].GetEnableEmissionWeightImage(); }
+	std::string GetEmissiveWeightTexturePath(int id) { return m_Materials_[id].GetEmissionWeightPath(); }
+	glm::vec4 GetEmissiveWeight(int id) { return m_Materials_[id].GetEmissionWeight(); }
+
+	// Opacity
+	bool GetOpacityImageColor(int id) { return m_Materials_[id].GetOpacityImage(); }
+	bool GetUseTextureOpacityInsteadOfColor(int id) { return m_Materials_[id].GetUseTextureOpacityInsteadOfOpacity(); }
+	bool GetEnableOpacityImage(int id) { return m_Materials_[id].GetEnableOpacityImage(); }
+	std::string GetOpacityTexturePath(int id) { return m_Materials_[id].GetOpacityPath(); }
+	glm::vec4 GetOpacity(int id) { return m_Materials_[id].GetOpacity(); }
 
 
 	// Setters for inspector
@@ -314,71 +593,304 @@ public:
 
 	rpr_material_node GetMaterialNode(int materialId);
 
-	void SetBaseColor(int id, const std::string& texturePath);
-	void SetBaseColor(int id, glm::vec4 color);
+	// Base color section ---------------------------------------------------------------------//
+// Base color
+	void SetBaseColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorImageColor(value); }
+	void SetUseTextureBaseColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureBaseColorInsteadOfColor(value); }
+	void SetEnableBaseColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableBaseColorImage(value); }
+	void SetBaseColor(int id, const std::string& texturePath) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColor(texturePath); }
+	void SetBaseColor(int id, glm::vec4 color) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColor(color); }
 
-	void SetMetallic(int id, const std::string& texturePath);
-	void SetMetallic(int id, glm::vec4 color);
+	// Base color weight
+	void SetBaseColorWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorWeightImage(value); }
+	void SetUseTextureBaseColorWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureBaseColorWeightInsteadOfWeight(value); }
+	void SetEnableBaseColorWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableBaseColorWeightImage(value); }
+	void SetBaseColorWeight(int id, glm::vec4 color) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorWeight(color); }
+	void SetBaseColorWeight(int id, const std::string& texturePath) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorWeight(texturePath); }
 
-	void SetRoughness(int id, const std::string& texturePath);
-	void SetRoughness(int id, glm::vec4 color);
+	// Base color roughness
+	void SetBaseColorRoughnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorRoughnessImage(value); }
+	void SetUseTextureBaseColorRoughnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureBaseColorRoughnessInsteadOfRoughness(value); }
+	void SetEnableBaseColorRoughnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableBaseColorRoughnessImage(value); }
+	void SetBaseColorRoughness(int id, glm::vec4 color) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorRoughness(color); }
+	void SetBaseColorRoughness(int id, const std::string& texturePath) { if (m_Materials_.contains(id)) m_Materials_[id].SetBaseColorRoughness(texturePath); }
 
-	void SetNormal(int id, const std::string& texturePath);
-	void SetNormal(int id, glm::vec4 color);
+	// Backscatter
+	void GetBackscatterImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterImageColor(value); }
+	void SetUseTextureBackscatterColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureBackscatterColorInsteadOfColor(value); }
+	void SetEnableBackscatterColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableBackscatterColorImage(value); }
+	void SetBackscatterColor(int id, glm::vec4 color) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterColor(color); }
+	void SetBackscatterColor(int id, const std::string& texturePath) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterColor(texturePath); }
 
-	void SetOpacity(int id, const std::string& texturePath);
-	void SetOpacity(int id, glm::vec4 color);
+	// Backscatter Weight
+	void SetBackscatterWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterImageWeight(value); }
+	void SetUseTextureBackscatterWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureBackscatterWeightInsteadOfWeight(value); }
+	void SetEnableBackscatterWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableBackscatterWeightImage(value); }
+	void SetBackscatterWeight(int id, glm::vec4 weight) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterWeight(weight); }
+	void SetBackscatterWeight(int id, const std::string& texturePath) { if (m_Materials_.contains(id)) m_Materials_[id].SetBackscatterWeight(texturePath); }
 
-	void SetEmissive(int id, const std::string& texturePath);
-	void SetEmissive(int id, glm::vec4 color);
-	void SetEmissionWeight(int id, glm::vec4 color);
-	void SetEmissionWeight(int id, const std::string& texturePath);
-
+	// Reflection Section ---------------------------------------------------------------------//
+// Reflection Color
+	void SetReflectionColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetReflectionImageColor(value); }
+	void SetUseTextureReflectionColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureReflectionColorInsteadOfColor(value); }
+	void SetEnableReflectionColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableReflectionColorImage(value); }
 	void SetReflectionColor(int id, glm::vec4 color);
 	void SetReflectionColor(int id, const std::string& texturePath);
+
+	// Reflection Weight
+	void SetReflectionWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetReflectionImageWeight(value); }
+	void SetUseTextureReflectionWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureReflectionWeightInsteadOfWeight(value); }
+	void SetEnableReflectionWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableReflectionWeightImage(value); }
 	void SetReflectionWeight(int id, glm::vec4 color);
 	void SetReflectionWeight(int id, const std::string& texturePath);
+
+	// Reflection Roughness
+	void SetReflectionRoughnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetReflectionImageRoughness(value); }
+	void SetUseTextureReflectionRoughnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureReflectionRoughnessInsteadOfRoughness(value); }
+	void SetEnableReflectionRoughnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableReflectionRoughnessImage(value); }
 	void SetReflectionRoughness(int id, glm::vec4 color);
 	void SetReflectionRoughness(int id, const std::string& texturePath);
 
-	void SetRefractionColor(int id, glm::vec4 color);
-	void SetRefractionColor(int id, const std::string& texturePath);
-	void SetRefractionWeight(int id, glm::vec4 weight);
-	void SetRefractionWeight(int id, const std::string& texturePath);
-	void SetRefractionRoughness(int id, glm::vec4 roughness);
-	void SetRefractionRoughness(int id, const std::string& texturePath);
+	// Reflection Anisotropy
+	void SetReflectionAnisotropyImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetReflectionImageAnisotropy(value); }
+	void SetUseTextureReflectionAnisotropyInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureReflectionAnisotropyInsteadOfAnisotropy(value); }
+	void SetEnableReflectionAnisotropyImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableReflectionAnisotropyImage(value); }
+	void SetReflectionAnisotropy(int id, glm::vec4 color);
+	void SetReflectionAnisotropy(int id, const std::string& texturePath);
+	void SetReflectionMode(int id, HorusMaterial::ReflectionType mode);
+	void SetIor(int id, float ior) { if (m_Materials_.contains(id)) m_Materials_[id].SetIor(ior); }
 
-	void SetCoatingColor(int id, glm::vec4 color);
-	void SetCoatingColor(int id, const std::string& texturePath);
-	void SetCoatingWeight(int id, glm::vec4 weight);
-	void SetCoatingWeight(int id, const std::string& texturePath);
-	void SetCoatingRoughness(int id, glm::vec4 roughness);
-	void SetCoatingRoughness(int id, const std::string& texturePath);
+	// Reflection Metalness
+	void SetReflectionMetalnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetReflectionImageMetalness(value); }
+	void SetUseTextureReflectionMetalnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureReflectionMetalnessInsteadOfMetalness(value); }
+	void SetEnableReflectionMetalnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableReflectionMetalnessImage(value); }
+	void SetReflectionMetalness(int id, glm::vec4 color);
+	void SetReflectionMetalness(int id, const std::string& texturePath);
 
-	void SetSheen(int id, glm::vec4 color);
-	void SetSheen(int id, const std::string& texturePath);
+
+	// Sheen Section ---------------------------------------------------------------------//
+// Sheen Color
+	void SetSheenColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSheenImageColor(value); }
+	void SetUseTextureSheenColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSheenColorInsteadOfColor(value); }
+	void SetEnableSheenColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSheenColorImage(value); }
+	void SetSheenColor(int id, glm::vec4 color);
+	void SetSheenColor(int id, const std::string& texturePath);
+
+	// Sheen Weight
+	void SetSheenWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSheenImageWeight(value); }
+	void SetUseTextureSheenWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSheenWeightInsteadOfWeight(value); }
+	void SetEnableSheenWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSheenWeightImage(value); }
 	void SetSheenWeight(int id, glm::vec4 weight);
 	void SetSheenWeight(int id, const std::string& texturePath);
 
+	// Sheen Tint
+	void SetSheenTintImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSheenImageTint(value); }
+	void SetUseTextureSheenTintInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSheenTintInsteadOfTint(value); }
+	void SetEnableSheenTintImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSheenTintImage(value); }
+	void SetSheenTint(int id, glm::vec4 tint);
+	void SetSheenTint(int id, const std::string& texturePath);
+
+	// Refraction Section ---------------------------------------------------------------------//
+// Refraction Color
+	void SetRefractionColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageColor(value); }
+	void SetUseTextureRefractionColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionColorInsteadOfColor(value); }
+	void SetEnableRefractionColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionColorImage(value); }
+	void SetRefractionColor(int id, glm::vec4 color);
+	void SetRefractionColor(int id, const std::string& texturePath);
+
+	// Refraction Weight
+	void SetRefractionWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageWeight(value); }
+	void SetUseTextureRefractionWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionWeightInsteadOfWeight(value); }
+	void SetEnableRefractionWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionWeightImage(value); }
+	void SetRefractionWeight(int id, glm::vec4 weight);
+	void SetRefractionWeight(int id, const std::string& texturePath);
+
+	// Refraction Normal Map
+	void SetRefractionNormalImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageNormal(value); }
+	void SetUseTextureRefractionNormalInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionNormalInsteadOfNormal(value); }
+	void SetEnableRefractionNormalImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionNormalImage(value); }
+	void SetRefractionNormal(int id, const std::string& texturePath);
+	void SetRefractionNormal(int id, glm::vec4 normal);
+
+	// Refraction Normal Map Weight
+	void SetRefractionNormalWeight(int id, float value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionNormalWeight(value); }
+
+	// Refraction Roughness
+	void SetRefractionRoughnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageRoughness(value); }
+	void SetUseTextureRefractionRoughnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionRoughnessInsteadOfRoughness(value); }
+	void SetEnableRefractionRoughnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionRoughnessImage(value); }
+	void SetRefractionRoughness(int id, glm::vec4 roughness);
+	void SetRefractionRoughness(int id, const std::string& texturePath);
+
+	void SetRefractionIor(int id, float ior) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionIor(ior); }
+	void SetRefractionThinSurface(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionThinSurface(value); }
+	
+
+	// Refraction Absorption
+	void SetRefractionAbsorptionColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageAbsorptionColor(value); }
+	void SetUseTextureRefractionAbsorptionColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionAbsorptionColorInsteadOfAbsorptionColor(value); }
+	void SetEnableRefractionAbsorptionColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionAbsorptionColorImage(value); }
+	void SetRefractionAbsorptionColor(int id, glm::vec4 color);
+	void SetRefractionAbsorptionColor(int id, const std::string& texturePath);
+
+	// Refraction Absorption Distance
+	void SetRefractionAbsorptionDistanceImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageAbsorptionDistance(value); }
+	void SetUseTextureRefractionAbsorptionDistanceInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureRefractionAbsorptionDistanceInsteadOfAbsorptionDistance(value); }
+	void SetEnableRefractionAbsorptionDistanceImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableRefractionAbsorptionDistanceImage(value); }
+	void SetRefractionAbsorptionDistance(int id, glm::vec4 color);
+	void SetRefractionAbsorptionDistance(int id, const std::string& texturePath);
+
+	void SetRefractionCaustics(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionCaustics(value); }
+
+	// SSS Section ---------------------------------------------------------------------//
+// SSS Scatter Color
+	void SetSssScatterColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssImageScatterColor(value); }
+	void SetUseTextureSssScatterColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSssScatterColorInsteadOfScatterColor(value); }
+	void SetEnableSssScatterColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSssScatterColorImage(value); }
 	void SetSssScatterColor(int id, glm::vec4 color);
 	void SetSssScatterColor(int id, const std::string& texturePath);
+
+	// SSS Scatter Weight
+	void SetSssScatterWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssImageScatterWeight(value); }
+	void SetUseTextureSssScatterWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSssScatterWeightInsteadOfScatterWeight(value); }
+	void SetEnableSssScatterWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSssScatterWeightImage(value); }
+	void SetSssScatterWeight(int id, glm::vec4 weight);
+	void SetSssScatterWeight(int id, const std::string& texturePath);
+
+	// SSS Scatter Distance
+	void SetSssScatterDistanceImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssImageScatterDistance(value); }
+	void SetUseTextureSssScatterDistanceInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSssScatterDistanceInsteadOfScatterDistance(value); }
+	void SetEnableSssScatterDistanceImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSssScatterDistanceImage(value); }
 	void SetSssScatterDistance(int id, glm::vec4 color);
 	void SetSssScatterDistance(int id, const std::string& texturePath);
 
-	void SetBackscatterColor(int id, glm::vec4 color);
-	void SetBackscatterColor(int id, const std::string& texturePath);
-	void SetBackscatterWeight(int id, glm::vec4 weight);
-	void SetBackscatterWeight(int id, const std::string& texturePath);
 
-	void SetDiffuseWeight(int id, glm::vec4 color);
-	void SetDiffuseWeight(int id, const std::string& texturePath);
+	// SSS Scatter Direction
+	void SetSssScatterDirectionImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssImageScatterDirection(value); }
+	void SetUseTextureSssScatterDirectionInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureSssScatterDirectionInsteadOfScatterDirection(value); }
+	void SetEnableSssScatterDirectionImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableSssScatterDirectionImage(value); }
+	void SetSssScatterDirection(int id, glm::vec4 color);
+	void SetSssScatterDirection(int id, const std::string& texturePath);
+
+
+	void SetSssUseMultiScattering(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssMultiScattering(value); }
+	void SetSssUseSchlickApproximation(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetSssUseSchlickApproximation(value); }
+
+	// Coating Section ---------------------------------------------------------------------//
+// Coating Color
+	void SetCoatingColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageColor(value); }
+	void SetUseTextureCoatingColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingColorInsteadOfColor(value); }
+	void SetEnableCoatingColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingColorImage(value); }
+	void SetCoatingColor(int id, glm::vec4 color);
+	void SetCoatingColor(int id, const std::string& texturePath);
+
+	// Coating Weight
+	void SetCoatingWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageWeight(value); }
+	void SetUseTextureCoatingWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingWeightInsteadOfWeight(value); }
+	void SetEnableCoatingWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingWeightImage(value); }
+	void SetCoatingWeight(int id, glm::vec4 weight);
+	void SetCoatingWeight(int id, const std::string& texturePath);
+
+	// Coating Normal Map
+	void SetCoatingNormalImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageNormal(value); }
+	void SetUseTextureCoatingNormalInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingNormalInsteadOfNormal(value); }
+	void SetEnableCoatingNormalImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingNormalImage(value); }
+	void SetCoatingNormalMap(int id, const std::string& texturePath);
+	void SetCoatingNormalMap(int id, glm::vec4 color);
+
+	// Coating Normal map weight
+	void SetCoatingNormalWeight(int id, float value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingNormalWeight(value); }
+
+	// Coating Roughness
+	void SetCoatingRoughnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageRoughness(value); }
+	void SetUseTextureCoatingRoughnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingRoughnessInsteadOfRoughness(value); }
+	void SetEnableCoatingRoughnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingRoughnessImage(value); }
+	void SetCoatingRoughness(int id, glm::vec4 roughness);
+	void SetCoatingRoughness(int id, const std::string& texturePath);
+
+	// Coating Ior
+	void SetCoatingIor(int id, float ior) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingIor(ior); }
+
+	// Coating Thickness
+	void SetCoatingThicknessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageThickness(value); }
+	void SetUseTextureCoatingThicknessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingThicknessInsteadOfThickness(value); }
+	void SetEnableCoatingThicknessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingThicknessImage(value); }
+	void SetCoatingThickness(int id, glm::vec4 thickness);
+	void SetCoatingThickness(int id, const std::string& texturePath);
+
+	// Coating Transmission Color
+	void SetCoatingTransmissionColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageTransmissionColor(value); }
+	void SetUseTextureCoatingTransmissionColorInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingTransmissionColorInsteadOfTransmissionColor(value); }
+	void SetEnableCoatingTransmissionColorImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingTransmissionColorImage(value); }
+	void SetCoatingTransmissionColor(int id, glm::vec4 color);
+	void SetCoatingTransmissionColor(int id, const std::string& texturePath);
+
+	//  Coating Metalness
+	void SetCoatingMetalnessImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetCoatingImageMetalness(value); }
+	void SetUseTextureCoatingMetalnessInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureCoatingMetalnessInsteadOfMetalness(value); }
+	void SetEnableCoatingMetalnessImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableCoatingMetalnessImage(value); }
+	void SetCoatingMetalness(int id, glm::vec4 metalness);
+	void SetCoatingMetalness(int id, const std::string& texturePath);
+
+	void SetCoatingMode(int id, HorusMaterial::CoatingType mode);
+
+	// Other Section ---------------------------------------------------------------------//
+	// Normal Map
+	void SetNormalImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetNormalMapImage(value); }
+	void SetUseTextureNormalInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureNormalMapInsteadOfNormal(value); }
+	void SetEnableNormalImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableNormalMapImage(value); }
+	void SetNormalMap(int id, const std::string& texturePath);
+	void SetNormalMap(int id, glm::vec4 color);
+
+	// Normal Weight
+	void SetNormalWeight(int id, glm::vec4 value) { if (m_Materials_.contains(id)) m_Materials_[id].SetNormalMapWeight(value); }
+
+	// Displacement Map
+	void SetDisplacementImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetDisplacementMapImage(value); }
+	void SetUseTextureDisplacementInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureDisplacementMapInsteadOfDisplacement(value); }
+	void SetEnableDisplacementImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableDisplacementMapImage(value); }
+	void SetDisplacementMap(int id, const std::string& texturePath);
+	void SetDisplacementMap(int id, glm::vec4 color);
+
+	// Displacement Weight
+	void SetDisplacementWeight(int id, glm::vec4 value) { if (m_Materials_.contains(id)) m_Materials_[id].SetDisplacementMapWeight(value); }
+
+	// Emissive
+	void SetEmissiveImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEmissiveImage(value); }
+	void SetUseTextureEmissiveInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureEmissiveInsteadOfEmissive(value); }
+	void SetEnableEmissiveImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableEmissiveImage(value); }
+	void SetEmissive(int id, const std::string& texturePath);
+	void SetEmissive(int id, glm::vec4 color);
+
+	// Emissive Weight
+	void SetEmissiveWeightImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEmissionWeightImage(value); }
+	void SetUseTextureEmissiveWeightInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureEmissionWeightInsteadOfEmissionWeight(value); }
+	void SetEnableEmissiveWeightImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableEmissionWeightImage(value); }
+	void SetEmissiveWeight(int id, const std::string& texturePath);
+	void SetEmissiveWeight(int id, glm::vec4 color);
+
+	// Opacity
+	void SetOpacityImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetOpacityImage(value); }
+	void SetUseTextureOpacityInsteadOfColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetUseTextureOpacityInsteadOfOpacity(value); }
+	void SetEnableOpacityImage(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetEnableOpacityImage(value); }
+	void SetOpacity(int id, const std::string& texturePath);
+	void SetOpacity(int id, glm::vec4 color);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	void SetTransparency(int id, glm::vec4 color);
 	void SetTransparency(int id, const std::string& texturePath);
-
-	void SetIor(int id, float ior);
-	void SetReflectionMode(int id, int mode);
-	void SetCoatingMode(int id, int mode);
 
 	// ----------------------------------------------
 	// Material Editor object --------------------------
@@ -538,12 +1050,12 @@ public:
 	void ShowLookdevScene();
 	void ShowJaguardXKSS();
 
+
 	// ----------------------------------------------
 
 private:
-	HorusObjectManager()
-	{
-	}
+
+	HorusObjectManager() = default;
 
 	std::map<std::string, int> m_ObjectNameToIdMap_;
 	int m_ActualSelectedId_ = -1;
@@ -587,7 +1099,6 @@ private:
 	// Material object --------------
 
 	std::map<int, HorusMaterial> m_Materials_;
-	std::unordered_map<int, HorusMaterialParameters> m_TempMatParams_;
 	int m_ActiveMaterialId_ = 0;
 	int m_MaterialIndex_ = 0;
 	int m_MaterialCount_ = 0;

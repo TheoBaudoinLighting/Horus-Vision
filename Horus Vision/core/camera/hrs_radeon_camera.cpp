@@ -59,6 +59,7 @@ void HorusRadeonCamera::Init(std::string Name)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusGarbageCollector& GC = HorusGarbageCollector::GetInstance();
 
 	m_CameraType_ = Free;
 
@@ -92,6 +93,8 @@ void HorusRadeonCamera::Init(std::string Name)
 
 	CHECK(rprCameraLookAt(m_Camera_, m_Position_.x, m_Position_.y, m_Position_.z, m_LookAt_.x, m_LookAt_.y, m_LookAt_.z, m_Up_.x, m_Up_.y, m_Up_.z));
 	CHECK(rprSceneSetCamera(ObjectManager.GetScene(), m_Camera_));
+
+	GC.Add(m_Camera_);
 }
 void HorusRadeonCamera::Reset()
 {
@@ -110,8 +113,8 @@ void HorusRadeonCamera::Destroy()
 {
 	if (m_Camera_)
 	{
-		CHECK(rprObjectDelete(m_Camera_))
-			m_Camera_ = nullptr;
+		//CHECK(rprObjectDelete(m_Camera_))
+		m_Camera_ = nullptr;
 	}
 }
 
@@ -288,7 +291,7 @@ void HorusRadeonCamera::SetClipping(float NearClipDistance, float FarClipDistanc
 void HorusRadeonCamera::Tumbling(float x, float y, float sensitivity)
 {
 	GetCameraInfo();
-	
+
 	// New method with quaternions
 	const float AngleX = -x * sensitivity;
 	const float AngleY = y * sensitivity;
@@ -346,7 +349,7 @@ void HorusRadeonCamera::Zoom(float distance)
 
 	UpdateCamera();
 }
-void HorusRadeonCamera::Pan(float x, float y,float sensitivity)
+void HorusRadeonCamera::Pan(float x, float y, float sensitivity)
 {
 	GetCameraInfo();
 

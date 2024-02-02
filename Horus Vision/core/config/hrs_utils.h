@@ -202,3 +202,5 @@ RadeonProRender::float4 XYZ_to_sRGB(const RadeonProRender::float4& xyz)
 	RadeonProRender::float4 srgb = Linear_to_sRGB(XYZ_to_sRGB_D65 * xyz);
 	return srgb;
 }
+
+

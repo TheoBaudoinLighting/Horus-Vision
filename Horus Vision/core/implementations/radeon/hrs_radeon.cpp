@@ -30,6 +30,8 @@
 #include "RadeonImageFilters.h" // TODO : Implement RadeonImageFilters
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <shared_mutex>
+
 #include "picojson.h"
 #include "stbi/stb_image_write.h"
 
@@ -63,6 +65,7 @@ public:
 };
 
 RenderProgressCallback::Update RenderProgressCallback;
+std::atomic<bool> StopFlag{ false };
 
 constexpr auto InvalidTime = std::chrono::time_point<std::chrono::high_resolution_clock>::max();
 int BenchmarkNumberOfRenderIteration = 0;
@@ -74,11 +77,17 @@ template <typename T> T Clamp(T x, T a, T b)
 }
 
 std::mutex RenderMutex; // single-threading
-void RenderJob(const rpr_context Ctxt, RenderProgressCallback::Update* Update)
+
+void StopAllThreads()
 {
+	StopFlag = true;
+}
+
+void RenderJob(const rpr_context Context, RenderProgressCallback::Update* Update)
+{
+	// TODO : find a way to remove the mutex here when the engine is in multi-threading mode
 	RenderMutex.lock();
-	//CHECK(rprContextRender(Ctxt));
-	rprContextRender(Ctxt);
+	rprContextRender(Context);
 	Update->Done = 1;
 	RenderMutex.unlock();
 }
@@ -87,27 +96,19 @@ void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuf
 {
 	if (rpr_int Status = rprContextResolveFrameBuffer(Context, FramebufferA, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
 	{
-		std::cout << "RPR Error: " << Status << '\n';
+		spdlog::error("RPR Error: {}", Status);
 	}
 
 	size_t FramebufferSize = 0;
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, NULL, &FramebufferSize));
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
 	if (FramebufferSize != m_WindowWidth_ * m_WindowHeight_ * 4 * sizeof(float))
 	{
 		CHECK(RPR_ERROR_INTERNAL_ERROR)
 	}
 
-
-	// TODO : Apply OCIO to m_FrameBufferDest_ here with For
-
-	// NOTE : fill init OCIO with m_FrameBufferDest_ for framebuffer <- need to be resolved and passed 1 time to the OCIO
-	// after that, we can use the framebuffer directly for apply change each pixel with OCIO
-
-	//HorusOCIO::GetInstance().ApplyOCIO(m_FrameBufferDest_);
-
-
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), NULL));
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
 }
+
 glm::vec2 HorusRadeon::SetWindowSize(int width, int height)
 {
 	m_WindowWidth_ = width;
@@ -147,7 +148,6 @@ void HorusRadeon::CreateFrameBuffers(int width, int height)
 	CHECK(rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferDest_));
 
 	spdlog::debug("Radeon framebuffers successfully created..");
-
 }
 
 bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
@@ -169,51 +169,6 @@ bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
 
 	return true;
 }
-void HorusRadeon::QuitRender()
-{
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
-
-	spdlog::info("Unload Radeon..");
-	spdlog::info("Release memory..");
-
-	CHECK(rprContextAbortRender(m_ContextA_));
-
-	ObjectManager.DestroyAllLights();
-	ObjectManager.DestroyAllMaterialEditors();
-	ObjectManager.DestroyAllMaterial();
-	ObjectManager.DestroyAllGroupShape();
-
-	spdlog::info("All Radeon objects deleted..");
-
-	glDeleteTextures(1, &m_RadeonTextureBuffer_);
-
-	CHECK(rprObjectDelete(m_Matsys_))
-		m_Matsys_ = nullptr;
-	CHECK(rprObjectDelete(m_FrameBufferA_))
-		m_FrameBufferA_ = nullptr;
-	/*CHECK(rprObjectDelete(m_FrameBufferB_)) // Not used for now so don't delete it
-		m_FrameBufferB_ = nullptr;
-	CHECK(rprObjectDelete(m_FrameBufferC_))
-		m_FrameBufferC_ = nullptr;*/
-	CHECK(rprObjectDelete(m_FrameBufferAdaptive_))
-		m_FrameBufferAdaptive_ = nullptr;
-	CHECK(rprObjectDelete(m_FrameBufferDest_))
-		m_FrameBufferDest_ = nullptr;
-
-	ObjectManager.DestroyAllCameras();
-	ObjectManager.DestroyAllScenes();
-
-	Gc.Clean();
-
-	rprContextClearMemory(m_ContextA_);
-	CheckNoLeak(m_ContextA_);
-	CHECK(rprObjectDelete(m_ContextA_))
-		m_ContextA_ = nullptr;
-
-	spdlog::info("Radeon successfully unloaded..");
-}
-
 bool HorusRadeon::InitGraphics()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
@@ -279,38 +234,13 @@ bool HorusRadeon::InitGraphics()
 	CHECK(rprContextSetParameterByKeyPtr(m_ContextA_, RPR_CONTEXT_RENDER_UPDATE_CALLBACK_DATA, &RenderProgressCallback));
 
 	CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_ITERATIONS, 1));
-
-	const std::future<void> RenderFuture = std::async(std::launch::async, [&]()
-		{
-			CHECK(rprContextRender(m_ContextA_));
-		});
-	RenderFuture.wait();
+	CHECK(rprContextRender(m_ContextA_));
 
 	CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_ITERATIONS, m_MaxIterations_));
 	rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_MAX_RECURSION, 4);
 
 	//m_FbData_ = std::shared_ptr<float>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
 	m_FbData_ = std::shared_ptr<float[]>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
-
-	// Image Filters (Post Effects)
-
-	// TODO : Implement RadeonImageFilters
-
-	/*CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_TONE_MAPPING_TYPE, RPR_TONEMAPPING_OPERATOR_PHOTOLINEAR));
-	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_TONE_MAPPING_EXPONENTIAL_INTENSITY, 2));
-
-	CHECK(rprContextSetParameterByKeyString(m_ContextA_, RPR_CONTEXT_OCIO_CONFIG_PATH, "resources/aces_1.0.3/config.ocio"));
-	CHECK(rprContextSetParameterByKeyString(m_ContextA_, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, "ACES - ACEScg"));*/
-
-	// white balance color space
-	/*rpr_post_effect WhiteBalance = nullptr;
-	CHECK(rprContextCreatePostEffect(m_ContextA_, RPR_POST_EFFECT_WHITE_BALANCE, &WhiteBalance));
-	CHECK(rprPostEffectSetParameter1u(WhiteBalance, "colorspace", RPR_COLOR_SPACE_DCIP3));
-	CHECK(rprContextAttachPostEffect(m_ContextA_, WhiteBalance));
-	Gc.Add(WhiteBalance);*/
-
-	// Setup ocio 
-	//OCIO.Init(m_ContextA_, m_FrameBufferA_, m_FbData_, "resources/aces_1.0.3/config.ocio", "ACES - ACEScg", "ACEs", "sRGB", 1.0f, 2.4f);
 
 	spdlog::info("Radeon graphics successfully initialized..");
 	Console.AddLog(" [info] Radeon graphics successfully initialized");
@@ -329,6 +259,50 @@ bool HorusRadeon::InitGraphics()
 
 	return true;
 }
+void HorusRadeon::QuitRender()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
+
+	spdlog::info("Unload Radeon..");
+	spdlog::info("Release memory..");
+
+	StopAllThreads();
+
+	CHECK(rprContextAbortRender(m_ContextA_));
+
+	ObjectManager.DestroyAllLights();
+	ObjectManager.DestroyAllMaterial();
+	ObjectManager.DestroyAllGroupShape();
+
+	spdlog::info("All Radeon objects deleted..");
+
+	glDeleteTextures(1, &m_RadeonTextureBuffer_);
+
+	CHECK(rprObjectDelete(m_Matsys_))
+		m_Matsys_ = nullptr;
+	CHECK(rprObjectDelete(m_FrameBufferA_))
+		m_FrameBufferA_ = nullptr;
+	/*
+	CHECK(rprObjectDelete(m_FrameBufferC_))
+		m_FrameBufferC_ = nullptr;*/
+	CHECK(rprObjectDelete(m_FrameBufferAdaptive_))
+		m_FrameBufferAdaptive_ = nullptr;
+	CHECK(rprObjectDelete(m_FrameBufferDest_))
+		m_FrameBufferDest_ = nullptr;
+
+	ObjectManager.DestroyAllCameras();
+
+	Gc.Clean();
+
+	CHECK(rprContextClearMemory(m_ContextA_));
+	CheckNoLeak(m_ContextA_);
+	CHECK(rprObjectDelete(m_ContextA_))
+		m_ContextA_ = nullptr;
+
+	spdlog::info("Radeon successfully unloaded..");
+}
+
 void HorusRadeon::ResizeRender(int width, int height)
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
@@ -364,7 +338,6 @@ void HorusRadeon::ResizeRender(int width, int height)
 	Init(m_WindowWidth_, m_WindowHeight_, m_WindowConfig_);
 
 	spdlog::info("after init buffers 02");
-
 
 	CHECK(rprContextResolveFrameBuffer(m_ContextA_, m_FrameBufferA_, m_FrameBufferDest_, false));
 
@@ -418,11 +391,11 @@ void HorusRadeon::RenderClassic()
 {
 	if (!m_LockingRender_)
 	{
-		if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_)
-		{
+		if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_) {
 			return;
 		}
 
+		constexpr int MinSamplesToSwitch = 3;
 
 		// Benchmark
 		{
@@ -444,17 +417,24 @@ void HorusRadeon::RenderClassic()
 
 		if (m_IsDirty_)
 		{
-			//m_RenderMutex_.lock();
-			m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
+			if (m_SampleCount_ <= MinSamplesToSwitch)
+			{
+				m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
+			}
+			else if (m_SampleCount_ >= MinSamplesToSwitch + 1)
+			{
+				m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback);
+				m_RenderThread_.detach();
+			}
 
-			if (m_SampleCount_ < 4 && !m_IsLockPreviewEnabled_)
+			if (m_SampleCount_ <= MinSamplesToSwitch && !m_IsLockPreviewEnabled_)
 			{
 				if (!m_IsPreviewEnabled_)
 				{
 					SetPreviewMode(true);
 				}
 			}
-			else if (m_SampleCount_ >= 5 && !m_IsLockPreviewEnabled_)
+			else if (m_SampleCount_ >= MinSamplesToSwitch + 1 && !m_IsLockPreviewEnabled_)
 			{
 				if (m_IsPreviewEnabled_)
 				{
@@ -469,18 +449,12 @@ void HorusRadeon::RenderClassic()
 				}
 			}
 
-
-			//m_RenderMutex_.unlock();
-			//m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple JThread
-			//m_RenderThread_ = std::thread(RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Thread
-
 			m_ThreadRunning_ = true;
 		}
 
 		while (!RenderProgressCallback.Done)
 		{
-			if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_)
-			{
+			if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_) {
 				break;
 			}
 
@@ -489,7 +463,15 @@ void HorusRadeon::RenderClassic()
 				RenderMutex.lock();
 				m_SampleCount_++;
 
-				m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
+				if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_)
+				{
+					m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
+				}
+				else if (m_SampleCount_ >= MinSamplesToSwitch + 1)
+				{
+					m_RenderInfoThread_ = std::jthread(&HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
+					m_RenderInfoThread_.detach();
+				}
 
 				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<GLvoid*>(m_FbData_.get()));
@@ -504,14 +486,17 @@ void HorusRadeon::RenderClassic()
 
 		if (m_ThreadRunning_)
 		{
-			m_ClassicRenderFuture_.wait(); // Simple Future Wait
-			m_ClassicRenderInfoFuture_.wait();
-			//m_RenderThread_.join(); // Simple Thread Join
+			if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_ && m_ClassicRenderFuture_.valid() && m_ClassicRenderInfoFuture_.valid())
+			{
+				m_ClassicRenderFuture_.wait(); // Simple Future Wait
+				m_ClassicRenderInfoFuture_.wait();
+			}
+
+
 			m_ThreadRunning_ = false;
 		}
 
 		GetClassicRenderProgress();
-
 		BenchmarkNumberOfRenderIteration += m_BatchSize_;
 	}
 }
@@ -544,7 +529,8 @@ void HorusRadeon::RenderAdaptive()
 
 		if (m_IsDirty_)
 		{
-			m_AdaptiveRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback);
+			//m_AdaptiveRenderFuture_ = std::thread(&HorusRadeon::RenderJob, this, m_ContextA_,std::ref( m_RenderProgressCallback_));
+			//m_AdaptiveRenderFuture_.detach();
 			m_ThreadRunning_ = true;
 		}
 
@@ -559,7 +545,8 @@ void HorusRadeon::RenderAdaptive()
 			{
 				RenderMutex.lock();
 
-				m_AdaptiveRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferAdaptive_);
+				//m_AdaptiveRenderInfoFuture_ = std::thread(&HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferAdaptive_);
+				//m_AdaptiveRenderInfoFuture_.detach();
 
 				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<const GLvoid*>(m_FbData_.get()));
@@ -574,8 +561,8 @@ void HorusRadeon::RenderAdaptive()
 
 		if (m_ThreadRunning_)
 		{
-			m_AdaptiveRenderFuture_.wait();
-			m_AdaptiveRenderInfoFuture_.wait();
+			//m_AdaptiveRenderFuture_.wait();
+			//m_AdaptiveRenderInfoFuture_.wait();
 			m_ThreadRunning_ = false;
 		}
 
@@ -661,7 +648,7 @@ void HorusRadeon::CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles)
 
 	RenderMultiTiles(FbMetadata, ObjectManager.GetScene(), m_ContextA_, MaxIterationPerTiles);
 
-	if (!stbi_write_png("FinalRender.png", m_WindowWidth_, m_WindowHeight_, 3, &FbMetadata.FbData[0], m_WindowWidth_ * 3))
+	if (!stbi_write_png("FinalRender.png", m_WindowWidth_, m_WindowHeight_, 3, FbMetadata.FbData.data(), m_WindowWidth_ * 3))
 	{
 		spdlog::error("Failed to save the final render image.");
 		Console.AddLog(" [error] Failed to save the final render image.");

@@ -69,7 +69,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 
 	Assimp::Importer Importer;
 
-	const aiScene* Scene = Importer.ReadFile(MeshPath, aiProcess_CalcTangentSpace |
+	const aiScene* Scene = Importer.ReadFile(MeshPath, aiProcess_CalcTangentSpace | aiProcess_GenNormals |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_SortByPType | aiProcess_ValidateDataStructure);
@@ -89,6 +89,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 		if (!pNode)
 		{
 			spdlog::error("No corresponding node found for mesh {}", m);
+			
 			continue;
 		}
 
@@ -99,7 +100,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 		if (!Mesh) 
 		{
 			spdlog::error("Error with Assimp: Mesh {} is invalid", m);
-			Console.AddLog(" [error] Error with Assimp: Mesh %d is invalid", m);
+			Console.AddLog(" [error] Error with Assimp: Mesh %s is invalid", m);
 			continue; 
 		}
 
@@ -135,6 +136,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 		}
 
 		spdlog::info("Mesh has {} Udims", UdimTexcoords.size());
+		Console.AddLog(" [info] Mesh has %d Udims", UdimTexcoords.size());
 
 		bool HasNormals = Mesh->HasNormals();
 		bool HasTexCoords = Mesh->HasTextureCoords(0);
@@ -198,6 +200,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 						else
 						{
 							spdlog::error("Mesh has no texture coordinates");
+							Console.AddLog(" [error] Mesh has no texture coordinates");
 						}
 					}
 				}
@@ -216,6 +219,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 
 		rpr_shape TShape;
 
+		// TODO : Replace by rprContextCreateMeshEx2 
 		CHECK(rprContextCreateMesh(Context, Vertices.data()
 			, Vertices.size() / 3                                    // num_vertices
 			, 3 * sizeof(rpr_float),                                 // vertex_stride
@@ -259,7 +263,7 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 	}
 
 	spdlog::info("Mesh loaded: {}", MeshPath);
-	Console.AddLog(" [success] Mesh loaded : %s", MeshPath.c_str());
+	Console.AddLog(" [info] Mesh loaded : %s", MeshPath.c_str());
 
 	return ShapesAndNames;
 }

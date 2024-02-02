@@ -685,7 +685,6 @@ void HorusObjectManager::SetGroupShapePosition(int id, glm::vec3 pos)
 		UpdateShapeTransforms(shape);*/
 	}
 }
-
 void HorusObjectManager::SetGroupShapeRotation(int id, glm::vec3 rot)
 {
 	if (!m_GroupShape_.contains(id))
@@ -728,7 +727,7 @@ void HorusObjectManager::SetGroupShapeResetTransform(int id)
 
 void HorusObjectManager::UpdateGroupShapeOutlinerData()
 {
-	for (const auto& Key : m_MeshShapeMap_ | std::views::keys) 
+	for (const auto& Key : m_MeshShapeMap_ | std::views::keys)
 	{
 		HorusGroupShape& Mesh = m_GroupShape_[m_ObjectNameToIdMap_[Key]];
 		std::vector<std::string> ShapeNames = Mesh.GetShapeName();
@@ -770,9 +769,9 @@ void HorusObjectManager::DeleteSelectedShape(int id)
 			auto it = std::find(shapes.begin(), shapes.end(), m_Shapes_[id]);
 			if (it != shapes.end())
 			{
-				shapes.erase(it);  
+				shapes.erase(it);
 				if (shapes.empty()) {
-					m_MeshShapeMap_.erase(key); 
+					m_MeshShapeMap_.erase(key);
 				}
 				break;
 			}
@@ -1022,47 +1021,6 @@ void HorusObjectManager::DestroyAllMaterial()
 	}
 }
 
-glm::vec4 HorusObjectManager::GetBaseColor(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetBaseColor();
-}
-
-glm::vec4 HorusObjectManager::GetMetallic(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetMetallic();
-}
-
-glm::vec4 HorusObjectManager::GetRoughness(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetRoughness();
-}
-
-glm::vec4 HorusObjectManager::GetNormal(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetNormal();
-}
-
-glm::vec4 HorusObjectManager::GetOpacity(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetOpacity();
-}
-
-glm::vec4 HorusObjectManager::GetEmissive(int id)
-{
-	HorusMaterial& Material = GetMaterial(id);
-
-	return Material.GetEmissive();
-}
 
 void HorusObjectManager::SetActiveMaterialId(int id)
 {
@@ -1083,7 +1041,6 @@ void HorusObjectManager::AssignMaterial(int mesh_id, int mat_id)
 
 	//m_GroupShape_[mesh_id].AssignMaterial(TODO);
 }
-
 void HorusObjectManager::AssignMaterialDirectly(rpr_shape shape, int materialId)
 {
 	rpr_material_node materialNode = GetMaterialNode(materialId);
@@ -1110,25 +1067,514 @@ rpr_material_node HorusObjectManager::GetMaterialNode(int materialId)
 }
 
 
-void HorusObjectManager::SetBaseColor(int id, const std::string& texturePath)
+
+// TODO: Add the rest of the setters
+// Reflection
+void HorusObjectManager::SetReflectionColor(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
 		spdlog::error("no material with this id exists. ");
 	}
-	m_Materials_[id].SetBaseColor(texturePath);
+
+	m_Materials_[id].SetReflectionColor(color);
 }
-void HorusObjectManager::SetBaseColor(int id, glm::vec4 color)
+void HorusObjectManager::SetReflectionColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionColor(texturePath);
+}
+void HorusObjectManager::SetReflectionRoughness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionRoughness(texturePath);
+}
+void HorusObjectManager::SetReflectionRoughness(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionRoughness(color);
+}
+void HorusObjectManager::SetReflectionWeight(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionWeight(color);
+}
+void HorusObjectManager::SetReflectionWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionWeight(texturePath);
+}
+void HorusObjectManager::SetReflectionAnisotropy(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionAnisotropy(color);
+}
+void HorusObjectManager::SetReflectionAnisotropy(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionAnisotropy(texturePath);
+}
+void HorusObjectManager::SetReflectionMode(int id, HorusMaterial::ReflectionType mode)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionMode(mode);
+}
+void HorusObjectManager::SetReflectionMetalness(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetReflectionMetalness(color);
+}
+void HorusObjectManager::SetReflectionMetalness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+	m_Materials_[id].SetReflectionMetalness(texturePath);
+}
+
+// Sheen
+void HorusObjectManager::SetSheenColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenColor(color);
+}
+void HorusObjectManager::SetSheenColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenColor(texturePath);
+}
+void HorusObjectManager::SetSheenWeight(int id, glm::vec4 weight)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenWeight(weight);
+}
+void HorusObjectManager::SetSheenWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenWeight(texturePath);
+}
+void HorusObjectManager::SetSheenTint(int id, glm::vec4 tint)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenTint(tint);
+}
+void HorusObjectManager::SetSheenTint(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSheenTint(texturePath);
+}
+
+// Refraction
+void HorusObjectManager::SetRefractionColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionColor(color);
+}
+void HorusObjectManager::SetRefractionColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionColor(texturePath);
+
+}
+void HorusObjectManager::SetRefractionWeight(int id, glm::vec4 weight)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionWeight(weight);
+}
+void HorusObjectManager::SetRefractionWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionWeight(texturePath);
+}
+void HorusObjectManager::SetRefractionRoughness(int id, glm::vec4 roughness)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionRoughness(roughness);
+}
+void HorusObjectManager::SetRefractionRoughness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionRoughness(texturePath);
+}
+void HorusObjectManager::SetRefractionNormal(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionNormal(texturePath);
+}
+void HorusObjectManager::SetRefractionNormal(int id, glm::vec4 normal)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionNormal(normal);
+}
+void HorusObjectManager::SetRefractionAbsorptionColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionAbsorptionColor(color);
+}
+void HorusObjectManager::SetRefractionAbsorptionColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+	m_Materials_[id].SetRefractionAbsorptionColor(texturePath);
+}
+void HorusObjectManager::SetRefractionAbsorptionDistance(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionAbsorptionDistance(color);
+}
+void HorusObjectManager::SetRefractionAbsorptionDistance(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetRefractionAbsorptionDistance(texturePath);
+}
+
+
+// SSS
+void HorusObjectManager::SetSssScatterColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterColor(color);
+}
+void HorusObjectManager::SetSssScatterColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterColor(texturePath);
+}
+void HorusObjectManager::SetSssScatterWeight(int id, glm::vec4 weight)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterWeight(weight);
+}
+void HorusObjectManager::SetSssScatterWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterWeight(texturePath);
+
+}
+void HorusObjectManager::SetSssScatterDistance(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterDistance(color);
+}
+void HorusObjectManager::SetSssScatterDistance(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterDistance(texturePath);
+}
+void HorusObjectManager::SetSssScatterDirection(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetSssScatterDirection(color);
+}
+void HorusObjectManager::SetSssScatterDirection(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material whith this id exist.");
+	}
+
+	m_Materials_[id].SetSssScatterDirection(texturePath);
+}
+
+// Coating
+void HorusObjectManager::SetCoatingColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingColor(color);
+}
+void HorusObjectManager::SetCoatingColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingColor(texturePath);
+}
+void HorusObjectManager::SetCoatingWeight(int id, glm::vec4 weight)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingWeight(weight);
+}
+void HorusObjectManager::SetCoatingWeight(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingWeight(texturePath);
+}
+void HorusObjectManager::SetCoatingNormalMap(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingNormal(texturePath);
+}
+void HorusObjectManager::SetCoatingNormalMap(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingNormal(color);
+}
+void HorusObjectManager::SetCoatingRoughness(int id, glm::vec4 roughness)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingRoughness(roughness);
+}
+void HorusObjectManager::SetCoatingRoughness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingRoughness(texturePath);
+}
+void HorusObjectManager::SetCoatingThickness(int id, glm::vec4 thickness)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingThickness(thickness);
+}
+void HorusObjectManager::SetCoatingThickness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingThickness(texturePath);
+}
+void HorusObjectManager::SetCoatingTransmissionColor(int id, glm::vec4 color)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingTransmissionColor(color);
+}
+void HorusObjectManager::SetCoatingTransmissionColor(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingTransmissionColor(texturePath);
+}
+void HorusObjectManager::SetCoatingMetalness(int id, glm::vec4 metalness)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingMetalness(metalness);
+}
+void HorusObjectManager::SetCoatingMetalness(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("");
+		throw std::runtime_error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingMetalness(texturePath);
+}
+void HorusObjectManager::SetCoatingMode(int id, HorusMaterial::CoatingType mode)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists.");
+	}
+
+	m_Materials_[id].SetCoatingMode(mode);
+}
+
+//  
+
+void HorusObjectManager::SetNormalMap(int id, const std::string& texturePath)
+{
+	if (!m_Materials_.contains(id))
+	{
+		spdlog::error("no material with this id exists. ");
+	}
+
+	m_Materials_[id].SetNormalMap(texturePath);
+}
+void HorusObjectManager::SetNormalMap(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
 		spdlog::error("no material with this id exists. ");
 		throw std::runtime_error("no material with this id exists. ");
 	}
-	m_Materials_[id].SetBaseColor(color);
-}
 
-void HorusObjectManager::SetMetallic(int id, const std::string& texturePath)
+	m_Materials_[id].SetNormalMap(color);
+}
+void HorusObjectManager::SetDisplacementMap(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1136,9 +1582,9 @@ void HorusObjectManager::SetMetallic(int id, const std::string& texturePath)
 		throw std::runtime_error("no material with this id exists. ");
 	}
 
-	m_Materials_[id].SetMetallic(texturePath);
+	m_Materials_[id].SetDisplacementMap(texturePath);
 }
-void HorusObjectManager::SetMetallic(int id, glm::vec4 color)
+void HorusObjectManager::SetDisplacementMap(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1146,51 +1592,8 @@ void HorusObjectManager::SetMetallic(int id, glm::vec4 color)
 		throw std::runtime_error("no material with this id exists. ");
 	}
 
-	m_Materials_[id].SetMetallic(color);
+	m_Materials_[id].SetDisplacementMap(color);
 }
-
-void HorusObjectManager::SetRoughness(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists. ");
-	}
-
-	m_Materials_[id].SetRoughness(texturePath);
-}
-void HorusObjectManager::SetRoughness(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists. ");
-	}
-
-	m_Materials_[id].SetRoughness(color);
-}
-
-void HorusObjectManager::SetNormal(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists. ");
-	}
-
-	m_Materials_[id].SetNormal(texturePath);
-}
-void HorusObjectManager::SetNormal(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists. ");
-	}
-
-	m_Materials_[id].SetNormal(color);
-}
-
 void HorusObjectManager::SetOpacity(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1211,7 +1614,6 @@ void HorusObjectManager::SetOpacity(int id, glm::vec4 color)
 
 	m_Materials_[id].SetOpacity(color);
 }
-
 void HorusObjectManager::SetEmissive(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
@@ -1233,304 +1635,7 @@ void HorusObjectManager::SetEmissive(int id, glm::vec4 color)
 	m_Materials_[id].SetEmissive(color);
 }
 
-void HorusObjectManager::SetReflectionColor(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists. ");
-	}
-
-	m_Materials_[id].SetReflectionColor(color);
-}
-void HorusObjectManager::SetReflectionColor(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists. ");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionColor(texturePath);
-}
-
-void HorusObjectManager::SetReflectionWeight(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionWeight(color);
-}
-void HorusObjectManager::SetReflectionWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionWeight(texturePath);
-}
-
-void HorusObjectManager::SetReflectionRoughness(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionRoughness(color);
-
-}
-void HorusObjectManager::SetReflectionRoughness(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionRoughness(texturePath);
-
-}
-
-void HorusObjectManager::SetRefractionColor(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionColor(color);
-}
-void HorusObjectManager::SetRefractionColor(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionColor(texturePath);
-
-}
-
-void HorusObjectManager::SetRefractionWeight(int id, glm::vec4 weight)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionWeight(weight);
-}
-void HorusObjectManager::SetRefractionWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionWeight(texturePath);
-}
-
-void HorusObjectManager::SetRefractionRoughness(int id, glm::vec4 roughness)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionRoughness(roughness);
-}
-void HorusObjectManager::SetRefractionRoughness(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetRefractionRoughness(texturePath);
-}
-
-void HorusObjectManager::SetCoatingColor(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingColor(color);
-}
-void HorusObjectManager::SetCoatingColor(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingColor(texturePath);
-}
-
-void HorusObjectManager::SetSheen(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSheen(color);
-}
-void HorusObjectManager::SetSheen(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSheen(texturePath);
-}
-
-void HorusObjectManager::SetSssScatterColor(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exists.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSssScatterColor(color);
-}
-void HorusObjectManager::SetSssScatterColor(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSssScatterColor(texturePath);
-}
-
-void HorusObjectManager::SetBackscatterColor(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetBackscatterColor(color);
-}
-void HorusObjectManager::SetBackscatterColor(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetBackscatterColor(texturePath);
-}
-
-void HorusObjectManager::SetIor(int id, float ior)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetIor(ior);
-}
-
-void HorusObjectManager::SetCoatingWeight(int id, glm::vec4 weight)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingWeight(weight);
-}
-void HorusObjectManager::SetCoatingWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingWeight(texturePath);
-}
-
-void HorusObjectManager::SetCoatingRoughness(int id, glm::vec4 roughness)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingRoughness(roughness);
-}
-void HorusObjectManager::SetCoatingRoughness(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingRoughness(texturePath);
-}
-
-void HorusObjectManager::SetSheenWeight(int id, glm::vec4 weight)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSheenWeight(weight);
-}
-void HorusObjectManager::SetSheenWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSheenWeight(texturePath);
-}
-
-void HorusObjectManager::SetBackscatterWeight(int id, glm::vec4 weight)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material whith this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetBackscatterWeight(weight);
-}
-void HorusObjectManager::SetBackscatterWeight(int id, const std::string& texturePath)
+void HorusObjectManager::SetEmissiveWeight(int id, const std::string& texturePath)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1538,31 +1643,11 @@ void HorusObjectManager::SetBackscatterWeight(int id, const std::string& texture
 		throw std::runtime_error("no material with this id exists.");
 	}
 
-	m_Materials_[id].SetBackscatterWeight(texturePath);
+	m_Materials_[id].SetEmissionWeight(texturePath);
+
 }
 
-void HorusObjectManager::SetDiffuseWeight(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetDiffuseWeight(color);
-}
-void HorusObjectManager::SetDiffuseWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetDiffuseWeight(texturePath);
-}
-
-void HorusObjectManager::SetEmissionWeight(int id, glm::vec4 color)
+void HorusObjectManager::SetEmissiveWeight(int id, glm::vec4 color)
 {
 	if (!m_Materials_.contains(id))
 	{
@@ -1572,16 +1657,7 @@ void HorusObjectManager::SetEmissionWeight(int id, glm::vec4 color)
 
 	m_Materials_[id].SetEmissionWeight(color);
 }
-void HorusObjectManager::SetEmissionWeight(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("");
-		throw std::runtime_error("no material with this id exists.");
-	}
 
-	m_Materials_[id].SetEmissionWeight(texturePath);
-}
 
 void HorusObjectManager::SetTransparency(int id, glm::vec4 color)
 {
@@ -1604,49 +1680,7 @@ void HorusObjectManager::SetTransparency(int id, const std::string& texturePath)
 	m_Materials_[id].SetTransparency(texturePath);
 }
 
-void HorusObjectManager::SetSssScatterDistance(int id, glm::vec4 color)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("");
-		throw std::runtime_error("no material with this id exists.");
-	}
 
-	m_Materials_[id].SetSssScatterDistance(color);
-}
-void HorusObjectManager::SetSssScatterDistance(int id, const std::string& texturePath)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetSssScatterDistance(texturePath);
-}
-
-void HorusObjectManager::SetReflectionMode(int id, int mode)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetReflectionMode(mode);
-}
-void HorusObjectManager::SetCoatingMode(int id, int mode)
-{
-	if (!m_Materials_.contains(id))
-	{
-		spdlog::error("no material with this id exist.");
-		throw std::runtime_error("no material with this id exists.");
-	}
-
-	m_Materials_[id].SetCoatingMode(mode);
-}
-
-// -----------------------------------------------------------------------------------------------
 // Material editor management --------------------------------------------------------------------
 
 void HorusObjectManager::AssignMaterialEditorNode(int mesh_id, int mat_id)
@@ -1668,7 +1702,6 @@ void HorusObjectManager::AssignMaterialEditorNode(int mesh_id, int mat_id)
 	spdlog::info("material editor node assigned to mesh with id: {}", mesh_id);
 
 }
-
 void HorusObjectManager::SetMaterialFromEditorNode(int id, rpr_material_node mat)
 {
 	//m_GroupShape_[id].AssignMaterial(TODO);
@@ -1742,7 +1775,6 @@ void HorusObjectManager::DestroyAllMaterialEditors()
 	}
 }
 
-// -----------------------------------------------------------------------------------------------
 // Light management ------------------------------------------------------------------------------
 
 int HorusObjectManager::CreateLight(const std::string& Name, const std::string& LightType, const std::string& ImagePath)
@@ -1828,6 +1860,7 @@ int HorusObjectManager::GetLightType(int id)
 	case RPR_LIGHT_TYPE_DISK:
 		return 7;
 	}
+	return -1;
 }
 std::string& HorusObjectManager::GetLightName(int id)
 {
@@ -2238,7 +2271,7 @@ void HorusObjectManager::SetDiskLightInnerAngle(int id, const float& InnerAngle)
 }
 
 
-// -----------------------------------------------------------------------------------------------
+// Scene management ------------------------------------------------------------------------------
 
 int HorusObjectManager::CreateScene(const std::string& name)
 {
@@ -2259,52 +2292,23 @@ int HorusObjectManager::CreateScene(const std::string& name)
 
 	return Id;
 }
-void HorusObjectManager::ImportGltfScene()
+int HorusObjectManager::CreateDefaultScene()
 {
+	int Id = CreateScene("DefaultScene");
 
+	CreateRadeonCamera(Id, "DefaultCamera");
+
+	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
+	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
+	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
+
+
+	//SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f), 90.0f);
+
+	SetScene(Id);
+
+	return Id;
 }
-
-void HorusObjectManager::SetScene(int id)
-{
-	if (!m_Scenes_.contains(id))
-	{
-		spdlog::error("no scene with this id exists. ");
-	}
-
-	m_ActiveSceneId_ = id;
-
-	auto Scene = m_Scenes_[id].GetScene();
-
-	m_Scenes_[id].SetScene(Scene);
-
-	spdlog::info("Scene {} set as active scene", id);
-
-}
-rpr_scene& HorusObjectManager::GetScene()
-{
-	return  m_Scenes_[m_ActiveSceneId_].GetScene();
-}
-
-int HorusObjectManager::GetSceneIdByName(const char* name)
-{
-	while (!m_ObjectNameToIdMap_.contains(name))
-	{
-		spdlog::info("Scene name does not exist, trying again");
-	}
-
-	return m_ObjectNameToIdMap_[name];
-}
-
-int HorusObjectManager::GetActiveSceneId()
-{
-	return m_ActiveSceneId_;
-}
-
-std::string& HorusObjectManager::GetSceneNameById(int id)
-{
-	return m_SceneNames_[id];
-}
-
 void HorusObjectManager::DestroyScene(int id)
 {
 	if (auto It = m_Scenes_.find(id); It != m_Scenes_.end())
@@ -2339,7 +2343,6 @@ void HorusObjectManager::DestroyScene(int id)
 
 	//HorusResetBuffers::get_instance().CallResetBuffers();
 }
-
 void HorusObjectManager::DestroyAllScenes()
 {
 	for (auto& scene : m_Scenes_)
@@ -2348,39 +2351,61 @@ void HorusObjectManager::DestroyAllScenes()
 	}
 }
 
-int HorusObjectManager::CreateDefaultScene()
+void HorusObjectManager::ImportGltfScene()
 {
-	int Id = CreateScene("DefaultScene");
 
-	CreateRadeonCamera(Id, "DefaultCamera");
-
-	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
-	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
-	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.exr");
-
-
-	//SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f), 90.0f);
-
-	SetScene(Id);
-
-	return Id;
 }
+void HorusObjectManager::SetScene(int id)
+{
+	if (!m_Scenes_.contains(id))
+	{
+		spdlog::error("no scene with this id exists. ");
+	}
+
+	m_ActiveSceneId_ = id;
+
+	auto Scene = m_Scenes_[id].GetScene();
+
+	m_Scenes_[id].SetScene(Scene);
+
+	spdlog::info("Scene {} set as active scene", id);
+
+}
+rpr_scene& HorusObjectManager::GetScene()
+{
+	return  m_Scenes_[m_ActiveSceneId_].GetScene();
+}
+int HorusObjectManager::GetSceneIdByName(const char* name)
+{
+	while (!m_ObjectNameToIdMap_.contains(name))
+	{
+		spdlog::info("Scene name does not exist, trying again");
+	}
+
+	return m_ObjectNameToIdMap_[name];
+}
+int HorusObjectManager::GetActiveSceneId()
+{
+	return m_ActiveSceneId_;
+}
+std::string& HorusObjectManager::GetSceneNameById(int id)
+{
+	return m_SceneNames_[id];
+}
+
 
 void HorusObjectManager::ShowDummyDragon()
 {
 	m_Scenes_[m_ActiveSceneId_].ShowDummyDragon();
 }
-
 void HorusObjectManager::ShowDummyPlane()
 {
 	m_Scenes_[m_ActiveSceneId_].ShowDummyPlane();
 }
-
 void HorusObjectManager::ShowLookdevScene()
 {
 	m_Scenes_[m_ActiveSceneId_].ShowLookdevScene();
 }
-
 void HorusObjectManager::ShowJaguardXKSS()
 {
 	m_Scenes_[m_ActiveSceneId_].ShowJaguardXKSS();

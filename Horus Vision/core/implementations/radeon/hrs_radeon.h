@@ -99,7 +99,7 @@ private:
 	}
 
 	// Render stuff
-
+	
 	int m_WindowWidth_ = 0;
 	int m_WindowHeight_ = 0;
 	HorusWindowConfig* m_WindowConfig_;
@@ -114,6 +114,8 @@ private:
 	int m_SelectedRenderVizMode_ = 1;
 	bool m_IsPreviewEnabled_ = false;
 	bool m_IsLockPreviewEnabled_ = false;
+	bool m_ChangeFB_ = true;
+
 
 	// Adaptive render
 	int m_MinAdaptiveTileSize_ = 8;
@@ -139,6 +141,7 @@ private:
 	std::future<void> m_AdaptiveRenderInfoFuture_;
 	//std::thread m_RenderThread_; // single-threading
 	std::jthread m_RenderThread_; // single-threading
+	std::jthread m_RenderInfoThread_; // single-threading
 	std::vector<std::thread> m_RenderThreads_; // multi-threading
 
 	bool m_IsDirty_;

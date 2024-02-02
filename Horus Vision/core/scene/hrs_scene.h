@@ -19,6 +19,7 @@ public:
 	void ImportScene(const char* path);
 
 	void ShowScene();
+	void CreateGrid();
 	void ClearScene();
 	void UpdateScene();
 

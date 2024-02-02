@@ -81,7 +81,8 @@ private:
 	bool m_IsFirstLaunch_ = true;
 	bool m_LaunchLoadData_ = true;
 
-	std::future<bool> m_LoadingThread_ = async(std::launch::async, []() { return true; });
+	//std::future<bool> m_LoadingThread_ = async(std::launch::async, []() { return true; });
+	std::jthread m_LoadingThread_;
 	std::future_status m_Status_;
 
 	const float m_DesiredWidth_ = 800.0f;

@@ -62,6 +62,32 @@ void HorusUI::Init()
 	HorusConsole::GetInstance().InitConsole();
 }
 
+void independentThread()
+{
+	std::cout << "Starting concurrent thread.\n";
+	HorusObjectManager::GetInstance().ShowJaguardXKSS();
+	//std::this_thread::sleep_for(std::chrono::seconds(10));
+	std::cout << "Exiting concurrent thread.\n";
+}
+
+void threadCaller()
+{
+	std::cout << "Starting thread caller.\n";
+	std::thread t(independentThread);
+	t.detach();
+	std::cout << "Exiting thread caller.\n";
+}
+
+void ImportObjectThread(std::string FilePath)
+{
+	spdlog::debug("Starting Import thread.");
+
+	const std::string MeshName = std::filesystem::path(FilePath).stem().string();
+	HorusObjectManager::GetInstance().CreateGroupShape(FilePath.c_str(), MeshName);
+
+	spdlog::debug("Exiting Import thread.");
+}
+
 void HorusUI::MainMenuBar()
 {
 	if (ImGui::BeginMainMenuBar())
@@ -105,7 +131,7 @@ void HorusUI::MainMenuBar()
 
 			if (ImGui::MenuItem("Save scene as..", "Ctrl+Alt+S"))
 			{
-
+				threadCaller();
 			}
 
 			if (ImGui::MenuItem("Load test scene", "Ctrl+L"))
@@ -122,16 +148,13 @@ void HorusUI::MainMenuBar()
 
 				if (!FilePath.empty())
 				{
-					// Check if the file is already valid with non UTF-8 characters
-					const std::string MeshName = std::filesystem::path(FilePath).stem().string();
-
-					HorusObjectManager::GetInstance().CreateGroupShape(FilePath.c_str(), MeshName);
+					std::thread t(ImportObjectThread, FilePath);
+					t.detach();
 				}
 				else if (FilePath.empty())
 				{
 					spdlog::error("Can't import mesh : {} file path is empty.", FilePath);
 				}
-
 			}
 
 
