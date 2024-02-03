@@ -19,16 +19,19 @@
 #include "ImGuizmo.h"
 #include <hrs_console.h>
 
+#include "hrs_imgui_core.h"
 #include "hrs_inspector.h"
 #include "hrs_timer.h"
 
+// Pre load data for the engine in a separate jthread
 void LoadSetupEngineData()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusResetBuffers& ResetBuffers = HorusResetBuffers::GetInstance();
 	HorusTimerManager::GetInstance().StartTimer("LoadData");
 
-	int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "resources/Lookdev/Light/niederwihl_forest_4k.hdr");
+	int HDRI = ObjectManager.CreateLight("HDRI_01", "hdri", "core/scene/dependencies/light/niederwihl_forest_4k.exr");
+	//int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
 	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto TimeLoad = HorusTimerManager::GetInstance().StopTimer("LoadData");
@@ -183,7 +186,7 @@ void HorusEngine::Init(int Width, int Height, const std::string& Title, const st
 void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusUI& UI = HorusUI::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
@@ -191,7 +194,7 @@ void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 
 	UI.Init();
 	OpenGL.Init(Width, Height, Window);
-	ImGui.Init(Width, Height, Window);
+	ImGuiCore.Initialize(Width, Height, Window);
 	Radeon.Init(Width, Height, Window);
 	Radeon.InitGraphics();
 	Inspector.Init();
@@ -206,13 +209,13 @@ void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 void HorusEngine::PreRender()
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 	m_IsClosing_ = GetIsClosing();
 
 	OpenGL.InitRender();
-	ImGui.InitRender();
+	ImGuiCore.InitRender();
 	Radeon.InitRender();
 }
 
@@ -242,10 +245,10 @@ void HorusEngine::Render()
 void HorusEngine::PostRender()
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	ImGui.PostRender();
+	ImGuiCore.PostRender();
 	OpenGL.PostRender();
 	Radeon.PostRender();
 
@@ -259,8 +262,6 @@ void HorusEngine::PostRender()
 
 			m_IsFirstLaunch_ = false;
 		}
-
-		
 	}
 
 	/*if (m_IsFirstLaunch_)
@@ -350,11 +351,11 @@ void EditTransformWithGizmo(const float* View, const float* Projection, float* M
 void HorusEngine::Close()
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 	Radeon.QuitRender();
-	ImGui.QuitRender();
+	ImGuiCore.QuitRender();
 	OpenGL.QuitRender();
 
 	m_IsRunning_ = false;

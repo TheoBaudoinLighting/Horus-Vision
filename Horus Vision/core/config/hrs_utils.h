@@ -4,9 +4,15 @@
 #pragma warning(disable: 4305)
 #pragma warning(disable: 4244)
 
+#define NOMINMAX
+#include <Windows.h> 
+#include <shellapi.h> 
+
 // External includes
 #include "hrs_garbage_collector.h"
-#include "RadeonProRender.hpp"
+#include <Math/mathutils.h>
+
+#include "glm/glm.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -16,6 +22,13 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+
+#include "imgui.h"
+
+inline void OsOpenInShell(const char* path)
+{
+	::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
+}
 
 using namespace std;
 
@@ -83,7 +96,7 @@ inline rpr_shape CreateSquare(HorusGarbageCollector& Gc, rpr_context Context, rp
 
 	if (Scene == nullptr)
 	{
-				spdlog::error("Scene is null");
+		spdlog::error("Scene is null");
 		return nullptr;
 	}
 
@@ -97,110 +110,508 @@ inline rpr_shape CreateSquare(HorusGarbageCollector& Gc, rpr_context Context, rp
 	return Quad;
 }
 
-// sRGB to ACEScg
-RadeonProRender::float4 sRGB_to_ACEScg(const RadeonProRender::float4& srgb)
+// ImGui utility functions
+inline void ShowHandCursorOnHover()
 {
-	RadeonProRender::matrix sRGB_To_XYZ_D65(
-		0.4124, 0.3576, 0.1805, 0.0,
-		0.2126, 0.7152, 0.0722, 0.0,
-		0.0193, 0.1192, 0.9505, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix D65_to_D60(
-		1.01281, 0.00597, -0.01497, 0.0,
-		0.00749, 0.99834, -0.00502, 0.0,
-		-0.00285, 0.00471, 0.92424, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix XYZd60_to_ACEScg(
-		1.64184, -0.32496, -0.23654, 0.0,
-		-0.66351, 1.61496, 0.01675, 0.0,
-		0.01172, -0.00828, 0.98866, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix sRGB_to_ACEScg = XYZd60_to_ACEScg * D65_to_D60 * sRGB_To_XYZ_D65;
-	RadeonProRender::float4 ret = sRGB_to_ACEScg * srgb;
-	return ret;
-}
-
-// ACEScg to sRGB
-RadeonProRender::float4 ACEScg_to_sRGB(const RadeonProRender::float4& acescg)
-{
-	RadeonProRender::matrix ACEScg_to_XYZd60(
-		0.66245418, 0.13400421, 0.15618769, 0.0,
-		0.27222872, 0.67408177, 0.05368952, 0.0,
-		-0.00557465, 0.00406073, 1.010339100, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix D60_to_D65(
-		0.987224, -0.007598, 0.015372, 0.0,
-		0.012298, 1.001338, -0.011438, 0.0,
-		-0.003882, 0.007246, 0.987744, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix XYZ_D65_to_sRGB(
-		3.2404542, -1.5371385, -0.4985314, 0.0,
-		-0.9692660, 1.8760108, 0.0415560, 0.0,
-		0.0556434, -0.2040259, 1.0572252, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::matrix ACEScg_to_sRGB = XYZ_D65_to_sRGB * D60_to_D65 * ACEScg_to_XYZd60;
-	RadeonProRender::float4 ret = ACEScg_to_sRGB * acescg;
-	return ret;
-}
-
-// SRGB to Linear
-RadeonProRender::float4 sRGB_to_Linear(const RadeonProRender::float4& srgb)
-{
-	RadeonProRender::float4 linear;
-
-	for (int i = 0; i < 3; ++i) 
+	if (ImGui::IsItemHovered())
 	{
-		linear[i] = (srgb[i] <= 0.04045) ? (srgb[i] / 12.92) : std::pow((srgb[i] + 0.055) / 1.055, 2.4);
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 	}
-
-	linear[3] = srgb[3]; 
-	return linear;
 }
 
-// Linear to SRGB
-RadeonProRender::float4 Linear_to_sRGB(const RadeonProRender::float4& linear)
+inline void ShowResizeCursorOnHover()
 {
-	RadeonProRender::float4 srgb;
-
-	for (int i = 0; i < 3; ++i) 
+	if (ImGui::IsItemHovered())
 	{
-		srgb[i] = (linear[i] <= 0.0031308) ? (12.92 * linear[i]) : (1.055 * std::pow(linear[i], 1.0 / 2.4) - 0.055);
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
-
-	srgb[3] = linear[3]; 
-	return srgb;
 }
 
-// sRGB to XYZ
-RadeonProRender::float4 sRGB_to_XYZ(const RadeonProRender::float4& srgb)
+inline void ShowResizeHorizontalCursorOnHover()
 {
-	RadeonProRender::matrix sRGB_to_XYZ_D65(
-		0.4124564, 0.3575761, 0.1804375, 0.0,
-		0.2126729, 0.7151522, 0.0721750, 0.0,
-		0.0193339, 0.1191920, 0.9503041, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::float4 xyz = sRGB_to_XYZ_D65 * sRGB_to_Linear(srgb);
-	return xyz;
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+	}
 }
 
-// XYZ to sRGB
-RadeonProRender::float4 XYZ_to_sRGB(const RadeonProRender::float4& xyz)
+inline void ShowResizeVerticalCursorOnHover()
 {
-	RadeonProRender::matrix XYZ_to_sRGB_D65(
-		3.2404542, -1.5371385, -0.4985314, 0.0,
-		-0.9692660, 1.8760108, 0.0415560, 0.0,
-		0.0556434, -0.2040259, 1.0572252, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	RadeonProRender::float4 srgb = Linear_to_sRGB(XYZ_to_sRGB_D65 * xyz);
-	return srgb;
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+	}
 }
+
+inline void ShowResizeTopLeftBottomRightCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNESW);
+	}
+}
+
+inline void ShowResizeTopRightBottomLeftCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
+	}
+}
+
+inline void ShowTextInputCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
+	}
+}
+
+inline void ShowNotAllowedCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_NotAllowed);
+	}
+}
+
+inline void ShowVerticalResizeCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+	}
+}
+
+inline void ShowHorizontalResizeCursorOnHover()
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+	}
+}
+
+inline void ShowHandCursorOnHover(const char* tooltip)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		ImGui::SetTooltip(tooltip);
+	}
+}		
+
+inline void ShowResizeCursorOnHover(const char* tooltip)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
+		ImGui::SetTooltip(tooltip);
+	}
+}
+
+inline void ShowResizeHorizontalCursorOnHover(const char* tooltip)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+		ImGui::SetTooltip(tooltip);
+	}
+}
+
+// ImGui Link 
+inline void OpenLink(const char* text, const char* url)
+{
+	ImGui::TextUnformatted(text);
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (ImGui::IsMouseClicked(0))
+		{
+			OsOpenInShell(url);
+		}
+	}
+}
+
+inline void OpenLink(const char* text, const char* url, const ImVec4& color)
+{
+	ImGui::TextColored(color, text);
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (ImGui::IsMouseClicked(0))
+		{
+			OsOpenInShell(url);
+		}
+	}
+}
+
+inline void OpenLink(const char* text, const char* url, const ImVec4& color, float fontSize)
+{
+	ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+	ImGui::TextColored(color, text);
+	ImGui::PopFont();
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (ImGui::IsMouseClicked(0))
+		{
+			OsOpenInShell(url);
+		}
+	}
+}
+
+inline void OpenLink(const char* text, const char* url, const ImVec4& color, float fontSize, float width)
+{
+	ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+	ImGui::SetCursorPosX((width - ImGui::CalcTextSize(text).x) / 2);
+	ImGui::TextColored(color, text);
+	ImGui::PopFont();
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (ImGui::IsMouseClicked(0))
+		{
+			OsOpenInShell(url);
+		}
+	}
+}
+
+// ImGui Draw a rectangle
+inline void DrawRectangle(const ImVec2& position, const ImVec2& size, const ImVec4& color)
+{
+	ImGui::GetWindowDrawList()->AddRectFilled(position, ImVec2(position.x + size.x, position.y + size.y), ImGui::GetColorU32(color));
+}
+
+// ImGui Draw a rectangle with a border
+inline void DrawRectangle(const ImVec2& position, const ImVec2& size, const ImVec4& color, const ImVec4& borderColor)
+{
+	ImGui::GetWindowDrawList()->AddRectFilled(position, ImVec2(position.x + size.x, position.y + size.y), ImGui::GetColorU32(color));
+	ImGui::GetWindowDrawList()->AddRect(position, ImVec2(position.x + size.x, position.y + size.y), ImGui::GetColorU32(borderColor));
+}
+
+// ImGui Draw a rectangle around item
+inline void DrawRectangleAroundItem(const ImVec4& color)
+{
+	ImVec2 min = ImGui::GetItemRectMin();
+	ImVec2 max = ImGui::GetItemRectMax();
+	ImGui::GetWindowDrawList()->AddRect(min, max, ImGui::GetColorU32(color));
+}
+
+
+
+
+
+// Set the tooltip of the current item
+inline void	SetTooltip(const char* text)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip(text);
+	}
+}
+inline void SetTooltip(const char* text, const ImVec4& color)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::SetTooltip(text);
+		ImGui::PopStyleColor();
+	}
+}
+inline void SetTooltip(const char* text, const ImVec4& color, float fontSize)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+		ImGui::SetTooltip(text);
+		ImGui::PopFont();
+		ImGui::PopStyleColor();
+	}
+}
+inline void SetTooltip(const char* text, const ImVec4& color, float fontSize, float width)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+		ImGui::SetTooltip(text);
+		ImGui::PopFont();
+		ImGui::PopStyleColor();
+	}
+}
+inline void SetTooltip(const char* text, const ImVec4& color, float fontSize, float width, float height)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+		ImGui::SetTooltip(text);
+		ImGui::PopFont();
+		ImGui::PopStyleColor();
+	}
+}
+inline void SetTooltip(const char* text, const ImVec4& color, float fontSize, float width, float height, bool centered)
+{
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, color);
+		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+		ImGui::SetTooltip(text);
+		ImGui::PopFont();
+		ImGui::PopStyleColor();
+	}
+}
+
+
+
+
+
+
+
+
+// Text utility functions
+
+inline void TextCentered(const char* Text)
+{
+	ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(Text).x) / 2);
+	ImGui::Text(Text);
+}
+
+inline void TextCentered(const char* Text, const ImVec4& Color)
+{
+	ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(Text).x) / 2);
+	ImGui::PushStyleColor(ImGuiCol_Text, Color);
+	ImGui::Text(Text);
+	ImGui::PopStyleColor();
+}
+
+inline void TextCentered(const char* Text, const ImVec4& Color, float FontSize)
+{
+	ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(Text).x) / 2);
+	ImGui::PushStyleColor(ImGuiCol_Text, Color);
+	ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+	ImGui::Text(Text);
+	ImGui::PopFont();
+	ImGui::PopStyleColor();
+}
+
+inline void TextCentered(const char* Text, const ImVec4& Color, float FontSize, float Width)
+{
+	ImGui::SetCursorPosX((Width - ImGui::CalcTextSize(Text).x) / 2);
+	ImGui::PushStyleColor(ImGuiCol_Text, Color);
+	ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+	ImGui::Text(Text);
+	ImGui::PopFont();
+	ImGui::PopStyleColor();
+}
+
+// Convert a string to a wide string
+inline std::wstring StringToWideString(const std::string& str)
+{
+	std::wstring wstr(str.length(), L' ');
+	std::copy(str.begin(), str.end(), wstr.begin());
+	return wstr;
+}
+
+// Convert a wide string to a string
+inline std::string WideStringToString(const std::wstring& wstr)
+{
+	std::string str(wstr.length(), ' ');
+	std::copy(wstr.begin(), wstr.end(), str.begin());
+	return str;
+}
+
+// Convert const char* to std::string
+inline std::string CTS(const char* Char)
+{
+	std::string Str(Char);
+	return Str;
+}
+
+// Convert std::string to const char*
+inline const char* STC(const std::string& Str)
+{
+	return Str.c_str();
+}
+
+// Extract the file name from a path
+inline std::string ExtractFileName(const std::string& Path)
+{
+	size_t LastSlash = Path.find_last_of("\\/");
+	return Path.substr(LastSlash + 1);
+}
+
+// Extract the file extension from a path
+inline std::string ExtractFileExtension(const std::string& Path)
+{
+	size_t LastDot = Path.find_last_of(".");
+	return Path.substr(LastDot + 1);
+}
+
+// Extract the file name without the extension from a path
+inline std::string ExtractFileNameWithoutExtension(const std::string& Path)
+{
+	std::string FileName = ExtractFileName(Path);
+	size_t LastDot = FileName.find_last_of(".");
+	return FileName.substr(0, LastDot);
+}
+
+// Check if a file exists
+inline bool FileExists(const std::string& Path)
+{
+	std::ifstream File(Path);
+	return File.good();
+}
+
+// Read text file
+inline std::string ReadTextFile(const std::string& filePath)
+{
+	std::ifstream fileStream(filePath);
+	std::stringstream buffer;
+	buffer << fileStream.rdbuf();
+	return buffer.str();
+}
+
+// Write text file
+inline void WriteTextFile(const std::string& filePath, const std::string& content)
+{
+	std::ofstream fileStream(filePath);
+	fileStream << content;
+}
+
+// read binary file
+inline std::vector<char> ReadBinaryFile(const std::string& filePath)
+{
+	std::ifstream fileStream(filePath, std::ios::binary | std::ios::ate);
+	std::streamsize size = fileStream.tellg();
+	fileStream.seekg(0, std::ios::beg);
+	std::vector<char> buffer(size);
+	if (fileStream.read(buffer.data(), size)) {
+		return buffer;
+	}
+	else {
+		return {};
+	}
+}
+
+// write binary file
+inline void WriteBinaryFile(const std::string& filePath, const std::vector<char>& data)
+{
+	std::ofstream fileStream(filePath, std::ios::binary);
+	fileStream.write(data.data(), data.size());
+}
+
+// Check extension
+inline bool CheckExtension(const std::string& fileName, const std::string& extension)
+{
+	size_t pos = fileName.rfind('.');
+	if (pos != std::string::npos) {
+		return fileName.substr(pos + 1) == extension;
+	}
+	return false;
+}
+
+inline std::string ConcatenatePath(const std::string& directory, const std::string& fileName)
+{
+	return directory + ((directory.back() == '/' || directory.back() == '\\') ? "" : "/") + fileName;
+}
+
+inline std::string FormatPath(std::string path)
+{
+	std::replace(path.begin(), path.end(), '\\', '/');
+	return path;
+}
+
+inline std::vector<std::string> SplitString(const std::string& str, char delimiter)
+{
+	std::vector<std::string> tokens;
+	std::string token;
+	std::istringstream tokenStream(str);
+	while (std::getline(tokenStream, token, delimiter)) {
+		tokens.push_back(token);
+	}
+	return tokens;
+}
+
+//-------------------------------------------------------- DEBUGGING AND MESSAGE ----------------------------------//
+
+// Show an info message
+inline void LogInfo(const std::string& message) {
+	std::cout << "Info: " << message << '\n';
+}
+
+// Show an error message
+inline void LogError(const std::string& message) {
+	std::cerr << "Error: " << message << '\n';
+}
+
+// Show a warning message
+inline void LogWarning(const std::string& message) {
+	std::cout << "Warning: " << message << '\n';
+}
+
+// AssertCondition: Check a condition and display a message if it is not met.
+inline void AssertCondition(bool condition, const std::string& message) {
+	if (!condition) {
+		std::cerr << "Assertion failed: " << message << '\n';
+		abort();
+	}
+}
+
+// DisplayFPS: Calculate and display frames per second.
+inline void DisplayFPS(double deltaTime)
+{
+	static int frameCount = 0;
+	static double totalTime = 0.0;
+	totalTime += deltaTime;
+	++frameCount;
+	if (totalTime > 1.0)
+	{
+		std::cout << "FPS: " << frameCount / totalTime << '\n';
+		frameCount = 0;
+		totalTime = 0.0;
+	}
+}
+
+// Show the components of a vector
+inline void DebugVector(const glm::vec3& vec) {
+	std::cout << "Vector: (" << vec.x << ", " << vec.y << ", " << vec.z << ")" << '\n';
+}
+
+// Show the components of a matrix
+inline void DebugMatrix(const glm::mat4& mat)
+{
+	std::cout << "Matrix: " << '\n';
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			std::cout << mat[i][j] << " ";
+		}
+		std::cout << '\n';
+	}
+}
+
+// This function is a template function that takes a function and its arguments 
+// and measures the time it takes to execute the function.
+// Exemple of use: ExecutionTime("FunctionName", FunctionName, arg1, arg2, arg3);
+#include <chrono>
+template<typename Func, typename... Args>
+void ExecutionTime(const std::string& functionName, Func func, Args&&... args)
+{
+	auto start = std::chrono::high_resolution_clock::now();
+	func(std::forward<Args>(args)...);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> duration = end - start;
+	std::cout << functionName << " executed in " << duration.count() << " ms" << std::endl;
+}
+
+// ListResources: Display a list of resources.
+inline void ListResources(const std::vector<std::string>& resources) {
+	std::cout << "Loaded Resources:" << '\n';
+	for (const auto& resource : resources) {
+		std::cout << "- " << resource << '\n';
+	}
+}
+
 
 

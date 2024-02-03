@@ -54,9 +54,6 @@
     <ClCompile Include="core\implementations\opengl\hrs_opengl.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\imgui\hrs_imgui.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="core\implementations\radeon\hrs_radeon.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -148,6 +145,15 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\config\hrs_ocio.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_statistics.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_about.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_help.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1067,9 +1073,6 @@
     <ClInclude Include="core\implementations\opengl\hrs_opengl.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\imgui\hrs_imgui.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="core\implementations\radeon\hrs_radeon.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1484,16 +1487,7 @@
     <ClInclude Include="core\ui\hrs_outliner.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\imgui\hrs_fonts.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="external\imgui\IconsFontAwesome6.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\imgui\hrs_icons_fa.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\imgui\hrs_icons.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\config\hrs_platform.h">
@@ -1593,6 +1587,15 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_statistics.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_about.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_help.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

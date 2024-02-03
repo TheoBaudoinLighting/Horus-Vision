@@ -62,7 +62,7 @@ private:
 	bool m_OptionsChanged_ = false;
 	bool m_ResetBuffer_ = false;
 	bool m_IsFirstLaunch_ = true;
-	
+
 
 	inline static std::chrono::high_resolution_clock::time_point m_StartTime_;
 	inline static std::chrono::high_resolution_clock::time_point m_EndTime_;
@@ -110,7 +110,49 @@ public:
 private:
 	HorusViewportRadeon() = default;
 
-	// 
+	// Viewport variables
+	const ImVec4 m_GreenColor_ = ImVec4(0.6f, 1.0f, 0.6f, 1.0f);
+	const ImVec4 m_PinkColor_ = ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+
+	ImVec2 m_Pos_ = ImGui::GetCursorScreenPos();
+	ImVec2 m_ViewerSize_;
+	ImVec2 m_LastSize_ = ImVec2(0, 0);
+	float m_AvailableWidth_;
+	float m_AvailableHeight_;
+	ImVec2 m_ViewerWindowPos_;
+	ImVec2 m_ViewerWindowSize_;
+	ImVec2 m_UvMin_ = ImVec2(0.0f, 0.0f);
+	ImVec2 m_UvMax_ = ImVec2(1.0f, 1.0f);
+	int m_LastCustomX_ = m_CustomX_;
+	int m_LastCustomY_ = m_CustomY_;
+	int m_CustomX_ = 800;
+	int m_CustomY_ = 600;
+	bool m_FirstLaunch_ = true;
+
+	bool m_IsZooming_ = false;
+	bool m_UseTextColorForTint_ = false;
+	bool m_IsResizable_ = false;
+
+	// Mouse variables
+	bool m_IsDragging_ = false;
+	ImVec2 m_LastMousePos_ = ImVec2(0, 0);
+	float m_OffsetX_;
+	float m_OffsetY_;
+
+	float m_WidthPerItems_ = 100;
+
+	ImGuiIO& m_Io_ = ImGui::GetIO();
+	bool m_IsLeftAltPressed_ = m_Io_.KeyAlt;
+
+	ImGuiWindowFlags m_WindowFlags_ = 0;
+
+	int m_ElementsNumber_ = 8;
+
+	const char* m_SizePresetItem_[8] = { "800x600", "1024x768", "1280x720", "1920x1080", "2560x1440", "3840x2160", "7680x4320", "Custom" };
+	int m_SizePresetItemCurrent_ = 0;
+
+	// Radeon variables
+
 	ImVec2 m_ImageSize_;
 	ImVec2 m_StoreImagePosition_;
 

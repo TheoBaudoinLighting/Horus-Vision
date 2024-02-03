@@ -9,11 +9,11 @@
 void HorusWindow::InitContexts(int width, int height, HorusWindow* window)
 {
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
 	OpenGL.Init(width, height, window);
-	ImGui.Init(width, height, window);
+	ImGuiCore.Init(width, height, window);
 	Radeon.Init(width, height, window);
 
 	spdlog::info("OpenGL, ImGui and Radeon contexts initialized.");
@@ -132,11 +132,11 @@ void HorusWindow::ProcessInput()
 void HorusWindow::Close()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusImGui& ImGui = HorusImGui::GetInstance();
+	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 
 	Radeon.QuitRender();
-	ImGui.QuitRender();
+	ImGuiCore.QuitRender();
 	OpenGL.QuitRender();
 
 	m_IsRunning_ = false;

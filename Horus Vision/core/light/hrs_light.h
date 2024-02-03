@@ -30,6 +30,10 @@ public:
 	// General light
 	[[nodiscard]] rpr_light GetLight() const { return m_Light_; }
 	[[nodiscard]] rpr_light_type GetLightType() const { return m_LightType_; }
+	[[nodiscard]] std::string GetLightTexturePath() const { return m_ImagePath_; }
+	[[nodiscard]] bool IsLightUseFileTexture() const { return m_UseFileTexture_; }
+ 	[[nodiscard]] bool IsLightVisible() const { return m_IsLightVisible_; }
+	[[nodiscard]] bool IsLightHdri() const { return m_IsLightHdri_; }
 	[[nodiscard]] glm::vec3 GetPosition() const { return m_Position_; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return m_Rotation_; }
 	[[nodiscard]] glm::vec3 GetScale() const { return m_Scale_; }
@@ -68,13 +72,16 @@ public:
 	[[nodiscard]] int GetSkyLightPortalNumber() const { return m_SkyLightPortalNumber_; }
 
 	// Setters
+	void SetLightTexturePath(const std::string& ImagePath);
+	void SetLightVisibility(bool Visibility);
+	void SetLightHdri(bool IsHdri);
+	void SetUseFileTexture(bool UseFileTexture);
 	void SetLightType(const std::string& LightType);
 	void SetPosition(const glm::vec3& Position);
 	void SetRotation(const glm::vec3& RotationAxis);
 	void SetScale(const glm::vec3& Scale);
 	void SetDirection(const glm::vec3& Direction);
 	void SetIntensity(glm::vec3& Intensity);
-	void SetLightVisibility(bool Visibility);
 
 	// Directional light
 	void SetDirectionalLightShadowSoftnessAngle(float Coef);
@@ -116,6 +123,8 @@ private:
 	rpr_light_type m_LightType_;
 	bool m_IsLightVisible_ = false;
 	bool m_IsLightHdri_ = false;
+	bool m_UseFileTexture_ = false;
+	std::string m_ImagePath_;
 	glm::mat4 m_Transform_;
 	glm::vec3 m_Translation_ = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_Position_ = { 0.0f, 0.0f, 0.0f };
@@ -125,7 +134,6 @@ private:
 	glm::vec3 m_Color_ = { 1.0f, 1.0f, 1.0f };
 	glm::vec3 m_Intensity_ = { 1.0f, 1.0f, 1.0f };
 
-	std::string m_ImagePath_;
 
 	// point light
 	glm::vec3 m_PointLightRadiantPower_ = { 1.0f, 1.0f, 1.0f };

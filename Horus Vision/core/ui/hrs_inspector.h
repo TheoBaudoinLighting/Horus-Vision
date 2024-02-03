@@ -9,29 +9,6 @@ class HorusInspector
 {
 public:
 
-	struct PerformanceData
-	{
-		static const int DataLength = 60;
-		int ms_per_frame_idx = 0;
-		float ms_per_frame[DataLength] = { 0 };
-		float ms_per_frame_accum = 0.0f;
-		float fps_values[DataLength] = { 0 };
-
-		void Update(float deltaTime, float framerate)
-		{
-			ms_per_frame_accum -= ms_per_frame[ms_per_frame_idx];
-			ms_per_frame[ms_per_frame_idx] = deltaTime * 1000.0f;
-			ms_per_frame_accum += ms_per_frame[ms_per_frame_idx];
-			fps_values[ms_per_frame_idx] = framerate;
-			ms_per_frame_idx = (ms_per_frame_idx + 1) % DataLength;
-		}
-
-		float GetAverageMsPerFrame() const
-		{
-			return ms_per_frame_accum / DataLength;
-		}
-	};
-
 	enum class InspectorType
 	{
 		CAMERA,
@@ -120,6 +97,8 @@ public:
 	void SetFov(float fov);
 
 	// --- Light ---
+	void PopulateSelectedLightInfos();
+	void SetLightImageTexture(std::string path);
 
 	// --- Texture ---
 
@@ -152,15 +131,9 @@ public:
 	// --- Project ---
 	void PopulateSelectedProjectInfos();
 
-
-
 private:
 
-	PerformanceData m_PerformanceData_;
-
-	HorusInspector() : m_Gpu00N_{}, m_Gpu01N_{}
-	{
-	}
+	HorusInspector(){}
 
 	//--------------------------------------------- GENERAL ---------------------------------------------//
 	InspectorType m_SelectionType_ = InspectorType::PROJECT;
@@ -193,9 +166,14 @@ private:
 
 	int m_LightType_ = 0;
 
-	bool m_IsLightVisible_ = false;
+	// Light image file filter exr and hdr
+	const char m_LightImageFilters_[33] = { "Image (*.exr;*.hdr)\0*.exr;*.hdr\0" };
 
-	glm::vec3 m_LightIntensity_ = { 10.0f, 10.0f, 10.0f };
+	bool m_IsLightVisible_ = false;
+	bool m_UseFileTexture_ = false;
+	std::string m_LightName_ = "";
+	std::string m_LightImage_ = "";
+	glm::vec3 m_LightIntensity_ = {  1.0f, 1.0f, 1.0f };
 	glm::vec3 m_LightPosition_ = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_LightRotation_ = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_LightScale_ = { 1.0f, 1.0f, 1.0f };
@@ -309,7 +287,7 @@ private:
 
 	int m_ReflectionModeIndex_ = 0;
 	const char* m_ReflectionModes_[2] = { "PBR", "Metalness" };
-	bool m_ReflectionMode_ = HorusMaterial::ReflectionTypePBR;
+	bool m_ReflectionMode_ = HorusMaterial::ReflectionTypeMetalness;
 	bool m_ShowMetallicUi_ = false;
 	float m_Ior_ = 1.36f;
 
@@ -483,7 +461,7 @@ private:
 	int m_CoatingModeIndex_ = 0;
 	const char* m_CoatingModes_[2] = { "PBR", "Metalness" };
 	bool m_CoatingMetalnessUI_ = false;
-	bool m_CoatingMode_ = HorusMaterial::CoatingTypePBR;
+	bool m_CoatingMode_ = HorusMaterial::CoatingTypeMetalness;
 
 	// Other Section --------------------------------------------------------------------------------//
 	// Normal map
@@ -491,7 +469,7 @@ private:
 	bool m_UseTextureNormalMapInsteadOfNormalMap_ = false;
 	bool m_EnableNormalMapImage_ = false;
 	std::string m_NormalMapPath_ = "path/to/NormalMap.jpg";
-	glm::vec4 m_NormalMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+	glm::vec4 m_NormalMap_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	// Normal weight
 	glm::vec4 m_NormalMapWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -501,7 +479,7 @@ private:
 	bool m_UseTextureDisplacementMapInsteadOfDisplacementMap_ = false;
 	bool m_EnableDisplacementMapImage_ = false;
 	std::string m_DisplacementMapPath_ = "path/to/DisplacementMap.jpg";
-	glm::vec4 m_DisplacementMap_ = { 0.0f, 0.0f, 0.0f, 0.0f };
+	glm::vec4 m_DisplacementMap_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	// Displacement map weight
 	glm::vec4 m_DisplacementMapWeight_ = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -657,8 +635,7 @@ private:
 
 	char m_UserInput_[256] = "";
 
-	char m_Gpu00N_[1024];
-	char m_Gpu01N_[1024];
+	
 
 	rpr_render_statistics m_RenderStatistics_ = {};
 };

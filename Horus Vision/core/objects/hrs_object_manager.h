@@ -724,7 +724,7 @@ public:
 
 	void SetRefractionIor(int id, float ior) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionIor(ior); }
 	void SetRefractionThinSurface(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionThinSurface(value); }
-	
+
 
 	// Refraction Absorption
 	void SetRefractionAbsorptionColorImageColor(int id, bool value) { if (m_Materials_.contains(id)) m_Materials_[id].SetRefractionImageAbsorptionColor(value); }
@@ -979,16 +979,18 @@ public:
 	std::string& GetLightName(int id);
 	int GetLightType(int id);
 	HorusLight& GetLight(int Id);
-	glm::vec3 GetLightPosition(int id);
-	glm::vec3 GetLightRotation(int id);
-	glm::vec3 GetLightScale(int id);
-	glm::vec3 GetLightIntensity(int id);
-	int GetActiveLightId();
-	glm::vec3 GetLightColor(int id);
-	glm::vec3 GetLightDirection(int id);
+	std::string GetLightTexture(int id) { return m_Lights_[id].GetLightTexturePath(); }
+	glm::vec3 GetLightPosition(int id) { return m_Lights_[id].GetPosition(); }
+	glm::vec3 GetLightRotation(int id) { return m_Lights_[id].GetRotation(); }
+	glm::vec3 GetLightScale(int id) { return m_Lights_[id].GetScale(); }
+	glm::vec3 GetLightIntensity(int id) { return m_Lights_[id].GetIntensity(); }
+	int GetActiveLightId() { return m_ActiveLightId_; }
+	glm::vec3 GetLightColor(int id) { return m_Lights_[id].GetColor(); }
+	glm::vec3 GetLightDirection(int id) { return m_Lights_[id].GetDirection(); }
 
-	void SetActiveLightId(int id);
+	void SetActiveLightId(int id) { m_ActiveLightId_ = id; }
 	void SetLightName(int id, const std::string& name);
+	void SetLightTexture(int id, const std::string& ImagePath);
 	void SetLightIntensity(int id, glm::vec3 Intensity);
 	void SetLightType(int id, int type);
 	void SetLightVisibility(int id, bool visibility);

@@ -690,17 +690,13 @@ void HorusInspector::SetFov(float fov)
 	}
 }
 
+
+
 //-------------------------------------- LIGHT INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorLight()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	// Get Light info from ObjectManager
-	std::string& LightName = ObjectManager.GetLightName(ObjectManager.GetActiveLightId());
-	m_LightPosition_ = ObjectManager.GetLightPosition(ObjectManager.GetActiveLightId());
-	m_LightRotation_ = ObjectManager.GetLightRotation(ObjectManager.GetActiveLightId());
-	m_LightScale_ = ObjectManager.GetLightScale(ObjectManager.GetActiveLightId());
 
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Light Inspector");
@@ -900,6 +896,33 @@ void HorusInspector::InspectorLight()
 
 		if (ImGui::CollapsingHeader("HDRI", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			// HDRI path
+			ImGui::PushID("HDRI");
+			ImGui::TextUnformatted("HDRI Path : ");
+			ImGui::InputText("##path", m_LightImage_.data(), m_LightImage_.size());
+			ImGui::SameLine();
+
+			if (ImGui::Button("Browse##path"))
+			{
+				std::string FilePath = Utils::HorusFileDialog::OpenFile(m_LightImageFilters_);
+				if (!FilePath.empty())
+				{
+					std::jthread LoadThread([this, FilePath]() mutable
+						{
+							SetLightImageTexture(FilePath);
+						});
+					LoadThread.detach();
+				}
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Clear##path"))
+			{
+				m_LightImage_.clear();
+			}
+			ImGui::PopID();
+
+			ImGui::Separator();
 			if (ImGui::SliderFloat("Intensity", &m_LightIntensity_[0], 0.0f, 1.0f, "%.1f"))
 			{
 				ObjectManager.SetLightIntensity(ObjectManager.GetActiveLightId(), m_LightIntensity_);
@@ -1163,7 +1186,7 @@ void HorusInspector::InspectorLight()
 	ImGui::Separator();
 
 	ImGui::Text("Light id: %d ", ObjectManager.GetActiveLightId());
-	ImGui::Text("Light name: %s ", LightName.c_str());
+	ImGui::Text("Light name: %s ", m_LightName_.c_str());
 	ImGui::Text("Light type: %d ", m_LightType_);
 
 	ImGui::Separator();
@@ -1220,6 +1243,33 @@ void HorusInspector::InspectorLight()
 		ImGui::Text("Disk Light Angle: %.2f ", m_DiskLightAngle);
 	}
 
+}
+
+void HorusInspector::PopulateSelectedLightInfos()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Get Light info from ObjectManager
+	m_LightType_ = ObjectManager.GetLightType(ObjectManager.GetActiveLightId());
+	m_LightName_ = ObjectManager.GetLightName(ObjectManager.GetActiveLightId());
+	m_LightImage_ = ObjectManager.GetLightTexture(ObjectManager.GetActiveLightId());
+	m_LightIntensity_ = ObjectManager.GetLightIntensity(ObjectManager.GetActiveLightId());
+	m_LightPosition_ = ObjectManager.GetLightPosition(ObjectManager.GetActiveLightId());
+	m_LightRotation_ = ObjectManager.GetLightRotation(ObjectManager.GetActiveLightId());
+	m_LightScale_ = ObjectManager.GetLightScale(ObjectManager.GetActiveLightId());
+	m_LightDirection_ = ObjectManager.GetLightDirection(ObjectManager.GetActiveLightId());
+
+
+}
+
+void HorusInspector::SetLightImageTexture(std::string path)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	spdlog::info("Open file : {}", path);
+	ObjectManager.SetLightTexture(ObjectManager.GetActiveLightId(), path);
+	m_LightImage_ = path;
+	CallResetBuffer();
 }
 
 //-------------------------------------- GROUP SHAPE INSPECTOR --------------------------------------
@@ -1518,9 +1568,8 @@ void HorusInspector::InspectorMaterial()
 
 	// TODO : Add a checkbox for freeze the value of the material
 
-	// Collapsing HeaderFlag
+	// TODO : Add a button for convert (/switch prefered) material to node editor material (if possible)
 
-	// Getters Material
 
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Green
 	ImGui::Text("Material Inspector");
@@ -2012,7 +2061,6 @@ void HorusInspector::InspectorMaterial()
 
 }
 
-
 using UpdateCallback = std::function<void(const std::string&)>;
 
 void HorusInspector::DrawParameterWithFileDialog(std::string& filePath, bool& parameterEnabled, const std::string& buttonID, const char* fileFilter, const std::string& parameterName, UpdateCallback onUpdate, UpdateCallback onEnable)
@@ -2049,7 +2097,6 @@ void HorusInspector::DrawParameterWithFileDialog(std::string& filePath, bool& pa
 
 	ImGui::PopID();
 }
-
 void HorusInspector::DrawSwitchColorToTextureButton(bool& switchVariable, const char* id)
 {
 	ImGui::PushID(id);
@@ -3211,7 +3258,7 @@ void HorusInspector::DrawSssSection()
 					"Color",
 					[this, &ObjectManager](const std::string& path)
 					{
-						ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), path);
+							(ObjectManager.GetActiveMaterialId(), path);
 						ObjectManager.SetUseTextureSssScatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
 						ObjectManager.SetEnableSssScatterColorImage(ObjectManager.GetActiveMaterialId(), true);
 
@@ -3916,27 +3963,539 @@ void HorusInspector::DrawOtherSection()
 // Preset Material system (TODO)
 void HorusInspector::SetMaterialDefault()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // 0.0f = opaque, 1.0f = transparent
+	
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialPlastic()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.2f, 0.65f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.05f, 0.05f, 0.05f, 1.0f)); 
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)); 
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypePBR);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 0.8f, 0.8f, 1.0f)); 
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.8f, 0.8f, 0.8f, 1.0f)); 
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), true); 
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), true);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypePBR);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // 0.0f = opaque, 1.0f = transparent
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialMetal()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.8f, 0.7f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.6f, 0.5f, 0.4f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.15f, 0.15f, 0.15f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.55f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.75f, 0.75f, 0.75f, 1.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // 0.0f = opaque, 1.0f = transparent
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
-void HorusInspector::SetMaterialGlass()
+void HorusInspector::SetMaterialGlass() // TODO : Assign correct value 
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialEmissive()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // 0.0f = opaque, 1.0f = transparent
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialMatte()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialSkin()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 void HorusInspector::SetMaterialSSS()
 {
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	// Set default material
+	// Base Color
+	ObjectManager.SetBaseColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Reflection
+	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetReflectionMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::ReflectionTypeMetalness);
+	ObjectManager.SetReflectionMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Sheen
+	ObjectManager.SetSheenColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetSheenWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSheenTint(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	// Refraction
+	ObjectManager.SetRefractionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetRefractionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetRefractionNormal(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetRefractionAbsorptionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionAbsorptionDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
+
+	// SSS
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), false);
+	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), false);
+
+	// Coating
+	ObjectManager.SetCoatingColor(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingNormalWeight(ObjectManager.GetActiveMaterialId(), 0.0f);
+	ObjectManager.SetCoatingRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetCoatingIor(ObjectManager.GetActiveMaterialId(), 1.36f);
+	ObjectManager.SetCoatingThickness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetCoatingTransmissionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetCoatingMode(ObjectManager.GetActiveMaterialId(), HorusMaterial::CoatingTypeMetalness);
+	ObjectManager.SetCoatingMetalness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	// Other
+	ObjectManager.SetNormalWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetDisplacementMap(ObjectManager.GetActiveMaterialId(), glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+	ObjectManager.SetDisplacementWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	PopulateSelectedMaterialInfos();
+	CallResetBuffer();
 }
 
 
@@ -3954,64 +4513,7 @@ void HorusInspector::InspectorProjectProperty()
 
 	m_ResetBuffer_ = false;
 
-	// Render Informations
-	{
-		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, nullptr); // TODO : Fix exception here
-		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, nullptr); // TODO : Fix exception here
-		//rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_RENDER_STATISTICS, sizeof(m_RenderStatistics_), &m_RenderStatistics_, 0); // TODO : Fix exception here
-
-		//ImGui::Begin("Property Panel");
-
-		// gpu name
-		/*rpr_longlong MemoryUsage = m_RenderStatistics_.gpumem_usage / 1024 / 1024;
-		rpr_longlong SystemMemoryUsage = m_RenderStatistics_.sysmem_usage / 1024 / 1024;
-		rpr_longlong GpuMaxAllocation = m_RenderStatistics_.gpumem_max_allocation / 1024 / 1024;
-		rpr_longlong GpuTotal = m_RenderStatistics_.gpumem_total / 1024 / 1024;*/
-
-		/*long long MemoryUsage = 0;
-		long long SystemMemoryUsage = 0;
-		long long GpuMaxAllocation = 0;
-		long long GpuTotal = 0;*/
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		if (ImGui::CollapsingHeader("Render Info"))
-		{
-			ImGui::Text("GPU N01 : %s", m_Gpu00N_);
-			ImGui::Text("GPU N02 : %s", m_Gpu01N_);
-			ImGui::Separator();
-			ImGui::Text("Samples: %d", Radeon.GetSampleCount()); // %d is a placeholder for an integer
-
-			/*ImGui::Text("System memory usage : %d MB", SystemMemoryUsage);
-			ImGui::Text("GPU Memory usage : %d MB", MemoryUsage);
-			ImGui::Text("GPU max allocation : %d MB", GpuMaxAllocation);
-			ImGui::Text("GPU total : %d MB", GpuTotal);*/
-
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
-
-			float deltaTime = ImGui::GetIO().DeltaTime;
-			float framerate = ImGui::GetIO().Framerate;
-
-			m_PerformanceData_.Update(deltaTime, framerate);
-
-			//float avgMsPerFrame = m_PerformanceData_.GetAverageMsPerFrame();
-			//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", avgMsPerFrame, 1000.0f / avgMsPerFrame);
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / framerate, framerate);
-			ImGui::PushStyleColor(ImGuiCol_PlotLines, IM_COL32(255, 0, 0, 255));
-			ImGui::PlotLines("FPS", m_PerformanceData_.fps_values, PerformanceData::DataLength, 0, "FPS", 0.0f, 100.0f, ImVec2(0, 80));
-			ImGui::PopStyleColor();
-
-		}
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
-	}
+	// Render info moved to Statistic UI
 
 	// Render Modes
 	{
@@ -4608,14 +5110,6 @@ void HorusInspector::InspectorProjectProperty()
 
 					}
 
-					// Compute devices
-					if (ImGui::CollapsingHeader("Compute Devices", ImGuiTreeNodeFlags_DefaultOpen))
-					{
-						ImGui::Text("GPU name: %s", m_Gpu00N_);
-						ImGui::SameLine();
-						ImGui::Text("GPU name: %s", m_Gpu01N_);
-					}
-
 					ShowBigSeparator();
 
 					ImGui::EndTabItem();
@@ -4776,21 +5270,9 @@ void HorusInspector::PopulateSelectedProjectInfos()
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	// Populate Project Infos
-	m_Gpu00N_[0] = 0;
-	m_Gpu01N_[0] = 0;
-
-	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU0_NAME, sizeof(m_Gpu00N_), m_Gpu00N_, 0));
-	CHECK(rprContextGetInfo(Radeon.GetContext(), RPR_CONTEXT_GPU1_NAME, sizeof(m_Gpu01N_), m_Gpu01N_, 0));
-
 	m_MinSamples_ = Radeon.GetMinSamples();
 	m_MaxSamples_ = Radeon.GetMaxSamples();
 	m_SelectedRenderMode_ = Radeon.GetVisualizationRenderMode();
-
-
-
-
-
 }
 
 // Project Getters

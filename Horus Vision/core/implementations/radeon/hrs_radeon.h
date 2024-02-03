@@ -61,7 +61,7 @@ public:
 	float GetClassicRenderProgress();
 	float GetAdaptiveRenderProgress();
 
-	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer FramebufferA) const;
+	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer Framebuffer) const;
 	glm::vec2 SetWindowSize(int width, int height);
 	glm::vec2 GetWindowSize() const { return glm::vec2(m_WindowWidth_, m_WindowHeight_); }
 
@@ -134,6 +134,7 @@ private:
 
 	float m_PreviousLensShift_ = 0.0;
 
+	bool m_IsFramebufferAreOperational_ = false;
 	bool m_ThreadRunning_ = false;
 	std::future<void> m_ClassicRenderFuture_;
 	std::future<void> m_AdaptiveRenderFuture_;

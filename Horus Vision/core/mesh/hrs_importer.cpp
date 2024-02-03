@@ -69,10 +69,10 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 
 	Assimp::Importer Importer;
 
-	const aiScene* Scene = Importer.ReadFile(MeshPath, aiProcess_CalcTangentSpace | aiProcess_GenNormals |
+	const aiScene* Scene = Importer.ReadFile(MeshPath, aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType | aiProcess_ValidateDataStructure);
+		aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenNormals | aiProcess_GenSmoothNormals 
+		 | aiProcess_ValidateDataStructure);
 
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
 	{

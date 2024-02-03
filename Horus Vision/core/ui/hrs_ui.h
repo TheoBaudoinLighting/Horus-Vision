@@ -44,6 +44,9 @@ private:
 	inline static bool m_ShowConsole_ = true;
 	inline static bool m_ShowScene_ = false;
 	inline static bool m_ShowInspector_ = true;
+	inline static bool m_ShowStatistics_ = true;
+	inline static bool m_ShowHelp_ = false;
+	inline static bool m_ShowAbout_ = false;
 
 	bool m_LoadLogoTexture_ = true;
 	bool m_LoadUILogoTexture_ = true;

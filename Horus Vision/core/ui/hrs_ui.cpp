@@ -12,10 +12,13 @@
 #include "hrs_inspector.h"
 #include "hrs_console.h"
 
-#include "hrs_imgui.h"
+#include "hrs_imgui_core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 
+#include "hrs_about.h"
+#include "hrs_help.h"
+#include "hrs_statistics.h"
 #include "../scene/hrs_importer_manager.h"
 #include "imgui_internal.h"
 #include "stb_image.h"
@@ -62,6 +65,7 @@ void HorusUI::Init()
 	HorusConsole::GetInstance().InitConsole();
 }
 
+// TODO : Move this to HorusUI
 void independentThread()
 {
 	std::cout << "Starting concurrent thread.\n";
@@ -108,6 +112,7 @@ void HorusUI::MainMenuBar()
 
 		if (ImGui::BeginMenu("File"))
 		{
+			ImGui::BeginDisabled(true);
 			if (ImGui::MenuItem("New", "Ctrl+N"))
 			{
 				//ObjectManager.DestroyScene(ObjectManager.GetActiveSceneId());
@@ -131,7 +136,7 @@ void HorusUI::MainMenuBar()
 
 			if (ImGui::MenuItem("Save scene as..", "Ctrl+Alt+S"))
 			{
-				threadCaller();
+				//threadCaller();
 			}
 
 			if (ImGui::MenuItem("Load test scene", "Ctrl+L"))
@@ -139,6 +144,7 @@ void HorusUI::MainMenuBar()
 				HorusObjectManager::GetInstance().ShowLookdevScene();
 				//HorusObjectManager::GetInstance().ShowJaguardXKSS();
 			}
+			ImGui::EndDisabled();
 
 			ImGui::Separator();
 
@@ -186,6 +192,7 @@ void HorusUI::MainMenuBar()
 			}
 
 			// Import GLTF file
+			ImGui::BeginDisabled(true);
 			if (ImGui::MenuItem("Import GLTF Scene"))
 			{
 				HorusImporterManager::GetInstance().ImportGltf("C:/Users/WS_THEO/Desktop/gltf/exporttest.gltf", HorusRadeon::GetInstance().GetContext(), HorusRadeon::GetInstance().GetMatsys(), &HorusObjectManager::GetInstance().GetScene());
@@ -197,9 +204,7 @@ void HorusUI::MainMenuBar()
 					spdlog::info("Import GLTF : {}", FilePath);
 				}*/
 			}
-
-
-
+			ImGui::EndDisabled();
 
 			ImGui::Separator();
 
@@ -225,21 +230,6 @@ void HorusUI::MainMenuBar()
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Show"))
-		{
-			if (ImGui::MenuItem("Zoom +"))
-			{
-
-			}
-
-			if (ImGui::MenuItem("Zoom -"))
-			{
-
-			}
-
-			ImGui::EndMenu();
-		}
-
 		if (ImGui::BeginMenu("Window"))
 		{
 			ImGui::SeparatorText("Show / Hide");
@@ -248,26 +238,25 @@ void HorusUI::MainMenuBar()
 			ImGui::MenuItem("Render", nullptr, &m_ShowRadeonViewport_);
 			ImGui::MenuItem("Outliner", nullptr, &m_ShowOutliner_);
 			ImGui::MenuItem("Console", nullptr, &m_ShowConsole_);
-			ImGui::MenuItem("Scene", nullptr, &m_ShowScene_);
+			//ImGui::MenuItem("Scene", nullptr, &m_ShowScene_);
 			ImGui::MenuItem("Inspector", nullptr, &m_ShowInspector_);
-
+			ImGui::MenuItem("Statistics", nullptr, &m_ShowStatistics_);
+			
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::BeginMenu("Help"))
 		{
-			if (ImGui::MenuItem("About"))
-			{
-
-			}
+			ImGui::MenuItem("Documentation", nullptr, &m_ShowHelp_);
+			ImGui::MenuItem("About", nullptr, &m_ShowAbout_);
 
 			ImGui::EndMenu();
 		}
 
 		const float WindowWidth = ImGui::GetWindowWidth();
-		const float TextWidth = ImGui::CalcTextSize("Version 1.0.0").x;
+		const float TextWidth = ImGui::CalcTextSize("Version 1.3.0").x;
 		ImGui::SetCursorPosX(WindowWidth - TextWidth - ImGui::GetStyle().ItemSpacing.x);
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Version 1.0.0");
+		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Version 1.3.0");
 
 		ImGui::EndMainMenuBar();
 	}
@@ -301,6 +290,22 @@ void HorusUI::RenderUI()
 	{
 		HorusConsole::GetInstance().Console(&m_ShowConsole_);
 	}
+
+	if (m_ShowStatistics_)
+	{
+		HorusStatistics::GetInstance().Statistics(&m_ShowStatistics_);
+	}
+
+	if (m_ShowAbout_)
+	{
+		HorusAbout::GetInstance().About(&m_ShowAbout_);
+	}
+
+	if (m_ShowHelp_)
+	{
+		HorusHelp::GetInstance().RenderHelp(&m_ShowHelp_);
+	}
+
 }
 
 void HorusUI::ResetBuffers()

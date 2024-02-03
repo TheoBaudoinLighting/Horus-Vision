@@ -32,6 +32,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <shared_mutex>
 
+#include "hrs_statistics.h"
 #include "picojson.h"
 #include "stbi/stb_image_write.h"
 
@@ -92,21 +93,24 @@ void RenderJob(const rpr_context Context, RenderProgressCallback::Update* Update
 	RenderMutex.unlock();
 }
 
-void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuffer FramebufferA) const
+void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuffer Framebuffer) const
 {
-	if (rpr_int Status = rprContextResolveFrameBuffer(Context, FramebufferA, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
+	if (m_IsFramebufferAreOperational_)
 	{
-		spdlog::error("RPR Error: {}", Status);
-	}
+		if (rpr_int Status = rprContextResolveFrameBuffer(Context, Framebuffer, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
+		{
+			spdlog::error("RPR Error: {}", Status);
+		}
 
-	size_t FramebufferSize = 0;
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
-	if (FramebufferSize != m_WindowWidth_ * m_WindowHeight_ * 4 * sizeof(float))
-	{
-		CHECK(RPR_ERROR_INTERNAL_ERROR)
-	}
+		size_t FramebufferSize = 0;
+		CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
+		if (FramebufferSize != m_WindowWidth_ * m_WindowHeight_ * 4 * sizeof(float))
+		{
+			CHECK(RPR_ERROR_INTERNAL_ERROR)
+		}
 
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
+		CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
+	}
 }
 
 glm::vec2 HorusRadeon::SetWindowSize(int width, int height)
@@ -201,6 +205,8 @@ bool HorusRadeon::InitGraphics()
 		RPR_CREATION_FLAGS_ENABLE_GL_INTEROP | RPR_CREATION_FLAGS_ENABLE_GPU0 | RPR_CREATION_FLAGS_ENABLE_GPU1,
 		g_contextProperties, nullptr, &m_ContextA_);
 
+
+
 	CHECK(Status);
 
 	CHECK(rprContextSetActivePlugin(m_ContextA_, Plugins[0]));
@@ -245,6 +251,9 @@ bool HorusRadeon::InitGraphics()
 	spdlog::info("Radeon graphics successfully initialized..");
 	Console.AddLog(" [info] Radeon graphics successfully initialized");
 
+	m_IsFramebufferAreOperational_ = true;
+
+	HorusStatistics::GetInstance().InitStatistics(2, 0);
 	Engine.SetEngineIsReady(true);
 
 	if (auto EndEngineTimer = TimerManager.StopTimer("EngineInit"); EndEngineTimer > 1000)
@@ -312,6 +321,8 @@ void HorusRadeon::ResizeRender(int width, int height)
 	m_WindowWidth_ = width;
 	m_WindowHeight_ = height;
 
+	m_IsFramebufferAreOperational_ = false;
+
 	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
 
 	m_FbData_ = nullptr;
@@ -347,6 +358,8 @@ void HorusRadeon::ResizeRender(int width, int height)
 	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
 	ObjectManager.SetViewport(ObjectManager.GetActiveRadeonCameraId(), 0, 0, m_WindowWidth_, m_WindowHeight_);
 	m_SampleCount_ = 1;
+
+	m_IsFramebufferAreOperational_ = true;
 
 	spdlog::info("Radeon successfully resized in : Width : {}, Height : {}", m_WindowWidth_, m_WindowHeight_);
 	Console.AddLog(" [info] Radeon successfully resized in : Width : %d, Height : %d ", m_WindowWidth_, m_WindowHeight_);
@@ -415,7 +428,7 @@ void HorusRadeon::RenderClassic()
 
 		RenderProgressCallback.Clear();
 
-		if (m_IsDirty_)
+		if (m_IsDirty_ && m_IsFramebufferAreOperational_)
 		{
 			if (m_SampleCount_ <= MinSamplesToSwitch)
 			{
@@ -463,14 +476,9 @@ void HorusRadeon::RenderClassic()
 				RenderMutex.lock();
 				m_SampleCount_++;
 
-				if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_)
+				if (m_IsFramebufferAreOperational_)
 				{
 					m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
-				}
-				else if (m_SampleCount_ >= MinSamplesToSwitch + 1)
-				{
-					m_RenderInfoThread_ = std::jthread(&HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
-					m_RenderInfoThread_.detach();
 				}
 
 				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
@@ -484,7 +492,7 @@ void HorusRadeon::RenderClassic()
 			}
 		}
 
-		if (m_ThreadRunning_)
+		if (m_ThreadRunning_ && m_IsFramebufferAreOperational_)
 		{
 			if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_ && m_ClassicRenderFuture_.valid() && m_ClassicRenderInfoFuture_.valid())
 			{
@@ -492,9 +500,13 @@ void HorusRadeon::RenderClassic()
 				m_ClassicRenderInfoFuture_.wait();
 			}
 
-
 			m_ThreadRunning_ = false;
 		}
+		else
+		{
+			m_ThreadRunning_ = false;
+		}
+
 
 		GetClassicRenderProgress();
 		BenchmarkNumberOfRenderIteration += m_BatchSize_;
@@ -646,6 +658,8 @@ void HorusRadeon::CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles)
 	FbMetadata.TileSizeX = Tile_Size;
 	FbMetadata.TileSizeY = Tile_Size;
 
+	/*std::jthread RenderThread(&RenderMultiTiles, FbMetadata, ObjectManager.GetScene(), m_ContextA_, MaxIterationPerTiles);
+	RenderThread.detach();*/
 	RenderMultiTiles(FbMetadata, ObjectManager.GetScene(), m_ContextA_, MaxIterationPerTiles);
 
 	if (!stbi_write_png("FinalRender.png", m_WindowWidth_, m_WindowHeight_, 3, FbMetadata.FbData.data(), m_WindowWidth_ * 3))
@@ -670,10 +684,10 @@ void HorusRadeon::RenderMultiTiles(HorusFrameBufferMetadata& FbMetadata, rpr_sce
 
 	rprCameraGetInfo(m_Camera_, RPR_CAMERA_LENS_SHIFT, sizeof(m_PreviousLensShift_), &m_PreviousLensShift_, nullptr);
 
-	CHECK_GT(FbMetadata.RenderTargetSizeX, FbMetadata.TileSizeX)
-		CHECK_GT(FbMetadata.RenderTargetSizeY, FbMetadata.TileSizeY)
+	CHECK_GT(FbMetadata.RenderTargetSizeX, FbMetadata.TileSizeX);
+	CHECK_GT(FbMetadata.RenderTargetSizeY, FbMetadata.TileSizeY);
 
-		FbMetadata.FbData.resize(static_cast<std::vector<rpr_uchar, std::allocator<rpr_uchar>>::size_type>(FbMetadata.RenderTargetSizeX) * FbMetadata.RenderTargetSizeY * 3);
+	FbMetadata.FbData.resize(static_cast<std::vector<rpr_uchar, std::allocator<rpr_uchar>>::size_type>(FbMetadata.RenderTargetSizeX) * FbMetadata.RenderTargetSizeY * 3);
 
 	float TileSizeXf = FbMetadata.RenderTargetSizeX / static_cast<float>(FbMetadata.TileSizeX);
 	float TileSizeYf = FbMetadata.RenderTargetSizeY / static_cast<float>(FbMetadata.TileSizeY);

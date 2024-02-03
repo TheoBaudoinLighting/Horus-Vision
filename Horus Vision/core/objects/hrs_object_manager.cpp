@@ -1872,52 +1872,8 @@ HorusLight& HorusObjectManager::GetLight(int Id)
 {
 	return m_Lights_[Id];
 }
-glm::vec3 HorusObjectManager::GetLightPosition(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetPosition();
-}
-glm::vec3 HorusObjectManager::GetLightRotation(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetRotation();
-}
-glm::vec3 HorusObjectManager::GetLightScale(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetScale();
-}
-glm::vec3 HorusObjectManager::GetLightColor(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetColor();
-}
-glm::vec3 HorusObjectManager::GetLightDirection(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetDirection();
-}
-glm::vec3 HorusObjectManager::GetLightIntensity(int id)
-{
-	HorusLight& Light = GetLight(id);
-
-	return Light.GetIntensity();
-}
-int HorusObjectManager::GetActiveLightId()
-{
-	return m_ActiveLightId_;
-}
 
 // General Setters
-void HorusObjectManager::SetActiveLightId(int id)
-{
-	m_ActiveLightId_ = id;
-}
 void HorusObjectManager::SetLightType(int id, int type)
 {
 	if (!m_Lights_.contains(id))
@@ -1965,6 +1921,15 @@ void HorusObjectManager::SetLightName(int id, const std::string& name)
 
 	m_LightNames_[id] = name;
 
+}
+void HorusObjectManager::SetLightTexture(int id, const std::string& ImagePath)
+{
+	if (!m_Lights_.contains(id))
+	{
+		spdlog::error("no light with this id exists. ");
+	}
+
+	m_Lights_[id].SetLightTexturePath(ImagePath);
 }
 void HorusObjectManager::SetLightVisibility(int id, bool visibility)
 {

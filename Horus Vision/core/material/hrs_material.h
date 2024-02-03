@@ -724,7 +724,7 @@ private:
 	std::string m_ReflectionAnisotropyRotationPath_ = "path/to/ReflectionAnisotropyRotation.jpg";
 	glm::vec4 m_ReflectionAnisotropyRotation_ = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	ReflectionType m_ReflectionMode_ = ReflectionTypePBR;
+	ReflectionType m_ReflectionMode_ = ReflectionTypeMetalness;
 	float m_Ior_ = 1.36f;
 
 	// Reflection Metalness
@@ -893,7 +893,7 @@ private:
 	bool m_EnableCoatingMetalnessImage_ = false;
 	std::string m_CoatingMetalnessPath_ = "path/to/CoatingMetalness.jpg";
 	glm::vec4 m_CoatingMetalness_ = { 0.0f, 0.0f, 0.0f, 0.0f };
-	CoatingType m_CoatingMode_ = CoatingTypePBR;
+	CoatingType m_CoatingMode_ = CoatingTypeMetalness;
 
 	// Other secion --------------------------------------------------------------------------------//
 	// Normal map

@@ -159,7 +159,6 @@
     <ClCompile Include="external\RadeonProRender\common\common.cpp" />
     <ClCompile Include="core\shaders\hrs_shader_manager.cpp" />
     <ClCompile Include="core\implementations\opengl\hrs_opengl.cpp" />
-    <ClCompile Include="core\implementations\imgui\hrs_imgui.cpp" />
     <ClCompile Include="core\implementations\radeon\hrs_radeon.cpp" />
     <ClCompile Include="core\hrs_engine.cpp" />
     <ClCompile Include="core\window\hrs_window.cpp" />
@@ -188,6 +187,9 @@
     <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
     <ClCompile Include="core\implementations\radeon\hrs_radeon_posteffect.cpp" />
     <ClCompile Include="core\implementations\radeon\hrs_radeon_render.cpp" />
+    <ClCompile Include="core\ui\hrs_about.cpp" />
+    <ClCompile Include="core\ui\hrs_statistics.cpp" />
+    <ClCompile Include="core\ui\hrs_help.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\config\hrs_config.h" />
@@ -197,9 +199,6 @@
     <ClInclude Include="core\config\hrs_reset_buffers.h" />
     <ClInclude Include="core\config\hrs_timer.h" />
     <ClInclude Include="core\config\hrs_utils.h" />
-    <ClInclude Include="core\implementations\imgui\hrs_fonts.h" />
-    <ClInclude Include="core\implementations\imgui\hrs_icons.h" />
-    <ClInclude Include="core\implementations\imgui\hrs_icons_fa.h" />
     <ClInclude Include="core\material\hrs_graph.h" />
     <ClInclude Include="external\GLAD\INCLUDE\GLAD\glad.h" />
     <ClInclude Include="external\GLAD\INCLUDE\KHR\khrplatform.h" />
@@ -521,7 +520,6 @@
     <ClInclude Include="external\RadeonProRender\common\tiny_obj_loader.h" />
     <ClInclude Include="core\shaders\hrs_shader_manager.h" />
     <ClInclude Include="core\implementations\opengl\hrs_opengl.h" />
-    <ClInclude Include="core\implementations\imgui\hrs_imgui.h" />
     <ClInclude Include="core\implementations\radeon\hrs_radeon.h" />
     <ClInclude Include="core\hrs_engine.h" />
     <ClInclude Include="core\window\hrs_window.h" />
@@ -671,6 +669,9 @@
     <ClInclude Include="core\scene\hrs_importer_manager.h" />
     <ClInclude Include="core\implementations\radeon\hrs_radeon_posteffect.h" />
     <ClInclude Include="core\implementations\radeon\hrs_radeon_render.h" />
+    <ClInclude Include="core\ui\hrs_about.h" />
+    <ClInclude Include="core\ui\hrs_statistics.h" />
+    <ClInclude Include="core\ui\hrs_help.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="core\shaders\light.frag" />

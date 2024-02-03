@@ -4,7 +4,7 @@
 #include "hrs_opengl.h" // glad.h
 #include "hrs_radeon.h" // glfw3.h
 #include "hrs_config.h" // glfw3.h
-#include "hrs_imgui.h" // glfw3.h
+#include "hrs_imgui_core.h" // glfw3.h
 
 // External includes
 #include <RadeonProRender.hpp>

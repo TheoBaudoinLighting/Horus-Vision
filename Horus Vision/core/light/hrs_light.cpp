@@ -487,7 +487,7 @@ void HorusLight::DestroyLight()
 		}
 
 		//CHECK(rprObjectDelete(m_Light_))
-			m_Light_ = nullptr;
+		m_Light_ = nullptr;
 		m_IsLightHdri_ = false;
 
 	}
@@ -601,9 +601,33 @@ void HorusLight::SetIntensity(glm::vec3& Intensity)
 			break;
 	}
 }
+void HorusLight::SetLightTexturePath(const std::string& ImagePath)
+{
+	m_ImagePath_ = ImagePath;
+
+	switch (m_LightType_)
+	{
+	case RPR_LIGHT_TYPE_SPOT:
+		SetSpotLightImage(ImagePath);
+		break;
+	case RPR_LIGHT_TYPE_ENVIRONMENT:
+		spdlog::info("Set image for environment light {}", ImagePath);
+		SetEnvironmentLightSetImage(ImagePath);
+		break;
+	}
+
+}
 void HorusLight::SetLightVisibility(bool Visibility)
 {
 	CHECK(rprLightSetVisibilityFlag(m_Light_, RPR_LIGHT_VISIBILITY_LIGHT, Visibility))
+}
+void HorusLight::SetLightHdri(bool IsHdri)
+{
+	m_IsLightHdri_ = IsHdri;
+}
+void HorusLight::SetUseFileTexture(bool UseFileTexture)
+{
+	m_UseFileTexture_ = UseFileTexture;
 }
 
 // Directional 
@@ -673,7 +697,8 @@ void HorusLight::SetEnvironmentLightSetImage(const std::string& ImagePath)
 	CHECK(Status)
 		HorusGarbageCollector::GetInstance().Add(Image);
 
-	CHECK(rprEnvironmentLightSetImage(m_Light_, Image))
+	CHECK(rprEnvironmentLightSetImage(m_Light_, Image));
+	spdlog::info("Image set for environment light");
 }
 void HorusLight::SetShapeEnvironmentLight(rpr_shape Shape, bool IsEnvLight)
 {

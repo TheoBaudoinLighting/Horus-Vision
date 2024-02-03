@@ -41,7 +41,7 @@ rpr_material_node HorusMaterial::CreateMaterial()
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 0.5f, 0.5f));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_DIFFUSE_WEIGHT, 1.0f, 1.0f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_DIFFUSE_ROUGHNESS, 0.0f, 0.0f, 0.0f, 0.0f));
-	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_BACKSCATTER_COLOR, 0.5f, 0.5f, 0.5f, 0.5f));
+	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_BACKSCATTER_COLOR, 1.0f, 1.0f, 1.0f, 1.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_BACKSCATTER_WEIGHT, 0.0f, 0.0f, 0.0f, 0.0f));
 
 	// Reflection
@@ -50,8 +50,9 @@ rpr_material_node HorusMaterial::CreateMaterial()
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_ROUGHNESS, 0.5f, 0.5f, 0.5f, 0.5f));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_ANISOTROPY, 0.0f, 0.0f, 0.0f, 0.0f));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_ANISOTROPY_ROTATION, 0.0f, 0.0f, 0.0f, 0.0f));
-	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_MODE, RPR_UBER_MATERIAL_IOR_MODE_PBR));
+	CHECK(rprMaterialNodeSetInputUByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_MODE, RPR_UBER_MATERIAL_IOR_MODE_METALNESS));
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_IOR, 1.36f, 1.36f, 1.36f, 1.36f));
+	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_REFLECTION_METALNESS, 0.0f, 0.0f, 0.0f, 0.0f));
 
 	// Sheen
 	CHECK(rprMaterialNodeSetInputFByKey(MaterialNodeUberv2, RPR_MATERIAL_INPUT_UBER_SHEEN, 1.0f, 1.0f, 1.0f, 1.0f));

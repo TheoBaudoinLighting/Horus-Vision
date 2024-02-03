@@ -3,53 +3,44 @@
 
 #include <Windows.h>
 
+#include "hrs_engine.h"
 #include "hrs_inspector.h"
 #include "hrs_timer.h"
+#include "hrs_utils.h"
 #include "imgui_internal.h"
 using namespace std;
 
 //---------------------------------------RADEON SECTION---------------------------------------//
+
+void CallRenderMultiTiles(int TileSize, int MaxIterationPerTile)
+{
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	Radeon.CallRenderMultiTiles(TileSize, MaxIterationPerTile);
+}
 
 void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusTimerManager& TimerManager = HorusTimerManager::GetInstance();
 
-	ImVec4 GreenColor = ImVec4(0.6f, 1.0f, 0.6f, 1.0f);
-	ImVec4 PinkColor = ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+	m_Io_ = ImGui::GetIO();
 
-	static ImVec2 LastSize = ImVec2(0, 0);
-	static ImVec2 ViewerWindowPos;
-	static ImVec2 ViewerWindowSize;
 
-	static bool IsZooming = false;
-	static bool UseTextColorForTint = false;
-	static bool IsResizable = false;
 
-	static int CustomX = 800;
-	static int CustomY = 600;
-	static int LastCustomX = CustomX;
-	static int LastCustomY = CustomY;
-
-	float WidthPerItems = 100;
-
-	ImGuiIO& io = ImGui::GetIO();
-	bool IsLeftAltPressed = io.KeyAlt;
-
-	ImGuiWindowFlags WindowFlags = 0;
-
-	if (IsLeftAltPressed) {
-		WindowFlags |= ImGuiWindowFlags_NoMove;
+	if (m_IsLeftAltPressed_) {
+		m_WindowFlags_ |= ImGuiWindowFlags_NoMove;
 	}
 
-	const char* Items[] = { "800x600", "1024x768", "1280x536", "1280x720", "1920x1080", "1920x803", "2048x858" };
-	static int ItemCurrent = 0;
-
-	if (ImGui::Begin("Render view", p_open, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | WindowFlags))
+	if (ImGui::Begin("Render view", p_open, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | m_WindowFlags_))
 	{
-		int ElementsNumber = 8;
-		float AvailableWidth = ImGui::GetContentRegionAvail().x;
-		WidthPerItems = AvailableWidth / ElementsNumber;
+		m_ViewerSize_ = ImGui::GetWindowSize();
+		m_ViewerWindowPos_ = ImGui::GetWindowPos();
+		m_AvailableWidth_ = ImGui::GetContentRegionAvail().x;
+		m_AvailableHeight_ = ImGui::GetContentRegionAvail().y;
+		m_Pos_ = ImGui::GetCursorScreenPos();
+		m_IsLeftAltPressed_ = ImGui::IsKeyDown(ImGuiKey_LeftAlt);
+
+		m_WidthPerItems_ = m_AvailableWidth_ / m_ElementsNumber_;
 
 		if (ImGui::BeginMenuBar())
 		{
@@ -69,39 +60,56 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
-			ImGui::SetNextItemWidth(WidthPerItems-50);
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
 			ImGui::Text("Size : ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems- 50);
-			ImGui::DragInt("", &CustomX);
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
+			ImGui::DragInt("", &m_CustomX_);
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems- 50);
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
 			ImGui::Text(" x ");
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(WidthPerItems- 50);
-			ImGui::DragInt("", &CustomY);
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
+			ImGui::DragInt("", &m_CustomY_);
 			ImGui::SameLine();
 
 			ImGui::SameLine(); ShowHelpMarker("Resize the viewport to the desired size. The render will be automatically resized to fit the viewport. Ctrl + Click to edit directly the size.");
 
-			ImGui::SetNextItemWidth(WidthPerItems- 50);
-			if (ImGui::Combo("Predefined Sizes", &ItemCurrent, Items, IM_ARRAYSIZE(Items)))
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
+			// Replace by begin Combo // ImGuiComboFlags_WidthFitPreview
+
+			// Size Presets variables
+			//const char* m_SizePresetItems_[] = { "800x600", "1024x768", "1280x536", "1280x720", "1920x1080", "1920x803", "2048x858" };
+			
+
+			if (ImGui::BeginCombo("##SizePreset", m_SizePresetItem_[m_SizePresetItemCurrent_], ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_WidthFitPreview))
 			{
-				sscanf_s(Items[ItemCurrent], "%dx%d", &CustomX, &CustomY);
+				for (int n = 0; n < IM_ARRAYSIZE(m_SizePresetItem_); n++)
+				{
+					if (bool IsSelected = (m_SizePresetItemCurrent_ == n); ImGui::Selectable(m_SizePresetItem_[n], IsSelected))
+					{
+						m_SizePresetItemCurrent_ = n;
+						sscanf_s(m_SizePresetItem_[m_SizePresetItemCurrent_], "%dx%d", &m_CustomX_, &m_CustomY_);
+
+						Radeon.ResizeRender(m_CustomX_, m_CustomY_);
+					}
+				}
+				ImGui::EndCombo();
 			}
+
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 			ImGui::SameLine();
-			ImGui::Checkbox("Resizable", &IsResizable);
+			ImGui::Checkbox("Resizable", &m_IsResizable_);
 			ImGui::SameLine(); ShowHelpMarker("Resize automatically the render to fit the viewport.");
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
-			ImGui::Checkbox("Zooming", &IsZooming);
+			ImGui::Checkbox("Zooming", &m_IsZooming_);
 			ImGui::SameLine(); ShowHelpMarker("Zoom on the render when you rest the mouse on it.");
 			ImGui::SameLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -111,7 +119,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			const char* ColorSpaceConfigItems[] = { "sRGB", "Linear", "ACEScg", "ACES2065-1", "ACEScc", "ACEScct", "ACESproxy" };
 			static int CurrentColorSpaceConfig = 0;
 
-			ImGui::SetNextItemWidth(WidthPerItems- 50);
+			ImGui::SetNextItemWidth(m_WidthPerItems_ - 50);
 			if (ImGui::Combo("Color Space", &CurrentColorSpaceConfig, ColorSpaceConfigItems, IM_ARRAYSIZE(ColorSpaceConfigItems)))
 			{
 				//Radeon.SetColorSpace(CurrentColorSpaceConfig);
@@ -135,20 +143,19 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			ImGui::EndMenuBar();
 		}
 
-		GLuint TextureId = Radeon.GetTextureBuffer();
-		ImVec2 ViewerSize = ImGui::GetContentRegionAvail();
+		const GLuint TextureId = Radeon.GetTextureBuffer();
 
 		if (m_IsViewportLocked_ == true)
 		{
-			if (IsResizable)
+			if (m_IsResizable_)
 			{
-				if (ViewerSize.x != LastSize.x || ViewerSize.y != LastSize.y)
+				if (m_ViewerSize_.x != m_LastSize_.x || m_ViewerSize_.y != m_LastSize_.y)
 				{
-					LastSize = ViewerSize;
+					m_LastSize_ = m_ViewerSize_;
 				}
 
 				ImVec2 CursorPos = ImGui::GetCursorPos();
-				ImVec2 CenterPos = ImVec2(CursorPos.x + ViewerSize.x / 2, CursorPos.y + ViewerSize.y / 2);
+				ImVec2 CenterPos = ImVec2(CursorPos.x + m_ViewerSize_.x / 2, CursorPos.y + m_ViewerSize_.y / 2);
 
 				ImDrawList* DrawList = ImGui::GetWindowDrawList();
 				DrawList->AddRectFilled(ImGui::GetCursorScreenPos(), ImVec2(m_ImageSize_.x, m_ImageSize_.y), ImColor(26, 26, 51, 255));
@@ -156,6 +163,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 				float RenderProgress = 10; // TODO : get the render progress of the tiled render
 				ImGui::SetCursorPos(ImVec2(CenterPos.x - m_ImageSize_.x / 2, CenterPos.y - 20));
 				ImGui::ProgressBar(RenderProgress, ImVec2(m_ImageSize_.x, 30), "Rendering...");
+				DrawRectangleAroundItem(m_GreenColor_);
 
 				// Bouton "Quit Render"
 				ImGui::SetCursorPos(ImVec2(CenterPos.x - m_ImageSize_.x / 2, CenterPos.y + m_ImageSize_.y - 50));
@@ -171,18 +179,18 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 				int CurrentTile = 64;
 				int MaxTiles = 25;
 
-				float AspectRatioImage = static_cast<float>(CustomX) / static_cast<float>(CustomY);
+				float AspectRatioImage = static_cast<float>(m_CustomX_) / static_cast<float>(m_CustomY_);
 				m_AspectRationRender_ = AspectRatioImage;
 
-				if (ViewerSize.x / ViewerSize.y > AspectRatioImage)
+				if (m_ViewerSize_.x / m_ViewerSize_.y > AspectRatioImage)
 				{
-					m_ImageSize_.y = ViewerSize.y;
-					m_ImageSize_.x = ViewerSize.y * AspectRatioImage;
+					m_ImageSize_.y = m_ViewerSize_.y;
+					m_ImageSize_.x = m_ViewerSize_.y * AspectRatioImage;
 				}
 				else
 				{
-					m_ImageSize_.x = ViewerSize.x;
-					m_ImageSize_.y = ViewerSize.x / AspectRatioImage;
+					m_ImageSize_.x = m_ViewerSize_.x;
+					m_ImageSize_.y = m_ViewerSize_.x / AspectRatioImage;
 				}
 
 				ImVec2 CursorPos = ImGui::GetCursorPos();
@@ -224,58 +232,104 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 		{
 			if (m_IsFirstLaunch_)
 			{
-				Radeon.ResizeRender(CustomX, CustomY);
-				LastCustomX = CustomX;
-				LastCustomY = CustomY;
+				Radeon.ResizeRender(m_CustomX_, m_CustomY_);
+				m_LastCustomX_ = m_CustomX_;
+				m_LastCustomY_ = m_CustomY_;
 
 				m_IsFirstLaunch_ = false;
 			}
 
-			if (CustomX != LastCustomX || CustomY != LastCustomY)
+			if (m_CustomX_ != m_LastCustomX_ || m_CustomY_ != m_LastCustomY_)
 			{
-				Radeon.ResizeRender(CustomX, CustomY);
-				LastCustomX = CustomX;
-				LastCustomY = CustomY;
+				Radeon.ResizeRender(m_CustomX_, m_CustomY_);
+				m_LastCustomX_ = m_CustomX_;
+				m_LastCustomY_ = m_CustomY_;
 			}
 
-			if (IsResizable)
+			if (m_IsResizable_)
 			{
-				if (ViewerSize.x != LastSize.x || ViewerSize.y != LastSize.y)
+				if (m_ViewerSize_.x != m_LastSize_.x || m_ViewerSize_.y != m_LastSize_.y)
 				{
-					Radeon.ResizeRender(static_cast<int>(ViewerSize.x), static_cast<int>(ViewerSize.y));
-					LastSize = ViewerSize;
+					Radeon.ResizeRender(static_cast<int>(m_ViewerSize_.x), static_cast<int>(m_ViewerSize_.y));
+					m_LastSize_ = m_ViewerSize_;
 				}
 
-				ImGui::Image((void*)intptr_t(TextureId), ImVec2(ViewerSize.x, ViewerSize.y));
+				ImGui::Image((void*)intptr_t(TextureId), ImVec2(m_ViewerSize_.x, m_ViewerSize_.y));
+				DrawRectangleAroundItem(m_GreenColor_);
 			}
 			else
 			{
-				float aspect_ratio_image = static_cast<float>(CustomX) / static_cast<float>(CustomY);
-				m_AspectRationRender_ = aspect_ratio_image;
-
-				if (ViewerSize.x / ViewerSize.y > aspect_ratio_image)
+				if (!m_IsDragging_)
 				{
-					m_ImageSize_.y = ViewerSize.y;
-					m_ImageSize_.x = ViewerSize.y * aspect_ratio_image;
+					float aspect_ratio_image = static_cast<float>(m_CustomX_) / static_cast<float>(m_CustomY_);
+					m_AspectRationRender_ = aspect_ratio_image;
+
+					if (m_ViewerSize_.x / m_ViewerSize_.y > aspect_ratio_image)
+					{
+						m_ImageSize_.y = m_ViewerSize_.y;
+						m_ImageSize_.x = m_ViewerSize_.y * aspect_ratio_image;
+					}
+					else
+					{
+						m_ImageSize_.x = m_ViewerSize_.x;
+						m_ImageSize_.y = m_ViewerSize_.x / aspect_ratio_image;
+					}
+
+					/*m_OffsetX_ = (m_ViewerSize_.x - m_ImageSize_.x) * 0.5f;
+					m_OffsetY_ = (m_ViewerSize_.y - m_ImageSize_.y) * 0.5f;*/
 				}
-				else
+
+				// Right click to reset the position
+				if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && !m_IsLeftAltPressed_ && ImGui::IsWindowFocused() && ImGui::IsWindowHovered())
 				{
-					m_ImageSize_.x = ViewerSize.x;
-					m_ImageSize_.y = ViewerSize.x / aspect_ratio_image;
+					m_OffsetX_ = (m_ViewerSize_.x - m_ImageSize_.x) * 0.5f;
+					m_OffsetY_ = (m_ViewerSize_.y - m_ImageSize_.y) * 0.5f;
 				}
 
-				float OffsetX = (ViewerSize.x - m_ImageSize_.x - 60) * 0.5f;
-				float OffsetY = (ViewerSize.y - m_ImageSize_.y) * 0.5f;
+				// TODO : Implement the zooming feature for the render
+				float zoomFactor = ImGui::GetIO().MouseWheel;
+				if (zoomFactor != 0 && !m_IsDragging_ && ImGui::IsWindowFocused())
+				{
+					const float zoomSpeed = 0.05f;
+					ImVec2 mousePos = ImGui::GetMousePos();
 
-				ImGui::SetCursorPos(ImVec2(OffsetX + 30, OffsetY + 30));
-				ImVec2 Pos = ImGui::GetCursorScreenPos();
+					float mouseRelX = (mousePos.x - m_OffsetX_) / m_ImageSize_.x;
+					float mouseRelY = (mousePos.y - m_OffsetY_) / m_ImageSize_.y;
 
-				ImVec2 UvMin = ImVec2(0.0f, 0.0f);
-				ImVec2 UvMax = ImVec2(1.0f, 1.0f);
+					m_ImageSize_.x *= (1 + zoomFactor * zoomSpeed);
+					m_ImageSize_.y *= (1 + zoomFactor * zoomSpeed);
 
-				ImGui::Image((void*)intptr_t(TextureId), m_ImageSize_, UvMin, UvMax);
+					m_OffsetX_ = mousePos.x - (m_ImageSize_.x * mouseRelX);
+					m_OffsetY_ = mousePos.y - (m_ImageSize_.y * mouseRelY);
+				}
 
-				if (IsZooming)
+				// Dragging the image with the left mouse button
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsLeftAltPressed_ && ImGui::IsWindowFocused() && ImGui::IsWindowHovered())
+				{
+					m_IsDragging_ = true;
+					m_LastMousePos_ = ImGui::GetMousePos();
+				}
+				else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && m_IsDragging_ && !m_IsLeftAltPressed_)
+				{
+					ImVec2 currentMousePos = ImGui::GetMousePos();
+					ImVec2 delta = ImVec2(currentMousePos.x - m_LastMousePos_.x, currentMousePos.y - m_LastMousePos_.y);
+
+					m_OffsetX_ += delta.x;
+					m_OffsetY_ += delta.y;
+
+					m_LastMousePos_ = currentMousePos;
+				}
+				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::IsWindowFocused() && ImGui::IsWindowHovered())
+				{
+					m_IsDragging_ = false;
+				}
+
+
+				ImGui::SetCursorPos(ImVec2(m_OffsetX_, m_OffsetY_));
+				ImGui::Image((void*)intptr_t(TextureId), m_ImageSize_, m_UvMin_, m_UvMax_);
+				DrawRectangleAroundItem(m_GreenColor_);
+
+				if (m_IsZooming_)
 				{
 					if (ImGui::BeginItemTooltip())
 					{
@@ -284,10 +338,10 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 						float TextureW = m_ImageSize_.x;
 
 						float RegionSz = 32.0f;
-						float RegionX = io.MousePos.x - Pos.x - RegionSz * 0.5f;
-						float RegionY = io.MousePos.y - Pos.y - RegionSz * 0.5f;
+						float RegionX = m_Io_.MousePos.x - m_Pos_.x - RegionSz * 0.5f;
+						float RegionY = m_Io_.MousePos.y - m_Pos_.y - RegionSz * 0.5f;
 
-						ImVec4 TintCol = UseTextColorForTint ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+						ImVec4 TintCol = m_UseTextColorForTint_ ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
 						ImVec4 BorderCol = ImGui::GetStyleColorVec4(ImGuiCol_Border);
 
 						if (RegionX < 0.0f) { RegionX = 0.0f; }
@@ -299,19 +353,22 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 						ImVec2 Uv0 = ImVec2((RegionX) / TextureW, (RegionY) / TextureH);
 						ImVec2 Uv1 = ImVec2((RegionX + RegionSz) / TextureW, (RegionY + RegionSz) / TextureH);
 						ImGui::Image((void*)intptr_t(TextureId), ImVec2(RegionSz * Zoom, RegionSz * Zoom), Uv0, Uv1, TintCol, BorderCol);
+						DrawRectangleAroundItem(m_GreenColor_);
 						ImGui::EndTooltip();
 					}
 				}
 
-				float MiddleX = OffsetX + 30 + m_ImageSize_.x / 2.0f;
-				float MiddleY = OffsetY + 60 + m_ImageSize_.y / 2.0f;
+				float MiddleX = m_OffsetX_ + 30 + m_ImageSize_.x / 2.0f;
+				float MiddleY = m_OffsetY_ + 60 + m_ImageSize_.y / 2.0f;
 
 				m_StoreImagePosition_ = ImVec2(MiddleX, MiddleY);
 			}
 		}
 
-		ViewerWindowPos = ImGui::GetWindowPos();
-		ViewerWindowSize = ImGui::GetWindowSize();
+		m_ViewerWindowPos_ = ImGui::GetWindowPos();
+		m_ViewerWindowSize_ = ImGui::GetWindowSize();
+
+
 	}
 
 	//----------------------------- BOTTOM BAR -----------------------------------------
@@ -329,30 +386,45 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 		int MaxSamples = Radeon.GetMaxSamples();
 		int CurrentSamples = static_cast<int>(Progress / 100.0f * MaxSamples);
 
-		ImGui::SetNextItemWidth(WidthPerItems);
+		ImGui::SetNextItemWidth(m_WidthPerItems_);
 
 		if (IsRenderComplete)
 		{
 			ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Progress : ");
 
-			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, GreenColor);
+			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, m_GreenColor_);
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.f, 0.f, 0.f, 1.f));
 		}
 		else
 		{
 			ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.7f, 1.0f), "Progress : ");
 
-			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, PinkColor);
+			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, m_PinkColor_);
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 1.f, 1.f));
 		}
 
-		ImGui::SetNextItemWidth(WidthPerItems + 100);
+
+		ImGui::SetNextItemWidth(m_WidthPerItems_ + 100);
 
 		ImGui::SameLine();
 
 		char OverlayText[32];
 		sprintf_s(OverlayText, "%d on %d", CurrentSamples, MaxSamples);
 		ImGui::ProgressBar(Progress / 100.0f, ImVec2(0.0f, 0.0f), OverlayText);
+		if (IsRenderComplete)
+		{
+			DrawRectangleAroundItem(m_GreenColor_);
+		}
+		else
+		{
+			DrawRectangleAroundItem(m_PinkColor_);
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("%d on %d", CurrentSamples, MaxSamples);
+			ImGui::EndTooltip();
+		}
 
 		ImGui::PopStyleColor(2);
 
@@ -384,8 +456,8 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			snprintf(TimeString, sizeof(TimeString), "Rendering finish in : %lldh %lldm %llds %lldms", m_Hours_, m_Minutes_, m_Seconds_, m_Milliseconds_);
 
 			ImVec2 OverlayPos = ImVec2(
-				ViewerWindowPos.x + ViewerWindowSize.x / 2.0f,
-				ViewerWindowPos.y + ViewerWindowSize.y - 30.0f
+				m_ViewerWindowPos_.x + m_ViewerWindowSize_.x / 2.0f,
+				m_ViewerWindowPos_.y + m_ViewerWindowSize_.y - 30.0f
 			);
 
 			ImGuiWindowFlags OverlayFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
@@ -399,6 +471,15 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 				ImGui::Text("%s", TimeString);
 				ImGui::Separator();
 			}
+			if (IsRenderComplete)
+			{
+				DrawRectangleAroundItem(m_GreenColor_);
+			}
+			else
+			{
+				// Normaly, this should not happen
+				DrawRectangleAroundItem(m_PinkColor_);
+			}
 			ImGui::End();
 
 
@@ -408,9 +489,9 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 		ImGui::SameLine();
 
 		float WindowWidth = ImGui::GetWindowWidth();
-		float TextWidth = ImGui::CalcTextSize("Renderer 5.1.1    ").x;
+		float TextWidth = ImGui::CalcTextSize("Renderer 5.1.2    ").x;
 		ImGui::SetCursorPosX(WindowWidth - TextWidth - ImGui::GetStyle().ItemSpacing.x);
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Renderer 5.1.1");
+		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Renderer 5.1.2");
 
 		ImGui::EndGroup();
 	}
@@ -424,7 +505,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 	{
 		m_CallToRenderFullImage_ = false;
 
-		Sleep(2000);
+		//Sleep(2000);
 
 		Radeon.CallRenderMultiTiles(m_TileSize_, m_MaxIterationPerTile_);
 	}
@@ -505,7 +586,7 @@ void HorusViewportRadeon::OverlayRadeon(bool* p_open)
 	const float DistancePad = 10.0f;
 	const ImGuiViewport* Viewport = ImGui::GetMainViewport();
 	auto WindowPos = ImVec2(Viewport->WorkPos.x + Viewport->WorkSize.x - DistancePad,
-	                         Viewport->WorkPos.y + Viewport->WorkSize.y - DistancePad);
+		Viewport->WorkPos.y + Viewport->WorkSize.y - DistancePad);
 	ImVec2 WindowPosPivot = ImVec2(1.0f, 1.0f);
 
 	ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always, WindowPosPivot);
