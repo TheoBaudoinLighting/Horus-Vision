@@ -1,35 +1,24 @@
-# Horus Vision Camera Module README
+# Camera Module for Horus Vision
 
-This directory contains the implementation and interface for the Horus Vision camera system, specifically designed for OpenGL and Radeon based rendering. The files are part of a larger project aimed at providing advanced rendering capabilities. Here's a brief overview of each file and its purpose:
+This directory contains the core components of the camera system for Horus Vision, suitable for both OpenGL and Radeon rendering environments.
 
-### Files Description
+## Files Overview
 
-- **hrs_opengl_camera.cpp & hrs_opengl_camera.h**
-  - These files contain the implementation and declaration of the HorusOpenGLCamera class, respectively. This class is responsible for managing camera functionalities such as initialization, updating camera matrices, and interfacing with shaders for OpenGL-based rendering environments.
+- `hrs_opengl_camera.cpp` & `hrs_opengl_camera.h`: Implements the `HorusOpenGLCamera` class for OpenGL rendering.
+- `hrs_radeon_camera.cpp` & `hrs_radeon_camera.h`: Implements the `HorusRadeonCamera` class for Radeon-based rendering.
 
-- **hrs_radeon_camera.cpp & hrs_radeon_camera.h**
-  - Similar to the OpenGL camera files, these are responsible for the implementation and declaration of the HorusRadeonCamera class. This class is tailored for use with Radeon rendering, supporting functionalities that align with Radeon's rendering capabilities and optimizations.
+## Usage
 
-### Usage
+1. Include the appropriate header file in your project.
+2. Instantiate a camera object (`HorusOpenGLCamera` or `HorusRadeonCamera`) as per your rendering environment.
+3. Initialize and update the camera using its methods.
 
-To integrate the Horus Vision camera system into your project:
+## Integration
 
-1. **Include the header files** in your rendering module.
-   - For OpenGL projects, include `hrs_opengl_camera.h`.
-   - For Radeon-based projects, include `hrs_radeon_camera.h`.
+- **OpenGL Projects**: Use `HorusOpenGLCamera` for comprehensive camera management.
+- **Radeon Projects**: `HorusRadeonCamera` is optimized for Radeon's rendering capabilities.
 
-2. **Instantiate the camera class** corresponding to your rendering environment.
-   - Use `HorusOpenGLCamera` for OpenGL.
-   - Use `HorusRadeonCamera` for Radeon.
+## Support
 
-3. **Initialize the camera** using the `Init` method, and update its state within your rendering loop through the `UpdateCamera` method.
+For assistance or to report issues, please contact the project maintainer.
 
-4. **Configure camera parameters** such as position, FOV (Field of View), aspect ratio, etc., as required by your scene setup.
-
-### Advanced Configuration
-
-- The camera classes allow for advanced configurations like setting custom viewports, adjusting clipping planes, and more. Refer to the respective class methods for detailed options.
-
-### Support
-
-For queries or issues related to the camera module, please open an issue on GitHub or contact the project maintainer directly.
