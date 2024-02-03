@@ -674,6 +674,7 @@
     <ClInclude Include="core\ui\hrs_help.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="core\scene\dependencies\light\niederwihl_forest_4k.exr" />
     <None Include="core\shaders\light.frag" />
     <None Include="core\shaders\light.vert" />
     <None Include="core\shaders\shader.frag" />

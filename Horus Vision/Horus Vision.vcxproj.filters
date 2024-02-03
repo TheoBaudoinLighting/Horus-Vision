@@ -2022,6 +2022,7 @@
     <None Include="core\shaders\shader.vert" />
     <None Include="core\shaders\light.frag" />
     <None Include="core\shaders\light.vert" />
+    <None Include="core\scene\dependencies\light\niederwihl_forest_4k.exr" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\glfw\lib-vc2022\glfw3.lib" />

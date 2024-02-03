@@ -14,6 +14,22 @@ void HorusLight::Init(const std::string& LightType, const std::string& ImagePath
 {
 	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
+	if (LightType.empty())
+	{
+		spdlog::error("Light type is empty");
+		HorusConsole::GetInstance().AddLog(" [error] Light type is empty");
+
+		return;
+	}
+
+	if (ImagePath.empty())
+	{
+		spdlog::error("Image path is empty");
+		HorusConsole::GetInstance().AddLog(" [error] Image path is empty");
+
+		return;
+	}
+
 	m_Light_ = CreateLight(LightType, ImagePath);
 	m_ImagePath_ = ImagePath;
 
@@ -84,21 +100,22 @@ rpr_light CreateHdriLight(const std::string& HdriImage)
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	rpr_light Light = nullptr;
-	rpr_image Image = nullptr;
+
+	CHECK(rprContextCreateEnvironmentLight(Radeon.GetContext(), &Light));
+	CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f));
+	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
+	Gc.Add(Light);
 
 	if (HdriImage.empty())
 	{
 		spdlog::error("Image hdri is empty");
 		Console.AddLog(" [error] Image hdri is empty");
 
-		return nullptr;
+		return Light; // Don't return nullptr because light is created
 	}
 
-	CHECK(rprContextCreateEnvironmentLight(Radeon.GetContext(), &Light))
-		Gc.Add(Light);
-
+	rpr_image Image = nullptr;
 	const std::string Path = HdriImage;
-
 	rpr_status Status = rprContextCreateImageFromFile(Radeon.GetContext(), Path.c_str(), &Image);
 
 	if (Status != RPR_SUCCESS)
@@ -106,14 +123,12 @@ rpr_light CreateHdriLight(const std::string& HdriImage)
 		spdlog::error("Failed to load image: {}", Path);
 		Console.AddLog(" [error] Failed to load image : %s ", Path.c_str());
 
-		return nullptr;
+		return Light; // Don't return nullptr because light is created
 	}
-	CHECK(Status)
-		Gc.Add(Image);
+	Gc.Add(Image);
+	CHECK(Status);
 
 	CHECK(rprEnvironmentLightSetImage(Light, Image));
-	CHECK(rprEnvironmentLightSetIntensityScale(Light, 1.f));
-	CHECK(rprSceneAttachLight(ObjectManager.GetScene(), Light));
 
 	spdlog::info("Light created");
 	Console.AddLog(" [success] Light created");
@@ -194,7 +209,7 @@ rpr_light CreateSpotLight(const std::string& ImagePath)
 			spdlog::error("Failed to load image: {}", Path);
 			Console.AddLog(" [error] Failed to load image : %s ", Path.c_str());
 
-			return nullptr;
+			return Light;
 		}
 
 		CHECK(Status)
@@ -337,12 +352,30 @@ rpr_light HorusLight::CreateLight(const std::string& LightType, const std::strin
 	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
+	rpr_light Light = nullptr;
+	// By default create a disk light
+
+
 	if (LightType.empty())
 	{
 		spdlog::error("Light type is empty");
 		Console.AddLog(" [error] Light type is empty");
 
-		return nullptr;
+		spdlog::info("Create disk light by default");
+
+		m_IsLightHdri_ = false;
+		m_LightType_ = RPR_LIGHT_TYPE_DISK;
+		m_Intensity_ = { 10.0f, 10.0f, 10.0f };
+
+		std::thread T([&]()
+			{
+				std::lock_guard Lock(Mtx);
+				m_Light_ = CreateDiskLight();
+				Gc.Add(m_Light_);
+			}); T.join();
+
+
+		return Light;
 	}
 
 	spdlog::info("Create light of type: {}", LightType);
@@ -614,6 +647,18 @@ void HorusLight::SetLightTexturePath(const std::string& ImagePath)
 		spdlog::info("Set image for environment light {}", ImagePath);
 		SetEnvironmentLightSetImage(ImagePath);
 		break;
+	case RPR_LIGHT_TYPE_POINT:
+		break;
+	case RPR_LIGHT_TYPE_DIRECTIONAL:
+		break;
+	case RPR_LIGHT_TYPE_SKY:
+		break;
+	case RPR_LIGHT_TYPE_IES:
+		break;
+	case RPR_LIGHT_TYPE_SPHERE:
+		break;
+	case RPR_LIGHT_TYPE_DISK:
+		break;
 	}
 
 }
@@ -694,8 +739,16 @@ void HorusLight::SetEnvironmentLightSetImage(const std::string& ImagePath)
 		return;
 	}
 
-	CHECK(Status)
-		HorusGarbageCollector::GetInstance().Add(Image);
+	CHECK(Status);
+	HorusGarbageCollector::GetInstance().Add(Image);
+
+	if (m_Light_ == nullptr)
+	{
+		spdlog::error("Light is nullptr");
+		HorusConsole::GetInstance().AddLog(" [error] Light is nullptr");
+
+		return;
+	}
 
 	CHECK(rprEnvironmentLightSetImage(m_Light_, Image));
 	spdlog::info("Image set for environment light");

@@ -1800,6 +1800,8 @@ int HorusObjectManager::CreateLight(const std::string& Name, const std::string& 
 	m_ObjectNameToIdMap_[LightName] = Id;
 	m_ActiveLightId_ = Id;
 
+	// TODO : Check If light are nullptr if true then destroy the light and release the id
+
 	spdlog::info("Light {} created with id: {}", LightName, Id);
 
 	return Id;
