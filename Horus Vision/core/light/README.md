@@ -16,14 +16,16 @@ To utilize the lighting module:
 2. Instantiate and configure light objects using the provided API.
 3. Integrate light sources into your rendering loop for dynamic lighting effects.
 
+## Support
+
+This template provides a concise overview of how to document these files for GitHub, emphasizing functionality, usage, and support. Adjust the content according to the specific details and functionalities of your implementation.
+
 ## Example
 
 ```cpp
 #include "hrs_light.h"
 
 // Example of creating a point light
-Light pointLight = Light::createPointLight(position, intensity, color);```
+Light pointLight = Light::createPointLight(position, intensity, color);
 
-## Support
 
-This template provides a concise overview of how to document these files for GitHub, emphasizing functionality, usage, and support. Adjust the content according to the specific details and functionalities of your implementation.
