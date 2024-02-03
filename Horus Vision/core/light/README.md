@@ -22,7 +22,7 @@ To utilize the lighting module:
 #include "hrs_light.h"
 
 // Example of creating a point light
-Light pointLight = Light::createPointLight(position, intensity, color);
+Light pointLight = Light::createPointLight(position, intensity, color);```
 
 ## Support
 
