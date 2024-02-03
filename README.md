@@ -64,6 +64,12 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 
 This project is licensed under the GNU Open 3 License. See the [LICENSE](LICENSE) file for details.
 
+## Disclaimer
+
+Please note that Horus Vision `1.3` is a strictly personal project. It is developed and maintained with the aim of exploring and implementing advanced rendering techniques. As such, **no guarantees of performance, stability, or usability are provided**. Users should utilize this software at their own risk, and support or updates may be limited. This project is not intended for commercial use and is made available for educational and research purposes only.
+
+Thank you for understanding and respecting the nature of this project.
+
 ## Contact
 
 For any questions or suggestions, feel free to contact us:
