@@ -17,6 +17,8 @@ public:
 	HorusInput(HorusInput const&) = delete;
 	void operator=(HorusInput const&) = delete;
 
+	void OnChar(GLFWwindow* window, unsigned int c);
+
 	void OnScroll(GLFWwindow* window, double xoffset, double yoffset);
 	void OnKey(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void OnMouse(GLFWwindow* window, int button, int action, int mods);

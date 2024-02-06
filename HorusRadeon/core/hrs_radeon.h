@@ -61,8 +61,9 @@ public:
 	float GetClassicRenderProgress();
 	float GetAdaptiveRenderProgress();
 
-	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer Framebuffer) const;
-	glm::vec2 SetWindowSize(int width, int height);
+	void ResizeFrameBufferData(int Width, int Height);
+	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer Framebuffer);
+	glm::vec2 SetWindowSize(int Width, int Height);
 	glm::vec2 GetWindowSize() const { return glm::vec2(m_WindowWidth_, m_WindowHeight_); }
 
 	rpr_context GetContext() { return m_ContextA_; }
@@ -99,9 +100,9 @@ private:
 	}
 
 	// Render stuff
-	
-	int m_WindowWidth_ = 0;
-	int m_WindowHeight_ = 0;
+
+	int m_WindowWidth_ = 800;
+	int m_WindowHeight_ = 600;
 	HorusWindowConfig* m_WindowConfig_;
 
 	// Classic render
@@ -175,4 +176,5 @@ private:
 	rpr_camera m_Camera_ = nullptr;
 
 	std::shared_ptr<float[]> m_FbData_ = nullptr;
+	mutable size_t m_CurrentFramebufferSize_;
 };

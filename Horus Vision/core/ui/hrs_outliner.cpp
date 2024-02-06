@@ -39,14 +39,6 @@ void HorusOutliner::Outliner(bool* p_open)
 
 		ImGui::Spacing();
 
-		if (ImGui::Button("Show Property panel"))
-		{
-			HorusInspector::GetInstance().PopulateSelectedProjectInfos();
-			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
-		}
-
-		ImGui::Spacing();
-
 		if (ImGui::CollapsingHeader("Debug Tools"))
 		{
 			if (ImGui::Button("Show Render panel"))
@@ -83,20 +75,54 @@ void HorusOutliner::Outliner(bool* p_open)
 			{
 				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::TEXTURE);
 			}
+
+			if (ImGui::Button("Show None panel"))
+			{
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::NONE);
+			}
+
 		}
 
 		ImGui::Spacing();
 		ImGui::Separator();
 		ImGui::Spacing();
 
-
 		ObjectManager.UpdateGroupShapeOutlinerData();
 
 		ImGuiTreeNodeFlags TreeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAllColumns;
 
+		// Project section
+		if (ImGui::TreeNodeEx("Scene Parameters", TreeFlags))
+		{
+			const bool IsSelected = (m_SelectedObject_ == "Scene");
+
+			if (IsSelected) {
+				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+			}
+
+			if (ImGui::Selectable("Scene properties", IsSelected))
+			{
+				m_SelectedMesh_.clear();
+				m_SelectedObject_ = "Scene";
+
+				spdlog::info("Scene selected");
+				Console.AddLog(" [info] Scene selected ");
+
+				HorusInspector::GetInstance().PopulateSelectedProjectInfos();
+				HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::PROJECT);
+			}
+
+			if (IsSelected) 
+			{
+				ImGui::PopStyleColor();
+			}
+
+			ImGui::TreePop();
+		}
+
+		// Group of shapes section
 		if (ImGui::TreeNodeEx("Meshes", TreeFlags))
 		{
-
 			// Group of shapes section
 			for (auto& OutlinerData = ObjectManager.GetGroupShapeWithShapesAndNames(); const auto & [fst, snd] : OutlinerData)
 			{
@@ -168,10 +194,9 @@ void HorusOutliner::Outliner(bool* p_open)
 			}
 			ImGui::TreePop();
 		}
-
-
 		ImGui::Separator();
 
+		// Material section
 		if (ImGui::TreeNodeEx("Materials", TreeFlags))
 		{
 			for (const auto& material : materials)
@@ -198,9 +223,9 @@ void HorusOutliner::Outliner(bool* p_open)
 			}
 			ImGui::TreePop();
 		}
-
 		ImGui::Separator();
 
+		// Camera section
 		if (ImGui::TreeNodeEx("Cameras", TreeFlags))
 		{
 			for (const auto& Camera : cameras)
@@ -226,9 +251,9 @@ void HorusOutliner::Outliner(bool* p_open)
 			}
 			ImGui::TreePop();
 		}
-
 		ImGui::Separator();
 
+		// Light section
 		if (ImGui::TreeNodeEx("Lights", TreeFlags))
 		{
 			for (const auto& Light : lights)
@@ -254,6 +279,18 @@ void HorusOutliner::Outliner(bool* p_open)
 			}
 			ImGui::TreePop();
 		}
+		ImGui::Separator();
+
+		// Check if the user clicked on the outliner but not on any object
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0))
+		{
+			// If the user clicked on the outliner but not on any object, we clear the selection ( like maya :D )
+			m_SelectedObject_.clear();
+			m_SelectedMesh_.clear();
+			m_SelectedObject_ = -1;
+			HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::NONE);
+		}
+
 		ImGui::End();
 	}
 }

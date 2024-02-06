@@ -19,7 +19,8 @@ public:
 		TEXTURE,
 		SCENE,
 		RENDER,
-		PROJECT
+		PROJECT,
+		NONE
 	};
 
 	static HorusInspector& GetInstance()
@@ -36,7 +37,6 @@ public:
 
 	void SetInspectorType(InspectorType Type);
 
-	//void InspectorTransform();
 	void InspectorCamera();
 	void InspectorLight();
 	void InspectorMaterial();
@@ -44,6 +44,7 @@ public:
 	void InspectorGroupShape();
 	void InspectorTexture();
 	void InspectorProjectProperty();
+	void InspectorNone();
 
 	void ShowHelpMarker(const char* desc);
 	void ShowBigSeparator();

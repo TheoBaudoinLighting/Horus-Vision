@@ -731,6 +731,9 @@ void HorusLight::SetEnvironmentLightSetImage(const std::string& ImagePath)
 
 	rpr_status Status = rprContextCreateImageFromFile(HorusRadeon::GetInstance().GetContext(), Path.c_str(), &Image);
 
+	//CHECK(rprImageSetOcioColorspace(Image, "Utility - Linear - sRGB"));
+	CHECK(rprImageSetOcioColorspace(Image, "Utility - Raw"));
+
 	if (Status != RPR_SUCCESS)
 	{
 		spdlog::error("Failed to load image: {}", Path);

@@ -15,6 +15,10 @@
 #include <future>
 #include <array>
 #include <vector>
+#include <future>
+#include <functional> // Pour std::ref
+#include <atomic>
+
 
 #include <Math/mathutils.h>
 #include "hrs_radeon_posteffect.h"
@@ -33,6 +37,7 @@
 #include <shared_mutex>
 
 #include "hrs_statistics.h"
+#include "hrs_utils.h"
 #include "picojson.h"
 #include "stbi/stb_image_write.h"
 
@@ -86,51 +91,75 @@ void StopAllThreads()
 
 void RenderJob(const rpr_context Context, RenderProgressCallback::Update* Update)
 {
-	// TODO : find a way to remove the mutex here when the engine is in multi-threading mode
 	RenderMutex.lock();
 	rprContextRender(Context);
 	Update->Done = 1;
 	RenderMutex.unlock();
 }
 
-void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuffer Framebuffer) const
+void HorusRadeon::ResizeFrameBufferData(int Width, int Height)
 {
-	if (m_IsFramebufferAreOperational_)
+	if (Width <= 0 || Height <= 0)
 	{
-		if (rpr_int Status = rprContextResolveFrameBuffer(Context, Framebuffer, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
-		{
-			spdlog::error("RPR Error: {}", Status);
-		}
-
-		size_t FramebufferSize = 0;
-		CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
-		if (FramebufferSize != m_WindowWidth_ * m_WindowHeight_ * 4 * sizeof(float))
-		{
-			CHECK(RPR_ERROR_INTERNAL_ERROR)
-		}
-
-		CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
+		spdlog::error("Invalid dimensions for ResizeFrameBufferData: width = {}, height = {}", Width, Height);
+		return;
 	}
+
+	size_t NewSize = static_cast<size_t>(Width) * Height * 4 * sizeof(float);
+	m_FbData_ = std::shared_ptr<float[]>(new float[Width * Height * 4], std::default_delete<float[]>());
+	m_CurrentFramebufferSize_ = NewSize;
+	spdlog::info("Framebuffer data resized to: width = {}, height = {}", Width, Height);
 }
 
-glm::vec2 HorusRadeon::SetWindowSize(int width, int height)
+void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuffer Framebuffer)
 {
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
+	if (rpr_int Status = rprContextResolveFrameBuffer(Context, Framebuffer, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
+	{
+		spdlog::error("RPR Error: {}", Status);
+
+		return;
+	}
+
+	size_t FramebufferSize = 0;
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
+
+	// Check if the framebuffer size is the same as the allocated memory size
+	if (FramebufferSize != m_CurrentFramebufferSize_)
+	{
+		spdlog::error("Mismatch in framebuffer size and allocated memory size.");
+		m_FbData_ = std::shared_ptr<float[]>(new float[FramebufferSize / sizeof(float)], std::default_delete<float[]>());
+		m_CurrentFramebufferSize_ = FramebufferSize;
+		//return;
+	}
+
+	if (m_FbData_ == nullptr)
+	{
+		spdlog::error("m_FbData_ is null.");
+		return;
+	}
+
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
+}
+
+glm::vec2 HorusRadeon::SetWindowSize(int Width, int Height)
+{
+	m_WindowWidth_ = Width;
+	m_WindowHeight_ = Height;
 
 	return { m_WindowWidth_, m_WindowHeight_ };
 }
+
 void HorusRadeon::CreateFrameBuffers(int width, int height)
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
+	//HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
 	m_WindowWidth_ = width;
 	m_WindowHeight_ = height;
 
 	glDeleteTextures(1, &m_RadeonTextureBuffer_);
-	OpenGLManager.DeleteAllVAOs();
+	/*OpenGLManager.DeleteAllVAOs();
 	OpenGLManager.DeleteAllVBOs();
-	OpenGLManager.DeleteAllEBOs();
+	OpenGLManager.DeleteAllEBOs();*/
 
 	if (m_IsAdaptativeSampling_)
 	{
@@ -152,6 +181,99 @@ void HorusRadeon::CreateFrameBuffers(int width, int height)
 	CHECK(rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferDest_));
 
 	spdlog::debug("Radeon framebuffers successfully created..");
+}
+void HorusRadeon::ResizeRender(int width, int height)
+{
+	std::lock_guard Lock(RenderMutex);
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+
+	m_WindowWidth_ = width;
+	m_WindowHeight_ = height;
+
+	//m_IsFramebufferAreOperational_ = false;
+
+	if (m_RenderThread_.joinable())
+	{
+		m_RenderThread_.join(); // Check if the render thread is joinable and join it before resizing
+	}
+
+	if (rprContextAbortRender(m_ContextA_) == RPR_SUCCESS)
+	{
+		spdlog::info("Render successfully interrupted for resizing.");
+	}
+	else
+	{
+		spdlog::error("Failed to interrupt the render for resizing.");
+		return;
+	}
+
+	if (m_ClassicRenderFuture_.valid())
+	{
+		if (auto Status = m_ClassicRenderFuture_.wait_for(std::chrono::seconds(0)); Status == std::future_status::ready)
+		{
+			spdlog::info("Render task successfully finished for resizing.");
+		}
+		else
+		{
+			spdlog::warn("The render task is still running for resizing.");
+		}
+	}
+	else
+	{
+		spdlog::info("No render task to wait for resizing.");
+	}
+
+	// Create framebuffers for the new size
+	CreateFrameBuffers(m_WindowWidth_, m_WindowHeight_);
+
+	// Set AOVs for the context
+	if (m_IsAdaptativeSampling_)
+	{
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, m_FrameBufferAdaptive_));
+	}
+	else
+	{
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, nullptr));
+	}
+
+	// Check if m_WindowWidth_ and m_WindowHeight_ are not equal to 0 or negative
+	if (m_WindowWidth_ == 0 || m_WindowHeight_ == 0)
+	{
+		CHECK(RPR_ERROR_INTERNAL_ERROR);
+	}
+	else if (m_WindowWidth_ < 0 || m_WindowHeight_ < 0)
+	{
+		CHECK(RPR_ERROR_INTERNAL_ERROR);
+	}
+
+	// Resize the framebuffer data to the new size of the window
+	ResizeFrameBufferData(m_WindowWidth_, m_WindowHeight_);
+
+	// Set the new size of the window to the OpenGL
+	OpenGL.InitBuffers(m_WindowWidth_, m_WindowHeight_);
+
+	// Set the new size of the window to the ImGui
+	Init(m_WindowWidth_, m_WindowHeight_, m_WindowConfig_);
+
+	// Set the new size of the window to the viewport
+	CHECK(rprContextResolveFrameBuffer(m_ContextA_, m_FrameBufferA_, m_FrameBufferDest_, false));
+
+	size_t fb_size = 0;
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &fb_size));
+
+	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
+	ObjectManager.SetViewport(ObjectManager.GetActiveRadeonCameraId(), 0, 0, m_WindowWidth_, m_WindowHeight_);
+	ObjectManager.SetSensorSize(ObjectManager.GetActiveRadeonCameraId(), 36.0f, 24.0f);
+	m_SampleCount_ = 1;
+
+	//m_IsFramebufferAreOperational_ = true;
+
+	spdlog::info("Radeon successfully resized in : Width : {}, Height : {}", m_WindowWidth_, m_WindowHeight_);
+	Console.AddLog(" [info] Radeon successfully resized in : Width : %d, Height : %d ", m_WindowWidth_, m_WindowHeight_);
 }
 
 bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
@@ -182,6 +304,8 @@ bool HorusRadeon::InitGraphics()
 	HorusOCIO& OCIO = HorusOCIO::GetInstance();
 	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
+	std::lock_guard Lock(RenderMutex);
+
 	spdlog::info("Init Radeon graphics..");
 	Console.AddLog(" [info] Init Radeon graphics..");
 
@@ -201,11 +325,16 @@ bool HorusRadeon::InitGraphics()
 	/*CHECK(rprContextSetParameterByKeyString(0, RPR_CONTEXT_TRACING_PATH, "logs"));
 	CHECK(rprContextSetParameterByKey1u(0, RPR_CONTEXT_TRACING_ENABLED, 1));*/
 
+	// TODO : Get Number of GPU in system
+
 	rpr_int Status = rprCreateContext(RPR_API_VERSION, Plugins, NumPlugins,
 		RPR_CREATION_FLAGS_ENABLE_GL_INTEROP | RPR_CREATION_FLAGS_ENABLE_GPU0 | RPR_CREATION_FLAGS_ENABLE_GPU1,
 		g_contextProperties, nullptr, &m_ContextA_);
 
-
+	// TODO : find a way for detect the number of GPU and CPU available
+	// TODO : Add a way to select the GPU to use after the creation of the context
+	constexpr int NumberOfGpus = 2;
+	constexpr int NumberOfCpus = 0;
 
 	CHECK(Status);
 
@@ -220,7 +349,7 @@ bool HorusRadeon::InitGraphics()
 
 	ObjectManager.CreateDefaultScene();
 
-	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_DISPLAY_GAMMA, 2.4f));
+	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_DISPLAY_GAMMA, 2.2f));
 	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_RADIANCE_CLAMP, 2.f));
 
 	// Set Classic Render (Default) -> Don't call the function because at the startup the engine need to render the first frame forced
@@ -245,15 +374,23 @@ bool HorusRadeon::InitGraphics()
 	CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_ITERATIONS, m_MaxIterations_));
 	rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_MAX_RECURSION, 4);
 
-	//m_FbData_ = std::shared_ptr<float>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
+	size_t FramebufferSize = 0;
+	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
+	m_CurrentFramebufferSize_ = FramebufferSize;
+
 	m_FbData_ = std::shared_ptr<float[]>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
+
+	const char OcioConfig[] = "resources/aces_1.0.3/config.ocio";
+	CHECK(rprContextSetParameterByKeyString(m_ContextA_, RPR_CONTEXT_OCIO_CONFIG_PATH, OcioConfig));
+	CHECK(rprContextSetParameterByKeyString(m_ContextA_, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, "Utility - Raw"));
+
 
 	spdlog::info("Radeon graphics successfully initialized..");
 	Console.AddLog(" [info] Radeon graphics successfully initialized");
 
 	m_IsFramebufferAreOperational_ = true;
 
-	HorusStatistics::GetInstance().InitStatistics(2, 0);
+	HorusStatistics::GetInstance().InitStatistics(NumberOfGpus, NumberOfCpus);
 	Engine.SetEngineIsReady(true);
 
 	if (auto EndEngineTimer = TimerManager.StopTimer("EngineInit"); EndEngineTimer > 1000)
@@ -310,59 +447,6 @@ void HorusRadeon::QuitRender()
 		m_ContextA_ = nullptr;
 
 	spdlog::info("Radeon successfully unloaded..");
-}
-
-void HorusRadeon::ResizeRender(int width, int height)
-{
-	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
-
-	m_IsFramebufferAreOperational_ = false;
-
-	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
-
-	m_FbData_ = nullptr;
-
-	CreateFrameBuffers(m_WindowWidth_, m_WindowHeight_);
-
-	if (m_IsAdaptativeSampling_)
-	{
-		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
-		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, m_FrameBufferAdaptive_));
-	}
-	else
-	{
-		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
-		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, nullptr));
-	}
-
-	m_FbData_ = std::shared_ptr<float[]>(new float[m_WindowWidth_ * m_WindowHeight_ * 4], std::default_delete<float[]>());
-
-	spdlog::info("Before init buffers 01 and 02");
-	OpenGL.InitBuffers(m_WindowWidth_, m_WindowHeight_);
-
-	spdlog::info("after init buffers 01");
-	Init(m_WindowWidth_, m_WindowHeight_, m_WindowConfig_);
-
-	spdlog::info("after init buffers 02");
-
-	CHECK(rprContextResolveFrameBuffer(m_ContextA_, m_FrameBufferA_, m_FrameBufferDest_, false));
-
-	size_t fb_size = 0;
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &fb_size));
-
-	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
-	ObjectManager.SetViewport(ObjectManager.GetActiveRadeonCameraId(), 0, 0, m_WindowWidth_, m_WindowHeight_);
-	m_SampleCount_ = 1;
-
-	m_IsFramebufferAreOperational_ = true;
-
-	spdlog::info("Radeon successfully resized in : Width : {}, Height : {}", m_WindowWidth_, m_WindowHeight_);
-	Console.AddLog(" [info] Radeon successfully resized in : Width : %d, Height : %d ", m_WindowWidth_, m_WindowHeight_);
 }
 
 void HorusRadeon::SetPreviewMode(bool Enable)
@@ -428,12 +512,17 @@ void HorusRadeon::RenderClassic()
 
 		RenderProgressCallback.Clear();
 
-		if (m_IsDirty_ && m_IsFramebufferAreOperational_)
+		if (m_IsDirty_ /*&& m_IsFramebufferAreOperational_*/)
 		{
 			if (m_SampleCount_ <= MinSamplesToSwitch)
 			{
 				m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
 			}
+			/*if (m_SampleCount_ <= MinSamplesToSwitch)
+			{
+				m_ClassicRenderFuture_ = std::async(std::launch::async, RenderJob, m_ContextA_, &RenderProgressCallback);
+			}*/
+
 			else if (m_SampleCount_ >= MinSamplesToSwitch + 1)
 			{
 				m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback);
@@ -476,10 +565,7 @@ void HorusRadeon::RenderClassic()
 				RenderMutex.lock();
 				m_SampleCount_++;
 
-				if (m_IsFramebufferAreOperational_)
-				{
-					m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
-				}
+				m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
 
 				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_WindowWidth_, m_WindowHeight_, GL_RGBA, GL_FLOAT, static_cast<GLvoid*>(m_FbData_.get()));
@@ -492,7 +578,7 @@ void HorusRadeon::RenderClassic()
 			}
 		}
 
-		if (m_ThreadRunning_ && m_IsFramebufferAreOperational_)
+		if (m_ThreadRunning_ /*&& m_IsFramebufferAreOperational_*/)
 		{
 			if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_ && m_ClassicRenderFuture_.valid() && m_ClassicRenderInfoFuture_.valid())
 			{
@@ -587,6 +673,7 @@ void HorusRadeon::RenderAdaptive()
 void HorusRadeon::SetClassicRender()
 {
 	HorusUI& Ui = HorusUI::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusTimerManager::GetInstance().ResetTimer("RenderTimer");
 
 	m_IsAdaptativeSampling_ = false;
@@ -595,7 +682,10 @@ void HorusRadeon::SetClassicRender()
 	SetActivePixelRemains(GetWindowSize().x / GetWindowSize().y);
 	CHECK(rprFrameBufferClear(GetAdaptiveRenderFrameBuffer()));
 
-	CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_SAMPLER_TYPE, RPR_CONTEXT_SAMPLER_TYPE_SOBOL));
+	ObjectManager.SetSensorSize(ObjectManager.GetActiveRadeonCameraId(), 36.0f, 24.0f);
+
+
+	//CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_SAMPLER_TYPE, RPR_CONTEXT_SAMPLER_TYPE_SOBOL));
 
 	ResizeRender(GetWindowSize().x, GetWindowSize().y);
 
@@ -617,6 +707,7 @@ void HorusRadeon::SetClassicRender()
 void HorusRadeon::SetAdaptiveRender()
 {
 	HorusUI& Ui = HorusUI::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 	HorusTimerManager::GetInstance().ResetTimer("RenderTimer");
 
 	m_IsAdaptativeSampling_ = true;
@@ -625,9 +716,11 @@ void HorusRadeon::SetAdaptiveRender()
 	SetSampleCount(1);
 	CHECK(rprFrameBufferClear(GetClassicRenderFrameBuffer()));
 
-	// CHange sampler
-	CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_SAMPLER_TYPE, RPR_CONTEXT_SAMPLER_TYPE_CMJ));
+	// Change sampler
+	//CHECK(rprContextSetParameterByKey1f(m_ContextA_, RPR_CONTEXT_SAMPLER_TYPE, RPR_CONTEXT_SAMPLER_TYPE_CMJ));
 
+	// Set Aspect Ratio
+	ObjectManager.SetSensorSize(ObjectManager.GetActiveRadeonCameraId(), 36.0f, 24.0f);
 
 	ResizeRender(GetWindowSize().x, GetWindowSize().y);
 
@@ -726,24 +819,24 @@ void HorusRadeon::RenderMultiTiles(HorusFrameBufferMetadata& FbMetadata, rpr_sce
 		for (int XTiles = 0; XTiles < TileSizeX; XTiles++)
 		{
 			const float DeltaX = 1.0f;
-			Status = rprCameraSetLensShift(camera, ShiftX, ShiftY); CHECK(Status)
-				Status = rprFrameBufferClear(FrameBuffer); CHECK(Status)
+			Status = rprCameraSetLensShift(camera, ShiftX, ShiftY); CHECK(Status);
+			Status = rprFrameBufferClear(FrameBuffer); CHECK(Status);
 
-				for (rpr_uint i = 0; i < MaxIterationRendering; i++)
-				{
-					Status = rprContextSetParameterByKey1u(Context, RPR_CONTEXT_FRAMECOUNT, i); CHECK(Status)
-						Status = rprContextRender(Context); CHECK(Status)
-				}
+			for (rpr_uint i = 0; i < MaxIterationRendering; i++)
+			{
+				Status = rprContextSetParameterByKey1u(Context, RPR_CONTEXT_FRAMECOUNT, i); CHECK(Status);
+				Status = rprContextRender(Context); CHECK(Status);
+			}
 
-			Status = rprContextResolveFrameBuffer(Context, FrameBuffer, FrameBufferResolved, false); CHECK(Status)
-				Status = rprFrameBufferGetInfo(FrameBufferResolved, RPR_FRAMEBUFFER_DATA, FrameBufferDatasize, FrameBufferData, nullptr); CHECK(Status)
+			Status = rprContextResolveFrameBuffer(Context, FrameBuffer, FrameBufferResolved, false); CHECK(Status);
+			Status = rprFrameBufferGetInfo(FrameBufferResolved, RPR_FRAMEBUFFER_DATA, FrameBufferDatasize, FrameBufferData, nullptr); CHECK(Status);
 
-				const int OffsetInRenderTargetX = XTiles * FbMetadata.TileSizeX;
+			const int OffsetInRenderTargetX = XTiles * FbMetadata.TileSizeX;
 			const int OffsetInRenderTargetY = YTiles * FbMetadata.TileSizeY;
 
-			for (unsigned J = 0; J < FbMetadata.TileSizeY; J++)
+			for (int J = 0; J < FbMetadata.TileSizeY; J++)
 			{
-				for (unsigned i = 0; i < FbMetadata.TileSizeX; i++)
+				for (int i = 0; i < FbMetadata.TileSizeX; i++)
 				{
 					const int DstX = OffsetInRenderTargetX + i;
 					const int DstY = OffsetInRenderTargetY + J;
@@ -774,7 +867,7 @@ void HorusRadeon::RenderMultiTiles(HorusFrameBufferMetadata& FbMetadata, rpr_sce
 			FrameBuffer = nullptr;
 	}
 	if (FrameBufferResolved) {
-		Status = rprObjectDelete(FrameBufferResolved); CHECK(Status)
+		Status = rprObjectDelete(FrameBufferResolved);  CHECK(Status)
 			FrameBufferResolved = nullptr;
 	}
 }
@@ -784,34 +877,34 @@ void HorusRadeon::SetVisualizationRenderMode(int Mode)
 	switch (Mode)
 	{
 	case 0:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIFFUSE));
 		break;
 	case 1:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_GLOBAL_ILLUMINATION));
 		break;
 	case 2:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION));
 		break;
 	case 3:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_DIRECT_ILLUMINATION_NO_SHADOW));
 		break;
 	case 4:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_WIREFRAME));
 		break;
 	case 5:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_MATERIAL_INDEX));
 		break;
 	case 6:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_POSITION));
 		break;
 	case 7:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_NORMAL));
 		break;
 	case 8:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_TEXCOORD));
 		break;
 	case 9:
-		rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION);
+		CHECK(rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_RENDER_MODE, RPR_RENDER_MODE_AMBIENT_OCCLUSION));
 		break;
 	}
 
@@ -821,50 +914,50 @@ void HorusRadeon::SetShowAOVsMode(int AOV)
 {
 	{
 		// Don't make Color AOV null because it's needed for the render
-		rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OPACITY, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_WORLD_COORDINATE, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_UV, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_MATERIAL_ID, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_GEOMETRIC_NORMAL, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_SHADING_NORMAL, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DEPTH, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_ID, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_GROUP_ID, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_SHADOW_CATCHER, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_BACKGROUND, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_EMISSION, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VELOCITY, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_ILLUMINATION, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_ILLUMINATION, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_AO, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_DIFFUSE, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_REFLECT, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_DIFFUSE, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_REFLECT, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_REFRACT, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VOLUME, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIFFUSE_ALBEDO, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VIEW_SHADING_NORMAL, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_REFLECTION_CATCHER, nullptr);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OPACITY, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_WORLD_COORDINATE, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_UV, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_MATERIAL_ID, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_GEOMETRIC_NORMAL, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_SHADING_NORMAL, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DEPTH, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_ID, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_GROUP_ID, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_SHADOW_CATCHER, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_BACKGROUND, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_EMISSION, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VELOCITY, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_ILLUMINATION, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_ILLUMINATION, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_AO, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_DIFFUSE, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_REFLECT, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_DIFFUSE, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_REFLECT, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_REFRACT, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VOLUME, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIFFUSE_ALBEDO, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VIEW_SHADING_NORMAL, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_REFLECTION_CATCHER, nullptr));
 		//rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR_RIGHT, nullptr); // Not Needed for now
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP0, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP1, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP2, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP3, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP4, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP5, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP6, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP7, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP8, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP9, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP10, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP11, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP12, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP13, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP14, nullptr);
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP15, nullptr);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP0, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP1, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP2, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP3, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP4, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP5, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP6, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP7, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP8, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP9, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP10, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP11, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP12, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP13, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP14, nullptr));
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP15, nullptr));
 	}
 
 	bool NoAoVs = false;
@@ -872,141 +965,141 @@ void HorusRadeon::SetShowAOVsMode(int AOV)
 	switch (AOV)
 	{
 	case 0:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
 		NoAoVs = true;
 		break;
 	case 1:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OPACITY, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OPACITY, m_FrameBufferA_));
 		break;
 	case 2:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_WORLD_COORDINATE, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_WORLD_COORDINATE, m_FrameBufferA_));
 		break;
 	case 3:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_UV, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_UV, m_FrameBufferA_));
 		break;
 	case 4:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_MATERIAL_ID, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_MATERIAL_ID, m_FrameBufferA_));
 		break;
 	case 5:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_GEOMETRIC_NORMAL, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_GEOMETRIC_NORMAL, m_FrameBufferA_));
 		break;
 	case 6:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_SHADING_NORMAL, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_SHADING_NORMAL, m_FrameBufferA_));
 		break;
 	case 7:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DEPTH, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DEPTH, m_FrameBufferA_));
 		break;
 	case 8:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_ID, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_ID, m_FrameBufferA_));
 		break;
 	case 9:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_GROUP_ID, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_OBJECT_GROUP_ID, m_FrameBufferA_));
 		break;
 	case 10:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_SHADOW_CATCHER, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_SHADOW_CATCHER, m_FrameBufferA_));
 		break;
 	case 11:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_BACKGROUND, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_BACKGROUND, m_FrameBufferA_));
 		break;
 	case 12:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_EMISSION, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_EMISSION, m_FrameBufferA_));
 		break;
 	case 13:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VELOCITY, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VELOCITY, m_FrameBufferA_));
 		break;
 	case 14:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_ILLUMINATION, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_ILLUMINATION, m_FrameBufferA_));
 		break;
 	case 15:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_ILLUMINATION, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_ILLUMINATION, m_FrameBufferA_));
 		break;
 	case 16:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_AO, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_AO, m_FrameBufferA_));
 		break;
 	case 17:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_DIFFUSE, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_DIFFUSE, m_FrameBufferA_));
 		break;
 	case 18:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_REFLECT, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIRECT_REFLECT, m_FrameBufferA_));
 		break;
 	case 19:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_DIFFUSE, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_DIFFUSE, m_FrameBufferA_));
 		break;
 	case 20:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_REFLECT, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_INDIRECT_REFLECT, m_FrameBufferA_));
 		break;
 	case 21:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_REFRACT, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_REFRACT, m_FrameBufferA_));
 		break;
 	case 22:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VOLUME, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VOLUME, m_FrameBufferA_));
 		break;
 	case 23:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_DIFFUSE_ALBEDO, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_DIFFUSE_ALBEDO, m_FrameBufferA_));
 		break;
 	case 24:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VARIANCE, m_FrameBufferA_));
 		break;
 	case 25:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_VIEW_SHADING_NORMAL, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_VIEW_SHADING_NORMAL, m_FrameBufferA_));
 		break;
 	case 26:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_REFLECTION_CATCHER, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_REFLECTION_CATCHER, m_FrameBufferA_));
 		break;
 	case 27:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP0, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP0, m_FrameBufferA_));
 		break;
 	case 28:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP1, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP1, m_FrameBufferA_));
 		break;
 	case 29:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP2, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP2, m_FrameBufferA_));
 		break;
 	case 30:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP3, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP3, m_FrameBufferA_));
 		break;
 	case 31:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP4, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP4, m_FrameBufferA_));
 		break;
 	case 32:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP5, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP5, m_FrameBufferA_));
 		break;
 	case 33:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP6, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP6, m_FrameBufferA_));
 		break;
 	case 34:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP7, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP7, m_FrameBufferA_));
 		break;
 	case 35:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP8, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP8, m_FrameBufferA_));
 		break;
 	case 36:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP9, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP9, m_FrameBufferA_));
 		break;
 	case 37:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP10, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP10, m_FrameBufferA_));
 		break;
 	case 38:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP11, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP11, m_FrameBufferA_));
 		break;
 	case 39:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP12, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP12, m_FrameBufferA_));
 		break;
 	case 40:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP13, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP13, m_FrameBufferA_));
 		break;
 	case 41:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP14, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP14, m_FrameBufferA_));
 		break;
 	case 42:
-		rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP15, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_LIGHT_GROUP15, m_FrameBufferA_));
 		break;
 	}
 
 	// for show AOVs before color AOV
 	if (!NoAoVs)
 	{
-		rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_);
+		CHECK(rprContextSetAOV(m_ContextA_, RPR_AOV_COLOR, m_FrameBufferA_));
 	}
 }
 

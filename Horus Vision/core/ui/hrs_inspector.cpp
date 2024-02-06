@@ -40,8 +40,8 @@ void HorusInspector::Inspector(bool* p_open)
 	case InspectorType::PROJECT:
 		InspectorProjectProperty();
 		break;
-	default:
-		break;
+	case InspectorType::NONE:
+		InspectorNone();
 	}
 
 	ImGui::End();
@@ -84,10 +84,8 @@ void HorusInspector::Init()
 
 	// Init Project Inspector
 	PopulateSelectedProjectInfos();
-
-
-
 }
+
 void HorusInspector::SetInspectorType(InspectorType Type)
 {
 	m_SelectionType_ = Type;
@@ -689,8 +687,6 @@ void HorusInspector::SetFov(float fov)
 		Console.AddLog(" [error] No camera selected");
 	}
 }
-
-
 
 //-------------------------------------- LIGHT INSPECTOR --------------------------------------
 
@@ -1627,8 +1623,6 @@ void HorusInspector::InspectorMaterial()
 
 	ShowBigSeparator();
 
-	const char Filters[] = { "Image (*.jpg;*.png;*.exr;*.tiff)\0*.jpg;*.png;*.exr;*.tiff\0" };
-
 	// Base Color - Done
 	DrawBaseColorSection();
 	ShowBigSeparator();
@@ -2061,14 +2055,51 @@ void HorusInspector::InspectorMaterial()
 
 }
 
-using UpdateCallback = std::function<void(const std::string&)>;
-
 void HorusInspector::DrawParameterWithFileDialog(std::string& filePath, bool& parameterEnabled, const std::string& buttonID, const char* fileFilter, const std::string& parameterName, UpdateCallback onUpdate, UpdateCallback onEnable)
 {
+	
+
+
 	ImGui::PushID(buttonID.c_str());
 	ImGui::TextUnformatted((parameterName + " Path: ").c_str());
 	ImGui::SameLine();
 	ImGui::InputText(("##path" + buttonID).c_str(), filePath.data(), filePath.size());
+
+	/*if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))
+	{
+		const std::string* filePathPtr = &filePath;
+		ImGui::SetDragDropPayload("IMAGE", filePathPtr, sizeof(std::string*), ImGuiCond_Once);
+
+		ImGui::Text("Drop %s", filePath.c_str());
+		ImGui::EndDragDropSource();
+	}*/
+
+	//if (ImGui::BeginDragDropTarget())
+	//{
+	//	if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_IMAGE))
+	//	{
+	//		IM_ASSERT(payload->DataSize == sizeof(std::string*));
+	//		const std::string* droppedFilePathPtr = static_cast<const std::string*>(payload->Data);
+	//		if (droppedFilePathPtr != nullptr)
+	//		{
+	//			filePath = *droppedFilePathPtr;
+	//			onUpdate(filePath);
+	//		}
+	//	}
+
+	//	/*if (payload != nullptr && payload->DataSize == sizeof(std::string*))
+	//	{
+	//		const std::string* droppedFilePathPtr = static_cast<const std::string*>(payload->Data);
+	//		if (droppedFilePathPtr != nullptr)
+	//		{
+	//			filePath = *droppedFilePathPtr;
+	//			onUpdate(filePath);
+	//		}
+	//	}*/
+	//	ImGui::EndDragDropTarget();
+	//}
+
+
 	ImGui::SameLine();
 
 	if (ImGui::Button(("Browse##" + buttonID).c_str()))
@@ -3258,7 +3289,7 @@ void HorusInspector::DrawSssSection()
 					"Color",
 					[this, &ObjectManager](const std::string& path)
 					{
-							(ObjectManager.GetActiveMaterialId(), path);
+						(ObjectManager.GetActiveMaterialId(), path);
 						ObjectManager.SetUseTextureSssScatterColorInsteadOfColor(ObjectManager.GetActiveMaterialId(), true);
 						ObjectManager.SetEnableSssScatterColorImage(ObjectManager.GetActiveMaterialId(), true);
 
@@ -4024,7 +4055,7 @@ void HorusInspector::SetMaterialDefault()
 	ObjectManager.SetEmissive(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	ObjectManager.SetEmissiveWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 	ObjectManager.SetOpacity(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // 0.0f = opaque, 1.0f = transparent
-	
+
 	PopulateSelectedMaterialInfos();
 	CallResetBuffer();
 }
@@ -4038,11 +4069,11 @@ void HorusInspector::SetMaterialPlastic()
 	ObjectManager.SetBaseColorWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	ObjectManager.SetBaseColorRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
 	ObjectManager.SetBackscatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.05f, 0.05f, 0.05f, 1.0f)); 
+	ObjectManager.SetBackscatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
 
 	// Reflection
 	ObjectManager.SetReflectionColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)); 
+	ObjectManager.SetReflectionWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
 	ObjectManager.SetReflectionRoughness(ObjectManager.GetActiveMaterialId(), glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
 	ObjectManager.SetReflectionAnisotropy(ObjectManager.GetActiveMaterialId(), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 	ObjectManager.SetIor(ObjectManager.GetActiveMaterialId(), 1.36f);
@@ -4065,11 +4096,11 @@ void HorusInspector::SetMaterialPlastic()
 	ObjectManager.SetRefractionCaustics(ObjectManager.GetActiveMaterialId(), false);
 
 	// SSS
-	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 0.8f, 0.8f, 1.0f)); 
-	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.8f, 0.8f, 0.8f, 1.0f)); 
+	ObjectManager.SetSssScatterColor(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 0.8f, 0.8f, 1.0f));
+	ObjectManager.SetSssScatterWeight(ObjectManager.GetActiveMaterialId(), glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
 	ObjectManager.SetSssScatterDirection(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	ObjectManager.SetSssScatterDistance(ObjectManager.GetActiveMaterialId(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), true); 
+	ObjectManager.SetSssUseMultiScattering(ObjectManager.GetActiveMaterialId(), true);
 	ObjectManager.SetSssUseSchlickApproximation(ObjectManager.GetActiveMaterialId(), true);
 
 	// Coating
@@ -4498,7 +4529,6 @@ void HorusInspector::SetMaterialSSS()
 	CallResetBuffer();
 }
 
-
 //-------------------------------------- PROJECT INSPECTOR --------------------------------------
 
 void HorusInspector::InspectorProjectProperty()
@@ -4523,9 +4553,8 @@ void HorusInspector::InspectorProjectProperty()
 		{
 			Radeon.SetVisualizationRenderMode(m_SelectedRenderMode_);
 			CallResetBuffer();
-		}
+		}ShowHandCursorOnHover("Select render mode");
 	}
-
 	ShowBigSeparator();
 
 	// Show AOVs
@@ -4584,10 +4613,8 @@ void HorusInspector::InspectorProjectProperty()
 		{
 			Radeon.SetShowAOVsMode(m_SelectedAov_);
 			CallResetBuffer();
-		}
+		}ShowHandCursorOnHover("Select AOV can be used to visualize different render passes");
 	}
-
-
 	ShowBigSeparator();
 
 	// Background image and transparent background
@@ -4605,13 +4632,13 @@ void HorusInspector::InspectorProjectProperty()
 			}
 
 			m_BackgroundPath_ = FilePath;
-		}
+		}ShowHandCursorOnHover();
 		ImGui::SameLine();
 		// Clear Path button
 		if (ImGui::Button("Clear##path"))
 		{
 			m_BackgroundPath_.clear();
-		}
+		} ShowHandCursorOnHover();
 
 		if (ImGui::Checkbox("Background image", &m_EnableBackdropImage_))
 		{
@@ -4641,7 +4668,7 @@ void HorusInspector::InspectorProjectProperty()
 					}
 				}
 			}
-		}
+		}ShowHandCursorOnHover();
 		ImGui::TextColored(m_WasBackdropImageEnabled_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f),
 			m_WasBackdropImageEnabled_ ? "Backdrop image is enabled" : "Backdrop image is disabled");
 
@@ -4667,7 +4694,7 @@ void HorusInspector::InspectorProjectProperty()
 				WasTransparentBackgroundEnabled = false;
 				m_ResetBuffer_ = true;
 			}
-		}
+		}ShowHandCursorOnHover();
 
 		if (WasTransparentBackgroundEnabled)
 		{
@@ -4707,7 +4734,7 @@ void HorusInspector::InspectorProjectProperty()
 							Radeon.SetMinSamples(m_MinSamples_);
 							CallResetBuffer();
 							PopulateSelectedProjectInfos();
-						}
+						} ShowResizeHorizontalCursorOnHover();
 
 						// Max samples
 						ImGui::Text("Max samples: %d", m_MaxSamples_);
@@ -4722,7 +4749,7 @@ void HorusInspector::InspectorProjectProperty()
 							Radeon.SetMaxSamples(m_MaxSamples_);
 							CallResetBuffer();
 							PopulateSelectedProjectInfos();
-						}
+						}ShowResizeHorizontalCursorOnHover();
 
 						ShowBigSeparator();
 
@@ -4732,7 +4759,7 @@ void HorusInspector::InspectorProjectProperty()
 						{
 							m_ResetBuffer_ = m_EnableRussianRoulette_ != m_PreviousEnableRussianRoulette_;
 							m_PreviousEnableRussianRoulette_ = m_EnableRussianRoulette_;
-						}
+						}ShowHandCursorOnHover("Russian roulette is a technique used to reduce the number of rays that are traced in a path tracer. It is used to reduce the computational cost of rendering by terminating rays that have a low contribution to the final image.");
 
 						ImVec4 rrColor = m_EnableRussianRoulette_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
 						ImGui::TextColored(rrColor, m_EnableRussianRoulette_ ? "Russian roulette is enabled" : "Russian roulette is disabled");
@@ -4745,10 +4772,12 @@ void HorusInspector::InspectorProjectProperty()
 								rprContextSetParameterByKey1f(Radeon.GetContext(), RPR_CONTEXT_RUSSIAN_ROULETTE_DEPTH, RussianRouletteDepth);
 								CallResetBuffer();
 							}
-						}
+						}ShowHandCursorOnHover("Russian roulette depth, the higher the value, the more likely the ray will be terminated");
 
 						ShowBigSeparator();
 
+						// TODO : Fix Adaptative sampling, (problem with allocating m_FbData_ in Radeon.cpp)
+						ImGui::BeginDisabled(true);
 						// Handle adaptive sampling checkbox and update render mode
 						if (ImGui::Checkbox("Adaptive sampling", &m_EnableAdaptiveSampling_))
 						{
@@ -4760,10 +4789,10 @@ void HorusInspector::InspectorProjectProperty()
 							else {
 								Radeon.SetClassicRender();
 							}
-						}
+						} ShowHandCursorOnHover("Adaptive sampling is a technique used to reduce the number of samples in areas of the image that are less important. It is used to reduce the computational cost of rendering by terminating rays that have a low contribution to the final image.");
 
-						ImVec4 color = m_EnableAdaptiveSampling_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
-						ImGui::TextColored(color, m_EnableAdaptiveSampling_ ? "Adaptive sampling is enabled" : "Adaptive sampling is disabled");
+						ImVec4 Color = m_EnableAdaptiveSampling_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
+						ImGui::TextColored(Color, m_EnableAdaptiveSampling_ ? "Adaptive sampling is enabled" : "Adaptive sampling is disabled");
 
 						// Display and handle adaptive threshold slider
 						ImGui::Text("Threshold: %.2f", m_AdaptiveThreshold_);
@@ -4772,7 +4801,8 @@ void HorusInspector::InspectorProjectProperty()
 						{
 							Radeon.SetAdaptiveSamplingThreshold(m_AdaptiveThreshold_);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Adaptive sampling threshold, the lower the value, the more likely the adaptive sampling will be used");
+						ImGui::EndDisabled();
 					}
 
 					ShowBigSeparator();
@@ -4784,7 +4814,7 @@ void HorusInspector::InspectorProjectProperty()
 						m_PreviousResetMode_ = m_EnablePreviewMode_;
 						Radeon.SetLockPreviewMode(m_EnablePreviewMode_);
 						PopulateSelectedProjectInfos();
-					}
+					} ShowHandCursorOnHover("Enable preview mode is used for faster rendering, it is useful for previewing the scene before the final render.");
 
 					// Display preview mode status
 					ImVec4 colorPM = m_EnablePreviewMode_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
@@ -4793,7 +4823,7 @@ void HorusInspector::InspectorProjectProperty()
 					ShowBigSeparator();
 
 					// Anti Aliasing
-					bool CheckboxAaChanged = ImGui::Checkbox("Enable AA", &m_EnableAa_);
+					bool CheckboxAaChanged = ImGui::Checkbox("Enable AA", &m_EnableAa_); ShowHandCursorOnHover("Enable anti-aliasing is used to reduce the jagged edges of the rendered image");
 					if (CheckboxAaChanged) {
 						m_ResetBuffer_ = true;
 						m_PreviousEnableAa_ = m_EnableAa_;
@@ -4802,6 +4832,8 @@ void HorusInspector::InspectorProjectProperty()
 
 					ImVec4 colorAA = m_EnableAa_ ? ImVec4(0.6f, 1.0f, 0.6f, 1.0f) : ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
 					ImGui::TextColored(colorAA, m_EnableAa_ ? "Anti aliasing is enabled" : "Anti aliasing is disabled");
+
+					ImGui::Separator();
 
 					// Display and handle filter 
 					const char* Filters[] = { "Box", "Triangle", "Gaussian", "Mitchell", "Lanczos", "Blackmanharris", "None" };
@@ -4835,7 +4867,7 @@ void HorusInspector::InspectorProjectProperty()
 							break;
 						}
 						CallResetBuffer();
-					}
+					} ShowHandCursorOnHover("Select filter can be used to change the filter used for anti-aliasing");
 
 					ShowBigSeparator();
 
@@ -4854,35 +4886,35 @@ void HorusInspector::InspectorProjectProperty()
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_DIFFUSE, maxDepthDiffuse);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Diffuse ray depth, the higher the value, the more likely the diffuse rays will be traced per pixel at each bounce");
 
 						static int maxDepthGlossy = 1;
 						if (ImGui::SliderInt("Reflection Ray Depth", &maxDepthGlossy, 1, 64))
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY, maxDepthGlossy);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Reflection ray depth, the higher the value, the more likely the reflection rays will be traced per pixel at each bounce");
 
 						static int maxDepthRefraction = 1;
 						if (ImGui::SliderInt("Refraction Ray Depth", &maxDepthRefraction, 1, 64))
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_REFRACTION, maxDepthRefraction);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Refraction ray depth, the higher the value, the more likely the refraction rays will be traced per pixel at each bounce");
 
 						static int maxDepthGlossyRefraction = 1;
 						if (ImGui::SliderInt("Glossy Refraction Ray Depth", &maxDepthGlossyRefraction, 1, 64))
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_GLOSSY_REFRACTION, maxDepthGlossyRefraction);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Glossy refraction ray depth, the higher the value, the more likely the glossy refraction rays will be traced per pixel at each bounce");
 
 						static int maxDepthShadow = 1;
 						if (ImGui::SliderInt("Shadow Ray Depth", &maxDepthShadow, 1, 64))
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_DEPTH_SHADOW, maxDepthShadow);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Shadow ray depth, the higher the value, the more likely the shadow rays will be traced per pixel at each bounce");
 					}
 
 					// Color management
@@ -4959,7 +4991,7 @@ void HorusInspector::InspectorProjectProperty()
 						{
 							rprContextSetParameterByKey1u(Radeon.GetContext(), RPR_CONTEXT_MAX_RECURSION, MaxRecursion);
 							CallResetBuffer();
-						}
+						} ShowResizeHorizontalCursorOnHover("Trace depth, the higher the value, make the rays to be traced more times and produce more accurate results (but slower), it's useful for deep reflections and refractions");
 					}
 
 					ShowBigSeparator();
@@ -5154,7 +5186,7 @@ void HorusInspector::InspectorProjectProperty()
 				}
 			}
 			ImGui::EndCombo();
-		}
+		} ShowHandCursorOnHover("Select the format to export the render");
 
 		ImGui::InputText("Filename", m_UserInput_, 256);
 		if (ImGui::Button("Browse##ExportPath"))
@@ -5165,7 +5197,7 @@ void HorusInspector::InspectorProjectProperty()
 				spdlog::info("Save file : {}", FilePath);
 				strncpy(m_UserInput_, FilePath.c_str(), sizeof(m_UserInput_));
 			}
-		}
+		} ShowHandCursorOnHover("Browse the folder to save the render, the path will be displayed in the input field");
 		ImGui::SameLine();
 		if (ImGui::Button("Export"))
 		{
@@ -5245,6 +5277,28 @@ void HorusInspector::InspectorProjectProperty()
 	ShowBigSeparator();
 }
 
+void HorusInspector::InspectorNone()
+{
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 1.0f, 0.6f, 1.0f)); // Vert clair pour le titre
+	ImGui::Text("Inspector");
+	ImGui::PopStyleColor();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 0.8f)); 
+	ImGui::TextWrapped("No object is currently selected for inspection. Please select an object from the Outliner or Scene to view its properties and perform actions.");
+	ImGui::PopStyleColor();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+
+}
+
+
 void HorusInspector::ShowHelpMarker(const char* desc)
 {
 	ImGui::TextDisabled("(?)");
@@ -5274,6 +5328,3 @@ void HorusInspector::PopulateSelectedProjectInfos()
 	m_MaxSamples_ = Radeon.GetMaxSamples();
 	m_SelectedRenderMode_ = Radeon.GetVisualizationRenderMode();
 }
-
-// Project Getters
-// Project Setters

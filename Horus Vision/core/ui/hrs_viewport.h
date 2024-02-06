@@ -95,6 +95,8 @@ public:
 	void ViewportRadeon(bool* p_open);
 	void OverlayRadeon(bool* p_open);
 
+	void RecenterViewport();
+
 	void ResetBuffers();
 
 	void ShowHelpMarker(const char* desc);
@@ -114,7 +116,6 @@ private:
 	const ImVec4 m_GreenColor_ = ImVec4(0.6f, 1.0f, 0.6f, 1.0f);
 	const ImVec4 m_PinkColor_ = ImVec4(1.0f, 0.6f, 0.7f, 1.0f);
 
-	ImVec2 m_Pos_ = ImGui::GetCursorScreenPos();
 	ImVec2 m_ViewerSize_;
 	ImVec2 m_LastSize_ = ImVec2(0, 0);
 	float m_AvailableWidth_;
@@ -140,9 +141,6 @@ private:
 	float m_OffsetY_;
 
 	float m_WidthPerItems_ = 100;
-
-	ImGuiIO& m_Io_ = ImGui::GetIO();
-	bool m_IsLeftAltPressed_ = m_Io_.KeyAlt;
 
 	ImGuiWindowFlags m_WindowFlags_ = 0;
 

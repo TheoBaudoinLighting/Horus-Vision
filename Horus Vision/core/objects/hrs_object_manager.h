@@ -174,20 +174,20 @@ public:
 	void SetActiveOpenGLCamera(int id);
 
 	int GetCameraIdByName(const char* name);
-	std::string& GetCameraNameById(int id);
+	std::string& GetCameraNameById(int id) { return m_RadeonCameraNames_[id]; }
 
-	void SetMoveCameraForward(int id);
-	void SetMoveCameraBackward(int id);
-	void SetMoveCameraLeft(int id);
-	void SetMoveCameraRight(int id);
-	void SetMoveCameraUp(int id);
-	void SetMoveCameraDown(int id);
-	void SetScrollCamera(int id, float delta);
+	void SetMoveCameraForward(int id) { m_RadeonCameras_[id].MoveCamera(Forward); }
+	void SetMoveCameraBackward(int id) { m_RadeonCameras_[id].MoveCamera(Backward); }
+	void SetMoveCameraLeft(int id) { m_RadeonCameras_[id].MoveCamera(Left); }
+	void SetMoveCameraRight(int id) { m_RadeonCameras_[id].MoveCamera(Right); }
+	void SetMoveCameraUp(int id) { m_RadeonCameras_[id].MoveCamera(Up); }
+	void SetMoveCameraDown(int id) { m_RadeonCameras_[id].MoveCamera(Down); }
+	void SetScrollCamera(int id, float delta) { m_RadeonCameras_[id].Zoom(delta); }
 
 	void SetPitch(int id, float pitch);
 	void SetHeading(int id, float heading);
 
-	void SetCameraLookat(int id, glm::vec3& pivot);
+	void SetCameraLookat(int id, glm::vec3& pivot) { m_RadeonCameras_[id].SetLookAt(pivot); }
 
 	void SetTumbleCamera(int id, float x, float y, float sensitivity);
 	void SetPanCamera(int id, float x, float y, float sensitivity);
@@ -195,33 +195,33 @@ public:
 
 	// Getters for inspector
 
-	glm::vec3 GetCameraLookAt(int id);
-	glm::vec3 GetCameraPosition(int id);
-	glm::vec3 GetCameraTranslation(int id);
-	glm::vec3 GetCameraRotation(int id);
-	glm::vec3 GetCameraScale(int id);
-	float GetCameraFov(int id);
-	float GetCameraAspectRatio(int id);
-	float GetCameraNearPlane(int id);
-	float GetCameraFarPlane(int id);
-	float GetCameraFocusDistance(int id);
-	float GetCameraFStop(int id);
-	int GetCameraApertureBlades(int id);
+	glm::vec3 GetCameraLookAt(int id) { return m_RadeonCameras_[id].GetLookAt(); }
+	glm::vec3 GetCameraPosition(int id) { return m_RadeonCameras_[id].GetPosition(); }
+	glm::vec3 GetCameraTranslation(int id) { return m_RadeonCameras_[id].GetTranslation(); }
+	glm::vec3 GetCameraRotation(int id) { return m_RadeonCameras_[id].GetRotation(); }
+	glm::vec3 GetCameraScale(int id) { return m_RadeonCameras_[id].GetCameraScale(); }
+	float GetCameraFov(int id) { return m_RadeonCameras_[id].GetFov(); }
+	float GetCameraAspectRatio(int id) { return m_RadeonCameras_[id].GetAspect(); }
+	float GetCameraNearPlane(int id) { return m_RadeonCameras_[id].GetNear(); }
+	float GetCameraFarPlane(int id) { return m_RadeonCameras_[id].GetFar(); }
+	float GetCameraFocusDistance(int id) { return m_RadeonCameras_[id].GetFocusPlane(); }
+	float GetCameraFStop(int id) { return m_RadeonCameras_[id].GetFStop(); }
+	int GetCameraApertureBlades(int id) { return m_RadeonCameras_[id].GetApertureBlades(); }
 
 	// Setters for inspector
 
-	void SetCameraFov(int id, float fov);
-	void SetCameraAspectRatio(int id, float aspect_ratio);
-	void SetCameraNear(int id, float NearPlane);
-	void SetCameraFar(int id, float FarPlane);
-	void SetFocusDistance(int id, float focus_distance);
-	void SetFStop(int id, float fstop);
-	void SetApertureBlades(int id, int blades);
-
-	void SetCameraLookAt(int id, glm::vec3 lookat);
-	void SetCameraPosition(int id, glm::vec3 position);
-	void SetCameraRotation(int id, glm::vec3 rotation_axis);
-	void SetCameraScale(int id, glm::vec3 scale);
+	void SetCameraFov(int id, float fov) { m_RadeonCameras_[id].SetFov(fov); }
+	void SetCameraAspectRatio(int id, float aspect_ratio) { m_RadeonCameras_[id].SetAspect(aspect_ratio); }
+	void SetCameraNear(int id, float NearPlane) { m_RadeonCameras_[id].SetClipping(NearPlane, 1000.0f); }
+	void SetCameraFar(int id, float FarPlane) { m_RadeonCameras_[id].SetClipping(0.1f, FarPlane); }
+	void SetFocusDistance(int id, float focus_distance) { m_RadeonCameras_[id].SetFocusPlane(focus_distance); }
+	void SetFStop(int id, float fstop) { m_RadeonCameras_[id].SetFStop(fstop); }
+	void SetApertureBlades(int id, int blades) { m_RadeonCameras_[id].SetApertureBlades(blades); }
+	void SetSensorSize(int id, float width, float height) { m_RadeonCameras_[id].SetSensorSize(width, height);  }
+	void SetCameraLookAt(int id, glm::vec3 lookat) { m_RadeonCameras_[id].SetLookAt(lookat); }
+	void SetCameraPosition(int id, glm::vec3 position) { m_RadeonCameras_[id].SetPosition(position); }
+	void SetCameraRotation(int id, glm::vec3 rotation_axis) { m_RadeonCameras_[id].SetCameraRotation(rotation_axis.x, rotation_axis.y, rotation_axis.z); }
+	void SetCameraScale(int id, glm::vec3 scale) { m_RadeonCameras_[id].SetCameraScale(scale); }
 
 	// Group Shape object ----------------------------------
 

@@ -51,15 +51,6 @@
     <ClCompile Include="core\hrs_horus.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\opengl\hrs_opengl.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="core\implementations\radeon\hrs_radeon.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="core\hrs_engine.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="core\window\hrs_window.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -99,9 +90,6 @@
     <ClCompile Include="core\inputs\hrs_input.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\implementations\opengl\hrs_opengl_manager.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="core\ui\hrs_ui.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -136,12 +124,6 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="core\implementations\radeon\hrs_radeon_render.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="core\implementations\radeon\hrs_radeon_posteffect.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\config\hrs_ocio.cpp">
@@ -1070,15 +1052,6 @@
     <ClInclude Include="core\shaders\hrs_shader_manager.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\opengl\hrs_opengl.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\radeon\hrs_radeon.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\hrs_engine.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="core\window\hrs_window.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1457,18 +1430,6 @@
     <ClInclude Include="core\config\hrs_garbage_collector.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\implementations\opengl\hrs_vao.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\opengl\hrs_vbo.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\opengl\hrs_ebo.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\opengl\hrs_opengl_manager.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="core\ui\hrs_ui.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1560,12 +1521,6 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\radeon\hrs_radeon_render.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="core\implementations\radeon\hrs_radeon_posteffect.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="core\config\hrs_ocio.h">

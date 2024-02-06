@@ -74,6 +74,8 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 		aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenNormals | aiProcess_GenSmoothNormals 
 		 | aiProcess_ValidateDataStructure);
 
+	/*const aiScene* Scene = Importer.ReadFile(MeshPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);*/
+
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
 	{
 		spdlog::error("Error with Assimp : {}", Importer.GetErrorString());
@@ -166,11 +168,11 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 		}
 
 		m_LoadMeshThread_ = std::thread([&]() {
-			for (unsigned int i = 0; i < Mesh->mNumFaces; ++i)
+			for (unsigned int I = 0; I < Mesh->mNumFaces; ++I)
 			{
 				std::lock_guard Guard(LoadMeshMutex);
 
-				aiFace Face = Mesh->mFaces[i];
+				aiFace Face = Mesh->mFaces[I];
 				FaceVert.push_back(Face.mNumIndices);
 
 				for (unsigned int j = 0; j < Face.mNumIndices; ++j)
@@ -190,9 +192,9 @@ std::vector<std::tuple<rpr_shape, std::string>> HorusMeshImporter::LoadMesh(cons
 					{
 						if (Mesh->mTextureCoords[Udim])
 						{
-							if (i < Mesh->mNumVertices)
+							if (I < Mesh->mNumVertices)
 							{
-								aiVector3D TexCoord = Mesh->mTextureCoords[Udim][i];
+								aiVector3D TexCoord = Mesh->mTextureCoords[Udim][I];
 								UdimTexcoords[Udim].emplace_back(TexCoord.x);
 								UdimTexcoords[Udim].emplace_back(TexCoord.y);
 							}

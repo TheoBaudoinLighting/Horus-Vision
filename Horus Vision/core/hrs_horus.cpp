@@ -37,7 +37,6 @@
 
 // Projects Include
 #include "hrs_engine.h" 
-#include "hrs_engine_core.h"
 #include "hrs_timer.h"
 
 int main()

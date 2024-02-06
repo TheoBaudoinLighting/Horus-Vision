@@ -79,6 +79,7 @@ private:
 	bool m_IsRunning_ = true;
 	bool m_IsClosing_ = false;
 	bool m_IsFirstLaunch_ = true;
+	bool m_IsSecondLaunch_ = true;
 	bool m_LaunchLoadData_ = true;
 
 	//std::future<bool> m_LoadingThread_ = async(std::launch::async, []() { return true; });

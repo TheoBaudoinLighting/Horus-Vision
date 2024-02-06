@@ -8,11 +8,11 @@
 
 void HorusWindow::InitContexts(int width, int height, HorusWindow* window)
 {
-	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusOpenGL& OpenGl = HorusOpenGL::GetInstance();
 	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	OpenGL.Init(width, height, window);
+	OpenGl.Init(width, height, window);
 	ImGuiCore.Init(width, height, window);
 	Radeon.Init(width, height, window);
 
@@ -20,14 +20,13 @@ void HorusWindow::InitContexts(int width, int height, HorusWindow* window)
 }
 bool HorusWindow::InitWindow(int width, int height, const std::string& title)
 {
-	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusEngine& Engine = HorusEngine::GetInstance();
 
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
-	m_WindowTitle_ = title;
+	WindowWidth = width;
+	WindowHeight = height;
+	WindowTitle = title;
 
-	Engine.InitContexts(m_WindowWidth_, m_WindowHeight_, this);
+	Engine.InitContexts(WindowWidth, WindowHeight, this);
 
 	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");

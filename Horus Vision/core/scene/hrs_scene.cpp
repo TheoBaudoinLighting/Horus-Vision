@@ -9,7 +9,7 @@
 
 #include "hrs_timer.h"
 
-std::mutex m_SceneMutex_;
+std::mutex SceneMutex;
 
 void HorusScene::Init()
 {
@@ -65,9 +65,9 @@ void HorusScene::CreateGrid()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	rpr_curve curve = nullptr;
+	rpr_curve Curve = nullptr;
 
-	size_t num_control_points = 4;
+	size_t NumControlPoints = 4;
 	rpr_float control_points[] = { -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f };
 	rpr_int control_points_stride = 3 * sizeof(rpr_float);
 
@@ -79,7 +79,7 @@ void HorusScene::CreateGrid()
 	rpr_int segment_per_curve = 4;
 	rpr_uint creation_flag = 0;
 
-	CHECK(rprContextCreateCurve(Radeon.GetContext(), &curve, num_control_points, control_points, control_points_stride, num_indices, curveCount, indices, &radius, &textureUV, &segment_per_curve, creation_flag));
+	CHECK(rprContextCreateCurve(Radeon.GetContext(), &Curve, NumControlPoints, control_points, control_points_stride, num_indices, curveCount, indices, &radius, &textureUV, &segment_per_curve, creation_flag));
 
 
 }

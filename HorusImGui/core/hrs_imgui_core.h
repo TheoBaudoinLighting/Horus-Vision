@@ -21,18 +21,18 @@ public:
 		return Instance;
 	}
 
-	HorusImGuiCore(HorusImGuiCore const&) = delete;
-	void operator=(HorusImGuiCore const&) = delete;
+	HorusImGuiCore(const HorusImGuiCore&) = delete;
+	void operator=(const HorusImGuiCore&) = delete;
 
 	void PrintMessage();
 
-	bool Initialize(const int Width, const int Height, HorusWindowConfig* WindowConfig);
+	bool Init(int Width, int Height, HorusWindowConfig* WindowConfig) override;
 
 	void InitRender() override;
 	void PostRender() override;
 	void QuitRender() override;
 
-	ImFont* GetIconFont() { return m_IconFont_; }
+	ImFont* GetIconFont() const { return m_IconFont_; }
 
 private:
 
@@ -46,5 +46,4 @@ private:
 	ImFont* m_IconFont_ = nullptr;
 
 	const char* m_GlslVersion_ = "#version 460";
-
 };

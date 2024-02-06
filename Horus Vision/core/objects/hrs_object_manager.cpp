@@ -210,78 +210,6 @@ void HorusObjectManager::GetOpenGLCameraMatrices(int id, glm::mat4& projection, 
 {
 	m_OpenGlCameras_[id].GetMatricies(view, projection, model);
 }
-std::string& HorusObjectManager::GetCameraNameById(int id)
-{
-	std::string& Name = m_RadeonCameraNames_[id];
-
-	return Name;
-}
-glm::vec3 HorusObjectManager::GetCameraLookAt(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetLookAt();
-}
-glm::vec3 HorusObjectManager::GetCameraPosition(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetPosition();
-}
-glm::vec3 HorusObjectManager::GetCameraTranslation(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetTranslation();
-}
-glm::vec3 HorusObjectManager::GetCameraRotation(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetRotation();
-}
-glm::vec3 HorusObjectManager::GetCameraScale(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetCameraScale();
-}
-float HorusObjectManager::GetCameraFov(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetFov();
-}
-float HorusObjectManager::GetCameraAspectRatio(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetAspect();
-}
-float HorusObjectManager::GetCameraNearPlane(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetNear();
-}
-float HorusObjectManager::GetCameraFarPlane(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetFar();
-}
-float HorusObjectManager::GetCameraFocusDistance(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetFocusPlane();
-}
-float HorusObjectManager::GetCameraFStop(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetFStop();
-}
 int HorusObjectManager::GetActiveRadeonCameraId()
 {
 	return m_ActiveRadeonCameraId_;
@@ -299,56 +227,8 @@ int HorusObjectManager::GetCameraIdByName(const char* name)
 
 	return m_ObjectNameToIdMap_[name];
 }
-int HorusObjectManager::GetCameraApertureBlades(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	return Camera.GetApertureBlades();
-}
 
 // Setters
-void HorusObjectManager::SetMoveCameraForward(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Forward);
-}
-void HorusObjectManager::SetMoveCameraBackward(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Backward);
-}
-void HorusObjectManager::SetMoveCameraLeft(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Left);
-}
-void HorusObjectManager::SetMoveCameraRight(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Right);
-}
-void HorusObjectManager::SetMoveCameraUp(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Up);
-}
-void HorusObjectManager::SetMoveCameraDown(int id)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.MoveCamera(Down);
-}
-void HorusObjectManager::SetScrollCamera(int id, float delta)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.Zoom(delta);
-}
 void HorusObjectManager::SetPitch(int id, float pitch)
 {
 	HorusRadeonCamera& Camera = GetRadeonCamera(id);
@@ -364,12 +244,6 @@ void HorusObjectManager::SetHeading(int id, float heading)
 	spdlog::info("Camera ID: {} Heading: {}", id, heading);
 
 	Camera.ChangeHeading(heading);
-}
-void HorusObjectManager::SetCameraLookat(int id, glm::vec3& pivot)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetLookAt(pivot);
 }
 void HorusObjectManager::SetTumbleCamera(int id, float x, float y, float sensitivity)
 {
@@ -410,72 +284,6 @@ void HorusObjectManager::SetActiveOpenGLCamera(int id)
 	}
 
 	m_ActiveOpenGLCameraId_ = id;
-}
-void HorusObjectManager::SetCameraFov(int id, float fov)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetFov(fov);
-}
-void HorusObjectManager::SetCameraAspectRatio(int id, float aspect_ratio)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetAspect(aspect_ratio);
-}
-void HorusObjectManager::SetCameraNear(int id, float NearPlane)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetClipping(NearPlane, NearPlane);
-}
-void HorusObjectManager::SetCameraFar(int id, float FarPlane)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetClipping(FarPlane, FarPlane);
-}
-void HorusObjectManager::SetFocusDistance(int id, float focus_distance)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetFocusPlane(focus_distance);
-}
-void HorusObjectManager::SetFStop(int id, float fstop)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetFStop(fstop);
-}
-void HorusObjectManager::SetApertureBlades(int id, int blades)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.SetApertureBlades(blades);
-}
-void HorusObjectManager::SetCameraLookAt(int id, glm::vec3 lookat)
-{
-	HorusRadeonCamera& camera = GetRadeonCamera(id);
-
-	camera.SetLookAt(lookat);
-}
-void HorusObjectManager::SetCameraPosition(int id, glm::vec3 position)
-{
-	HorusRadeonCamera& camera = GetRadeonCamera(id);
-
-	camera.SetPosition(position);
-}
-void HorusObjectManager::SetCameraRotation(int id, glm::vec3 rotation_axis)
-{
-	HorusRadeonCamera& camera = GetRadeonCamera(id);
-
-	camera.SetCameraRotation(rotation_axis.x, rotation_axis.y, rotation_axis.z);
-}
-void HorusObjectManager::SetCameraScale(int id, glm::vec3 scale)
-{
-	HorusRadeonCamera& camera = GetRadeonCamera(id);
-
-	camera.SetCameraScale(scale);
 }
 
 // Group Shape management -------------------------------------------------------------------------------

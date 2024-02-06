@@ -5,6 +5,13 @@ using namespace std;
 #include "hrs_engine.h"
 #include "hrs_input.h"
 
+void HorusInput::OnChar(GLFWwindow* window, unsigned int c)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacter(c);
+}
+
+
 void HorusInput::OnScroll(GLFWwindow* window, double xoffset, double yoffset)
 {
 

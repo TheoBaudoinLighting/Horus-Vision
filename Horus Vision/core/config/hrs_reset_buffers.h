@@ -20,7 +20,7 @@ public:
 	// Mutex
 	std::mutex Mutex;
 
-	void CallResetBuffers()
+	static void CallResetBuffers()
 	{
 		HorusRadeon& Radeon = HorusRadeon::GetInstance();
 		HorusUI& Ui = HorusUI::GetInstance();
@@ -43,6 +43,7 @@ public:
 	}
 
 private:
+
 	HorusResetBuffers() {}
 
 };

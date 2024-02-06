@@ -2,18 +2,12 @@
 
 #include "hrs_config.h" // glfw3.h
 
-#include <RadeonProRender.hpp>
-#include <string>
-
-
 class HorusContext
 {
 public:
 	virtual ~HorusContext() = default;
 
-	HorusContext(): m_Window_()
-	{
-	}
+	HorusContext(): m_Window_() {}
 
 	virtual bool Init(int Width, int Height, HorusWindowConfig* WindowConfig)
 	{

@@ -24,15 +24,15 @@ public:
 	{
 	}
 
-	~HorusWindow() = default;
+	~HorusWindow() override = default;
 
-	void InitContexts(int width, int height, HorusWindow* window);
+	static void InitContexts(int width, int height, HorusWindow* window);
 
 	bool InitWindow(int width, int height, const std::string& title);
 
-	GLFWwindow* get_window() override { return m_Window_; }
+	GLFWwindow* GetWindow() override { return m_Window_; }
 
-	void set_window(GLFWwindow* window) override { m_Window_ = window; }
+	void SetWindow(GLFWwindow* window) override { m_Window_ = window; }
 
 	void OnScroll(GLFWwindow* window, double xoffset, double yoffset) override {}
 	void OnKey(GLFWwindow* window, int key, int scancode, int action, int mods) override {}
@@ -41,11 +41,11 @@ public:
 	void OnResize(GLFWwindow* window, int width, int height) override {}
 	void OnClose() override {}
 
-	void scroll_callback(double xoffset, double yoffset) override { m_MouseWheel_ = yoffset; }
-	void mouse_button_callback(int button, int action, int mods) override {}
-	void key_callback(int key, int scancode, int action, int mods) override {}
-	void resize_callback(int width, int height) override { m_WindowWidth_ = width; m_WindowHeight_ = height; }
-	void close_callback() override {}
+	void ScrollCallback(double xoffset, double yoffset) override { m_MouseWheel_ = yoffset; }
+	void MouseButtonCallback(int button, int action, int mods) override {}
+	void KeyCallback(int key, int scancode, int action, int mods) override {}
+	void ResizeCallback(int width, int height) override { WindowWidth = width; WindowHeight = height; }
+	void CloseCallback() override {}
 	void ProcessInput();
 	void Close();
 
@@ -61,8 +61,8 @@ public:
 	bool IsClosing() const { return m_IsClosing_; }
 
 	int GetFps() const { return m_Fps_; }
-	int GetHeight() const { return m_WindowHeight_; }
-	int GetWidth() const { return m_WindowWidth_; }
+	int GetHeight() const { return WindowHeight; }
+	int GetWidth() const { return WindowWidth; }
 
 private:
 

@@ -13,13 +13,10 @@
 #include "hrs_timer.h"
 
 // Horus libraries
-#include "hrs_opengl_core.h"
 #include "hrs_imgui_core.h"
-#include "hrs_radeon_core.h"
-#include "hrs_engine_core.h"
-#include "hrs_render_core.h"
+#include "imgui_impl_glfw.h"
 
-void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam) 
+void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam)
 {
 	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
@@ -90,11 +87,11 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	glfwSetErrorCallback([]([[maybe_unused]] int Error, const char* Description) { spdlog::error("GLFW error: {}", Description); });
 
-	m_HorusWindow_ = glfwCreateWindow(m_WindowWidth_, m_WindowHeight_, window->m_WindowTitle_.c_str(), nullptr, nullptr);
+	m_HorusWindow_ = glfwCreateWindow(m_WindowWidth_, m_WindowHeight_, window->WindowTitle.c_str(), nullptr, nullptr);
 
 	if (!m_HorusWindow_)
 	{
@@ -103,7 +100,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 		return false;
 	}
 
-	window->set_window(m_HorusWindow_);
+	window->SetWindow(m_HorusWindow_);
 
 	glfwSetWindowUserPointer(m_HorusWindow_, &window);
 	glfwMakeContextCurrent(m_HorusWindow_);
@@ -116,6 +113,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	glfwSetCursorPosCallback(m_HorusWindow_, CursorPositionCallback);
 	glfwSetWindowSizeCallback(m_HorusWindow_, WindowResizeCallback);
 	glfwSetWindowCloseCallback(m_HorusWindow_, WindowCloseCallback);
+
 
 	glfwSwapInterval(1);
 
@@ -206,7 +204,7 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 
 void HorusOpenGL::InitRender()
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
+	//HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
@@ -246,7 +244,7 @@ void HorusOpenGL::InitRender()
 	/*glUseProgram(0);
 	glBindTexture(GL_TEXTURE_2D, 0);*/
 
-	
+
 }
 
 void HorusOpenGL::Render()
@@ -260,7 +258,7 @@ void HorusOpenGL::Render()
 	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		spdlog::error("Framebuffer is not complete!");
 	}
 
@@ -273,7 +271,7 @@ void HorusOpenGL::Render()
 	// Render here
 
 	/*glm::mat4 model, view, projection;
-	
+
 	m_DefaultShader_.Use();
 	ObjectManager.SendToShaderOpenGLCamera(ObjectManager.GetActiveOpenGLCameraId(), m_DefaultShader_);
 

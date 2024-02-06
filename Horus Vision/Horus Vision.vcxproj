@@ -76,7 +76,7 @@
     <LibraryPath>C:\opencv\build\x64\vc16\lib;C:\opencv\build\x64\vc16\bin;$(ProjectDir)external\glfw\include\lib-vc2022;$(LibraryPath)</LibraryPath>
     <IncludePath>C:\opencv\build\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)out\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusVision</IntDir>
     <TargetName>HorusVision</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -158,9 +158,6 @@
     <ClCompile Include="external\imgui\imnodes.cpp" />
     <ClCompile Include="external\RadeonProRender\common\common.cpp" />
     <ClCompile Include="core\shaders\hrs_shader_manager.cpp" />
-    <ClCompile Include="core\implementations\opengl\hrs_opengl.cpp" />
-    <ClCompile Include="core\implementations\radeon\hrs_radeon.cpp" />
-    <ClCompile Include="core\hrs_engine.cpp" />
     <ClCompile Include="core\window\hrs_window.cpp" />
     <ClCompile Include="core\config\hrs_logger.cpp" />
     <ClCompile Include="core\camera\hrs_radeon_camera.cpp" />
@@ -172,7 +169,6 @@
     <ClCompile Include="core\material\hrs_material_editor.cpp" />
     <ClCompile Include="core\scene\hrs_scene.cpp" />
     <ClCompile Include="core\inputs\hrs_input.cpp" />
-    <ClCompile Include="core\implementations\opengl\hrs_opengl_manager.cpp" />
     <ClCompile Include="core\ui\hrs_ui.cpp" />
     <ClCompile Include="core\ui\hrs_inspector.cpp" />
     <ClCompile Include="core\ui\hrs_console.cpp" />
@@ -185,8 +181,6 @@
     <ClCompile Include="external\RadeonProRender\inc\Math\half.cpp" />
     <ClCompile Include="external\RadeonProRender\rprTools\RadeonProRenderCpp.cpp" />
     <ClCompile Include="external\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
-    <ClCompile Include="core\implementations\radeon\hrs_radeon_posteffect.cpp" />
-    <ClCompile Include="core\implementations\radeon\hrs_radeon_render.cpp" />
     <ClCompile Include="core\ui\hrs_about.cpp" />
     <ClCompile Include="core\ui\hrs_statistics.cpp" />
     <ClCompile Include="core\ui\hrs_help.cpp" />
@@ -519,9 +513,6 @@
     <ClInclude Include="external\RadeonProRender\common\picojson.h" />
     <ClInclude Include="external\RadeonProRender\common\tiny_obj_loader.h" />
     <ClInclude Include="core\shaders\hrs_shader_manager.h" />
-    <ClInclude Include="core\implementations\opengl\hrs_opengl.h" />
-    <ClInclude Include="core\implementations\radeon\hrs_radeon.h" />
-    <ClInclude Include="core\hrs_engine.h" />
     <ClInclude Include="core\window\hrs_window.h" />
     <ClInclude Include="core\config\hrs_logger.h" />
     <ClInclude Include="external\RadeonProRender\inc\Math\eLut.h" />
@@ -654,10 +645,6 @@
     <ClInclude Include="core\scene\hrs_scene.h" />
     <ClInclude Include="core\inputs\hrs_input.h" />
     <ClInclude Include="core\config\hrs_garbage_collector.h" />
-    <ClInclude Include="core\implementations\opengl\hrs_vao.h" />
-    <ClInclude Include="core\implementations\opengl\hrs_vbo.h" />
-    <ClInclude Include="core\implementations\opengl\hrs_ebo.h" />
-    <ClInclude Include="core\implementations\opengl\hrs_opengl_manager.h" />
     <ClInclude Include="core\ui\hrs_ui.h" />
     <ClInclude Include="core\ui\hrs_inspector.h" />
     <ClInclude Include="core\ui\hrs_console.h" />
@@ -667,8 +654,6 @@
     <ClInclude Include="core\camera\hrs_opengl_camera.h" />
     <ClInclude Include="core\scene\hrs_scene_manager.h" />
     <ClInclude Include="core\scene\hrs_importer_manager.h" />
-    <ClInclude Include="core\implementations\radeon\hrs_radeon_posteffect.h" />
-    <ClInclude Include="core\implementations\radeon\hrs_radeon_render.h" />
     <ClInclude Include="core\ui\hrs_about.h" />
     <ClInclude Include="core\ui\hrs_statistics.h" />
     <ClInclude Include="core\ui\hrs_help.h" />

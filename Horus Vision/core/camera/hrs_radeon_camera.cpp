@@ -508,6 +508,12 @@ void HorusRadeonCamera::SetApertureBlades(int ApertureBlades)
 
 	UpdateCamera();
 }
+void HorusRadeonCamera::SetSensorSize(float Width, float Height)
+{
+	CHECK(rprCameraSetSensorSize(m_Camera_, Width, Height));
+
+	UpdateCamera();
+}
 void HorusRadeonCamera::SetAspect(const float Aspect)
 {
 	GetCameraInfo();

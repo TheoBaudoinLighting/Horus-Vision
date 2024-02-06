@@ -117,6 +117,7 @@ public:
 	void SetFocusPlane(float FocusDistance);
 	void SetFStop(float FStop);
 	void SetApertureBlades(int ApertureBlades);
+	void SetSensorSize(float Width, float Height);
 
 private:
 

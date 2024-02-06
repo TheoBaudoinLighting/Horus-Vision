@@ -76,8 +76,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)out\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusImGui</IntDir>
     <TargetName>HorusImGui</TargetName>
+    <LibraryPath>C:\opencv\build\x64\vc16\lib;C:\opencv\build\x64\vc16\bin;$(ProjectDir)external\glfw\include\lib-vc2022;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

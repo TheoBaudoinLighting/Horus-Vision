@@ -22,6 +22,7 @@
 #include "hrs_imgui_core.h"
 #include "hrs_inspector.h"
 #include "hrs_timer.h"
+#include "hrs_viewport.h"
 
 // Pre load data for the engine in a separate jthread
 void LoadSetupEngineData()
@@ -185,16 +186,16 @@ void HorusEngine::Init(int Width, int Height, const std::string& Title, const st
 
 void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
 {
+	HorusUI& UI = HorusUI::GetInstance();
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusUI& UI = HorusUI::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 	HorusInspector& Inspector = HorusInspector::GetInstance();
 
 	UI.Init();
 	OpenGL.Init(Width, Height, Window);
-	ImGuiCore.Initialize(Width, Height, Window);
+	ImGuiCore.Init(Width, Height, Window);
 	Radeon.Init(Width, Height, Window);
 	Radeon.InitGraphics();
 	Inspector.Init();
@@ -223,8 +224,6 @@ void HorusEngine::Render()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusUI& UI = HorusUI::GetInstance();
-	[[maybe_unused]] HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	[[maybe_unused]] HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	Radeon.RenderEngine();
 
@@ -255,11 +254,20 @@ void HorusEngine::PostRender()
 
 	if (m_EngineIsReady_)
 	{
+		if (m_IsSecondLaunch_)
+		{
+			// Need to recenter the viewport after loading all ImGui windows one Time
+			HorusViewportRadeon::GetInstance().RecenterViewport();
+
+			m_IsSecondLaunch_ = false;
+		}
+
 		if (m_IsFirstLaunch_)
 		{
 			m_LoadingThread_ = std::jthread(LoadSetupEngineData);
 			m_LoadingThread_.detach();
 
+			m_IsSecondLaunch_ = true;
 			m_IsFirstLaunch_ = false;
 		}
 	}

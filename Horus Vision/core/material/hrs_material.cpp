@@ -1593,6 +1593,9 @@ rpr_image HorusMaterial::LoadTexture(std::string path)
 		return nullptr;
 	}
 
+	//CHECK(rprImageSetOcioColorspace(Image, "Utility - Linear - sRGB"));
+	CHECK(rprImageSetOcioColorspace(Image, "Utility - Raw"));
+
 	gc.Add(Image);
 
 	spdlog::info("Texture -> {} loaded.", path);
