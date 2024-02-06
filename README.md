@@ -4,7 +4,7 @@
 
 Horus Vision is an advanced, physically-based rendering engine powered by Radeon Pro Render. Designed for high-quality, realistic output, it provides a range of features to cater to diverse rendering needs.
 
-![2024-01-17 20_54_23-Horus Vision](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/0f7c8aab-5c0c-4958-96d6-1e05837c1d6a)
+![HorusVisionCoffeeShot](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/9ab0d35a-228e-4b11-85ae-81435c0dd081)
 
 ## Features
 
@@ -28,7 +28,9 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 - **Scene Management**: Enhance scene management capabilities, allowing for more intuitive control and organization of scene elements.
 - **Advanced Material System**: Extend and improve the existing material system for even more realistic renders.
 
-![2024-01-16 18_34_51-](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/f6195652-a41f-4bf9-8a1f-4dfa9eaf9c91)
+![2024-01-17 20_54_23-Horus Vision](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/0f7c8aab-5c0c-4958-96d6-1e05837c1d6a)
+
+
 
 ## Dependencies
 
@@ -38,7 +40,6 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 - glm
 - ImGui
 - spdlog
-- tbb ( Remove soon )
 - assimp
 
 ## Installation
@@ -59,6 +60,8 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
     ```bash
     ./Horus_Vision
     ```
+
+![2024-01-16 18_34_51-](https://github.com/TheoBaudoinLighting/Horus-Vision/assets/30130580/f6195652-a41f-4bf9-8a1f-4dfa9eaf9c91)
 
 ## License
 
