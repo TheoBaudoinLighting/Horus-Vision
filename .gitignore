@@ -48,3 +48,16 @@
 /Horus Vision/FinalRender.png
 /Horus Vision/TestExport_96.png
 /Horus Vision/test_light_1024.png
+/Horus Vision/core/camera/README.md
+/Horus Vision/core/config/README.md
+/Horus Vision/core/light/README.md
+/Horus Vision/core/material/README.md
+/Horus Vision/core/mesh/README.md
+/Horus Vision/core/objects/README.md
+/Horus Vision/core/scene/README.md
+/Horus Vision/core/shaders/README.md
+/Horus Vision/core/ui/README.md
+/Horus Vision/core/window/README.md
+/Horus Vision/core/README.md
+/README.md
+/.gitignore
