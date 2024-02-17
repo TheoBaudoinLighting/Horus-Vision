@@ -24,7 +24,7 @@ public:
 
 	bool Init(int width, int height, HorusWindowConfig* window) override;
 
-	void InitBuffers(int Width, int Height);
+	bool InitBuffers(int Width, int Height);
 
 	void Render();
 

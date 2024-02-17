@@ -35,5 +35,8 @@
     <ClInclude Include="core\hrs_radeon_render.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="core\hrs_radeon_imagefilter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

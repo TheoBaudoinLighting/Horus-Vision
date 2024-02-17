@@ -33,13 +33,14 @@
 
 #include "RadeonImageFilters.h" // TODO : Implement RadeonImageFilters
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <shared_mutex>
 
 #include "hrs_statistics.h"
 #include "hrs_utils.h"
+#include "hrs_radeon_imagefilter.h"
 #include "picojson.h"
-#include "stbi/stb_image_write.h"
+//#include "stbi/stb_image_write.h"
 
 class RenderProgressCallback
 {
@@ -105,32 +106,40 @@ void HorusRadeon::ResizeFrameBufferData(int Width, int Height)
 		return;
 	}
 
-	size_t NewSize = static_cast<size_t>(Width) * Height * 4 * sizeof(float);
-	m_FbData_ = std::shared_ptr<float[]>(new float[Width * Height * 4], std::default_delete<float[]>());
-	m_CurrentFramebufferSize_ = NewSize;
-	spdlog::info("Framebuffer data resized to: width = {}, height = {}", Width, Height);
+	try {
+		size_t NewSize = static_cast<size_t>(Width) * Height * 4 * sizeof(float);
+		m_FbData_ = std::shared_ptr<float[]>(new float[Width * Height * 4], std::default_delete<float[]>());
+		m_CurrentFramebufferSize_ = NewSize;
+		spdlog::info("Framebuffer data resized to: width = {}, height = {}", Width, Height);
+	}
+	catch (const std::bad_alloc& e) {
+		spdlog::critical("Failed to allocate memory for framebuffer: {}", e.what());
+	}
 }
 
 void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuffer Framebuffer)
 {
-	if (rpr_int Status = rprContextResolveFrameBuffer(Context, Framebuffer, m_FrameBufferDest_, false); Status != RPR_SUCCESS)
-	{
+	if (rpr_int Status = rprContextResolveFrameBuffer(Context, Framebuffer, m_FrameBufferDest_, false); Status != RPR_SUCCESS) {
 		spdlog::error("RPR Error: {}", Status);
-
 		return;
+	}
+
+	if (!m_FbData_) {
+		m_FbData_ = std::shared_ptr<float[]>(nullptr);
 	}
 
 	size_t FramebufferSize = 0;
 	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &FramebufferSize));
 
 	// Check if the framebuffer size is the same as the allocated memory size
-	if (FramebufferSize != m_CurrentFramebufferSize_)
-	{
-		spdlog::error("Mismatch in framebuffer size and allocated memory size.");
-		m_FbData_ = std::shared_ptr<float[]>(new float[FramebufferSize / sizeof(float)], std::default_delete<float[]>());
+	if (m_FbData_ && FramebufferSize > m_CurrentFramebufferSize_) {
+		m_FbData_ = std::make_shared<float[]>(FramebufferSize / sizeof(float));
 		m_CurrentFramebufferSize_ = FramebufferSize;
-		//return;
 	}
+	else if (!m_FbData_) {
+		m_FbData_ = std::shared_ptr<float[]>(nullptr);
+	}
+
 
 	if (m_FbData_ == nullptr)
 	{
@@ -138,31 +147,33 @@ void HorusRadeon::AsyncFramebufferUpdate(const rpr_context Context, rpr_framebuf
 		return;
 	}
 
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr));
+	if (rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, FramebufferSize, m_FbData_.get(), nullptr) != RPR_SUCCESS) {
+		spdlog::error("Failed to get framebuffer data.");
+		return;
+	}
 }
 
 glm::vec2 HorusRadeon::SetWindowSize(int Width, int Height)
 {
+	if (Width <= 0 || Height <= 0) {
+		spdlog::error("Invalid window size: {}, {}", Width, Height);
+		return { m_WindowWidth_, m_WindowHeight_ };
+	}
+
 	m_WindowWidth_ = Width;
 	m_WindowHeight_ = Height;
 
 	return { m_WindowWidth_, m_WindowHeight_ };
 }
 
-void HorusRadeon::CreateFrameBuffers(int width, int height)
+bool HorusRadeon::CreateFrameBuffers(int width, int height)
 {
-	//HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
-
 	m_WindowWidth_ = width;
 	m_WindowHeight_ = height;
 
 	glDeleteTextures(1, &m_RadeonTextureBuffer_);
-	/*OpenGLManager.DeleteAllVAOs();
-	OpenGLManager.DeleteAllVBOs();
-	OpenGLManager.DeleteAllEBOs();*/
 
-	if (m_IsAdaptativeSampling_)
-	{
+	if (m_IsAdaptativeSampling_) {
 		CHECK(rprObjectDelete(m_FrameBufferAdaptive_));
 	}
 
@@ -174,13 +185,24 @@ void HorusRadeon::CreateFrameBuffers(int width, int height)
 
 	if (m_IsAdaptativeSampling_)
 	{
-		CHECK(rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferAdaptive_));
+		if (rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferAdaptive_) != RPR_SUCCESS) {
+			spdlog::error("Failed to create adaptive framebuffer");
+			return false;
+		}
 	}
 
-	CHECK(rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferA_));
-	CHECK(rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferDest_));
+	if (rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferA_) != RPR_SUCCESS) {
+		spdlog::error("Failed to create framebuffer A");
+		return false;
+	}
+
+	if (rprContextCreateFrameBuffer(m_ContextA_, Fmt, &Desc, &m_FrameBufferDest_) != RPR_SUCCESS) {
+		spdlog::error("Failed to create framebuffer Dest");
+		return false;
+	}
 
 	spdlog::debug("Radeon framebuffers successfully created..");
+	return true;
 }
 void HorusRadeon::ResizeRender(int width, int height)
 {
@@ -194,29 +216,22 @@ void HorusRadeon::ResizeRender(int width, int height)
 
 	//m_IsFramebufferAreOperational_ = false;
 
-	if (m_RenderThread_.joinable())
-	{
-		m_RenderThread_.join(); // Check if the render thread is joinable and join it before resizing
+	if (m_RenderThread_.joinable()) {
+		m_RenderThread_.join();
 	}
 
-	if (rprContextAbortRender(m_ContextA_) == RPR_SUCCESS)
-	{
-		spdlog::info("Render successfully interrupted for resizing.");
-	}
-	else
-	{
+	if (rprContextAbortRender(m_ContextA_) != RPR_SUCCESS) {
 		spdlog::error("Failed to interrupt the render for resizing.");
 		return;
 	}
 
-	if (m_ClassicRenderFuture_.valid())
-	{
+
+	if (m_ClassicRenderFuture_.valid()) {
 		if (auto Status = m_ClassicRenderFuture_.wait_for(std::chrono::seconds(0)); Status == std::future_status::ready)
 		{
 			spdlog::info("Render task successfully finished for resizing.");
 		}
-		else
-		{
+		else {
 			spdlog::warn("The render task is still running for resizing.");
 		}
 	}
@@ -225,8 +240,15 @@ void HorusRadeon::ResizeRender(int width, int height)
 		spdlog::info("No render task to wait for resizing.");
 	}
 
-	// Create framebuffers for the new size
-	CreateFrameBuffers(m_WindowWidth_, m_WindowHeight_);
+	if (!CreateFrameBuffers(m_WindowWidth_, m_WindowHeight_)) {
+		spdlog::error("Failed to create framebuffers.");
+		return;
+	}
+
+	if (m_WindowWidth_ <= 0 || m_WindowHeight_ <= 0) {
+		spdlog::error("Invalid window dimensions: {}, {}", m_WindowWidth_, m_WindowHeight_);
+		return;
+	}
 
 	// Set AOVs for the context
 	if (m_IsAdaptativeSampling_)
@@ -241,12 +263,10 @@ void HorusRadeon::ResizeRender(int width, int height)
 	}
 
 	// Check if m_WindowWidth_ and m_WindowHeight_ are not equal to 0 or negative
-	if (m_WindowWidth_ == 0 || m_WindowHeight_ == 0)
-	{
+	if (m_WindowWidth_ == 0 || m_WindowHeight_ == 0) {
 		CHECK(RPR_ERROR_INTERNAL_ERROR);
 	}
-	else if (m_WindowWidth_ < 0 || m_WindowHeight_ < 0)
-	{
+	else if (m_WindowWidth_ < 0 || m_WindowHeight_ < 0) {
 		CHECK(RPR_ERROR_INTERNAL_ERROR);
 	}
 
@@ -254,16 +274,28 @@ void HorusRadeon::ResizeRender(int width, int height)
 	ResizeFrameBufferData(m_WindowWidth_, m_WindowHeight_);
 
 	// Set the new size of the window to the OpenGL
-	OpenGL.InitBuffers(m_WindowWidth_, m_WindowHeight_);
+	if (!OpenGL.InitBuffers(m_WindowWidth_, m_WindowHeight_)) {
+		spdlog::error("Failed to initialize OpenGL buffers.");
+		return;
+	}
 
 	// Set the new size of the window to the ImGui
-	Init(m_WindowWidth_, m_WindowHeight_, m_WindowConfig_);
+	if (!Init(m_WindowWidth_, m_WindowHeight_, m_WindowConfig_)) {
+		spdlog::error("Failed to initialize ImGui.");
+		return;
+	}
 
 	// Set the new size of the window to the viewport
-	CHECK(rprContextResolveFrameBuffer(m_ContextA_, m_FrameBufferA_, m_FrameBufferDest_, false));
+	if (rprContextResolveFrameBuffer(m_ContextA_, m_FrameBufferA_, m_FrameBufferDest_, false) != RPR_SUCCESS) {
+		spdlog::error("Failed to resolve framebuffer.");
+		return;
+	}
 
 	size_t fb_size = 0;
-	CHECK(rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &fb_size));
+	if (rprFrameBufferGetInfo(m_FrameBufferDest_, RPR_FRAMEBUFFER_DATA, 0, nullptr, &fb_size) != RPR_SUCCESS) {
+		spdlog::error("Failed to get framebuffer information.");
+		return;
+	}
 
 	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
 	ObjectManager.SetViewport(ObjectManager.GetActiveRadeonCameraId(), 0, 0, m_WindowWidth_, m_WindowHeight_);
@@ -276,25 +308,6 @@ void HorusRadeon::ResizeRender(int width, int height)
 	Console.AddLog(" [info] Radeon successfully resized in : Width : %d, Height : %d ", m_WindowWidth_, m_WindowHeight_);
 }
 
-bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
-{
-	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
-	m_WindowConfig_ = window;
-	m_IsDirty_ = true;
-
-	m_RadeonTextureBuffer_ = OpenGL.GetRadeonTextureBuffer();
-
-	spdlog::info("Radeon initialized.");
-	Console.AddLog(" [info] Radeon initialized.");
-
-	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
-
-	return true;
-}
 bool HorusRadeon::InitGraphics()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
@@ -305,6 +318,8 @@ bool HorusRadeon::InitGraphics()
 	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
 	std::lock_guard Lock(RenderMutex);
+
+	//TBM::CreateRIFTest();
 
 	spdlog::info("Init Radeon graphics..");
 	Console.AddLog(" [info] Init Radeon graphics..");
@@ -405,70 +420,109 @@ bool HorusRadeon::InitGraphics()
 
 	return true;
 }
+bool HorusRadeon::Init(int width, int height, HorusWindowConfig* window)
+{
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	m_WindowWidth_ = width;
+	m_WindowHeight_ = height;
+	m_WindowConfig_ = window;
+	m_IsDirty_ = true;
+
+	m_RadeonTextureBuffer_ = OpenGL.GetRadeonTextureBuffer();
+
+	spdlog::info("Radeon initialized.");
+	Console.AddLog(" [info] Radeon initialized.");
+
+	SetWindowSize(m_WindowWidth_, m_WindowHeight_);
+
+	return true;
+}
 void HorusRadeon::QuitRender()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
+	try {
+		HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+		HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
 
-	spdlog::info("Unload Radeon..");
-	spdlog::info("Release memory..");
+		spdlog::info("Unload Radeon..");
+		spdlog::info("Release memory..");
 
-	StopAllThreads();
+		CHECK(rprContextAbortRender(m_ContextA_));
 
-	CHECK(rprContextAbortRender(m_ContextA_));
+		ObjectManager.DestroyAllLights();
+		ObjectManager.DestroyAllMaterial();
+		ObjectManager.DestroyAllGroupShape();
 
-	ObjectManager.DestroyAllLights();
-	ObjectManager.DestroyAllMaterial();
-	ObjectManager.DestroyAllGroupShape();
+		spdlog::info("All Radeon objects deleted..");
 
-	spdlog::info("All Radeon objects deleted..");
+		glDeleteTextures(1, &m_RadeonTextureBuffer_);
 
-	glDeleteTextures(1, &m_RadeonTextureBuffer_);
+		CHECK(rprObjectDelete(m_Matsys_))
+			m_Matsys_ = nullptr;
+		CHECK(rprObjectDelete(m_FrameBufferA_))
+			m_FrameBufferA_ = nullptr;
+		/*
+		CHECK(rprObjectDelete(m_FrameBufferC_))
+			m_FrameBufferC_ = nullptr;*/
+		CHECK(rprObjectDelete(m_FrameBufferAdaptive_))
+			m_FrameBufferAdaptive_ = nullptr;
+		CHECK(rprObjectDelete(m_FrameBufferDest_))
+			m_FrameBufferDest_ = nullptr;
 
-	CHECK(rprObjectDelete(m_Matsys_))
-		m_Matsys_ = nullptr;
-	CHECK(rprObjectDelete(m_FrameBufferA_))
-		m_FrameBufferA_ = nullptr;
-	/*
-	CHECK(rprObjectDelete(m_FrameBufferC_))
-		m_FrameBufferC_ = nullptr;*/
-	CHECK(rprObjectDelete(m_FrameBufferAdaptive_))
-		m_FrameBufferAdaptive_ = nullptr;
-	CHECK(rprObjectDelete(m_FrameBufferDest_))
-		m_FrameBufferDest_ = nullptr;
+		ObjectManager.DestroyAllCameras();
 
-	ObjectManager.DestroyAllCameras();
+		Gc.Clean();
 
-	Gc.Clean();
+		CHECK(rprContextClearMemory(m_ContextA_));
+		CheckNoLeak(m_ContextA_);
+		CHECK(rprObjectDelete(m_ContextA_))
+			m_ContextA_ = nullptr;
 
-	CHECK(rprContextClearMemory(m_ContextA_));
-	CheckNoLeak(m_ContextA_);
-	CHECK(rprObjectDelete(m_ContextA_))
-		m_ContextA_ = nullptr;
-
-	spdlog::info("Radeon successfully unloaded..");
+		spdlog::info("Radeon successfully unloaded..");
+	}
+	catch (const std::exception& e)
+	{
+		spdlog::error("Error in QuitRender : {}", e.what());
+	}
 }
 
 void HorusRadeon::SetPreviewMode(bool Enable)
 {
-	m_IsPreviewEnabled_ = Enable;
+	if (Enable != m_IsPreviewEnabled_) { // Validate state change
+		if (RPR_SUCCESS != rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_PREVIEW, Enable)) {
+			spdlog::error("Failed to set preview mode to: {}", Enable);
+		}
+		else {
+			m_IsPreviewEnabled_ = Enable;
+			spdlog::debug("Preview mode set to: {}", Enable);
+		}
+	}
+	else {
+		spdlog::debug("Preview mode already set to: {}", Enable);
+	}
+
+	////
+	/*m_IsPreviewEnabled_ = Enable;
 	rprContextSetParameterByKey1u(m_ContextA_, RPR_CONTEXT_PREVIEW, Enable);
-	spdlog::debug("Preview mode is: {}", Enable);
+	spdlog::debug("Preview mode is: {}", Enable);*/
 }
 void HorusRadeon::SetLockPreviewMode(bool Enable)
 {
-	if (Enable)
-	{
-		m_MaxSamplesTemp_ = m_MaxSamples_;
-		m_MaxSamples_ = 8;
+	if (Enable != m_IsLockPreviewEnabled_) {
+		if (Enable) {
+			m_MaxSamplesTemp_ = m_MaxSamples_;
+			m_MaxSamples_ = 8;
+		}
+		else {
+			m_MaxSamples_ = m_MaxSamplesTemp_;
+		}
+		m_IsLockPreviewEnabled_ = Enable;
+		spdlog::debug("Lock preview mode set to: {}", Enable);
 	}
-	else
-	{
-		m_MaxSamples_ = m_MaxSamplesTemp_;
+	else {
+		spdlog::debug("Lock preview mode already set to: {}", Enable);
 	}
-
-	m_IsLockPreviewEnabled_ = Enable;
-	spdlog::debug("Lock preview mode is: {}", Enable);
 }
 
 void HorusRadeon::RenderEngine()
@@ -514,19 +568,16 @@ void HorusRadeon::RenderClassic()
 
 		if (m_IsDirty_ /*&& m_IsFramebufferAreOperational_*/)
 		{
-			if (m_SampleCount_ <= MinSamplesToSwitch)
-			{
+			if (m_SampleCount_ <= MinSamplesToSwitch) {
 				m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
 			}
-			/*if (m_SampleCount_ <= MinSamplesToSwitch)
-			{
-				m_ClassicRenderFuture_ = std::async(std::launch::async, RenderJob, m_ContextA_, &RenderProgressCallback);
-			}*/
-
-			else if (m_SampleCount_ >= MinSamplesToSwitch + 1)
-			{
+			else if (m_SampleCount_ >= MinSamplesToSwitch + 1) {
 				m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback);
 				m_RenderThread_.detach();
+			}
+			else {
+				spdlog::warn("Invalid sample count: {}", m_SampleCount_);
+				return;
 			}
 
 			if (m_SampleCount_ <= MinSamplesToSwitch && !m_IsLockPreviewEnabled_)
@@ -592,7 +643,6 @@ void HorusRadeon::RenderClassic()
 		{
 			m_ThreadRunning_ = false;
 		}
-
 
 		GetClassicRenderProgress();
 		BenchmarkNumberOfRenderIteration += m_BatchSize_;
@@ -755,6 +805,7 @@ void HorusRadeon::CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles)
 	RenderThread.detach();*/
 	RenderMultiTiles(FbMetadata, ObjectManager.GetScene(), m_ContextA_, MaxIterationPerTiles);
 
+	// Save the final render image
 	if (!stbi_write_png("FinalRender.png", m_WindowWidth_, m_WindowHeight_, 3, FbMetadata.FbData.data(), m_WindowWidth_ * 3))
 	{
 		spdlog::error("Failed to save the final render image.");

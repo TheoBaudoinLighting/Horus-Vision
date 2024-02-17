@@ -503,12 +503,16 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\imgui\L2DFileDialog.h" />
     <ClInclude Include="external\nlohmann\json.hpp" />
+    <ClInclude Include="external\RadeonImageFilter\include\Half\half.hpp" />
+    <ClInclude Include="external\RadeonImageFilter\include\ImageTools.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_cl.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_directx12.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_gl.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_metal.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h" />
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image.h" />
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image_write.h" />
     <ClInclude Include="external\RadeonProRender\common\common.h" />
     <ClInclude Include="external\RadeonProRender\common\picojson.h" />
     <ClInclude Include="external\RadeonProRender\common\tiny_obj_loader.h" />

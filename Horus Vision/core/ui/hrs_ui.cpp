@@ -14,8 +14,6 @@
 
 #include "hrs_imgui_core.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-
 #include "hrs_about.h"
 #include "hrs_help.h"
 #include "hrs_statistics.h"

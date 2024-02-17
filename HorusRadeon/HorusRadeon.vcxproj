@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\hrs_radeon.h" />
+    <ClInclude Include="core\hrs_radeon_imagefilter.h" />
     <ClInclude Include="core\hrs_radeon_posteffect.h" />
     <ClInclude Include="core\hrs_radeon_render.h" />
   </ItemGroup>

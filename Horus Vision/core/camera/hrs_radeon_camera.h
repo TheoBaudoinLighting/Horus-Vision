@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -152,6 +151,7 @@ private:
 	glm::vec3 m_Right_ = glm::vec3(0, 0, 0);
 	glm::vec3 m_PitchAxis_ = glm::vec3(0, 0, 0);
 	glm::vec3 m_HeadingAxis_ = glm::vec3(0, 0, 0);
+	glm::quat m_CameraOrientation_ = glm::quat(1, 0, 0, 0);
 
 	rpr_camera m_Camera_ = nullptr;
 };

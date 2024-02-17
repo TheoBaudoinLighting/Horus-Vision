@@ -292,7 +292,35 @@ void HorusRadeonCamera::Tumbling(float x, float y, float sensitivity)
 {
 	GetCameraInfo();
 
-	// New method with quaternions
+	// New method with quaternions (In Progress)
+	/*glm::quat yaw = glm::angleAxis(-x * sensitivity, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::quat pitch = glm::angleAxis(-y * sensitivity, glm::vec3(1.0f, 0.0f, 0.0f));
+
+	m_CameraOrientation_ = yaw * pitch * m_CameraOrientation_;
+
+	const float KCameraOffset = glm::length(m_Position_ - m_LookAt_);
+	glm::vec3 CameraOffset = glm::vec3(0.0f, 0.0f, KCameraOffset);
+
+	m_Position_ = m_LookAt_ + glm::rotate(m_CameraOrientation_, CameraOffset);*/
+
+
+
+	// GEMINI
+	/*const float AngleX = -x * sensitivity;
+	const float AngleY = -y * sensitivity;
+
+	glm::quat QuatPitch = glm::angleAxis(AngleY, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::quat QuatHeading = glm::angleAxis(AngleX, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::vec3 CameraDirection = glm::normalize(m_Position_ - m_LookAt_);
+	CameraDirection = glm::rotate(QuatPitch * QuatHeading, CameraDirection);
+
+	m_Position_ = m_LookAt_ + CameraDirection * glm::length(m_Position_ - m_LookAt_);*/
+
+
+	// THEO
+	// New method with quaternions (Gimbal lock)
 	const float AngleX = -x * sensitivity;
 	const float AngleY = y * sensitivity;
 
@@ -301,15 +329,17 @@ void HorusRadeonCamera::Tumbling(float x, float y, float sensitivity)
 
 	glm::vec3 Axis = glm::cross(CameraDirection, m_Up_);
 
-	glm::quat QuatPitch = glm::angleAxis(AngleY, Axis); // y = pitch
-	glm::quat QuatHeading = glm::angleAxis(AngleX, m_Up_); // x = heading
+	glm::quat QuatPitch = glm::angleAxis(AngleY, Axis);
+	glm::quat QuatHeading = glm::angleAxis(AngleX, m_Up_);
 
 	glm::quat QuatTemp = glm::normalize(glm::cross(QuatPitch, QuatHeading));
+	QuatTemp = glm::normalize(QuatHeading * QuatPitch);
 
 	CameraDirection = glm::rotate(QuatTemp, CameraDirection);
 
 	m_Position_ = m_LookAt_ + CameraDirection * Radius;
 
+	// OLD
 	{
 		// Previous method with Euler angles (deprecated)
 	/*const float AngleX = x * 2.5f;

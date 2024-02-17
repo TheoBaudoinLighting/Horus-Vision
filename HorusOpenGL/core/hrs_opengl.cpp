@@ -154,29 +154,13 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	return true;
 }
 
-void HorusOpenGL::InitBuffers(int Width, int Height)
+bool HorusOpenGL::InitBuffers(int Width, int Height)
 {
 	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 	HorusGrid& Grid = HorusGrid::GetInstance();
 
 	m_WindowWidth_ = Width;
 	m_WindowHeight_ = Height;
-
-	//glEnable(GL_DEPTH_TEST);
-
-	/*OpenGLManager.CreateVAO(0);
-	OpenGLManager.BindVAO(0);
-
-	OpenGLManager.CreateVBO(0, m_QuadVertexData_, sizeof(m_QuadVertexData_));
-	OpenGLManager.CreateEBO(0, m_QuadIndexData_, sizeof(m_QuadIndexData_));
-
-	OpenGLManager.SetVaoAttrib(0, 0, 3, 5 * sizeof(GLfloat), 0);
-	OpenGLManager.SetVaoAttrib(0, 1, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
-	OpenGLManager.SetVaoAttrib(0, 2, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
-
-	OpenGLManager.UnbindVAO(0);
-	OpenGLManager.UnbindVBO(0);
-	OpenGLManager.UnbindEBO(0);*/
 
 	// Texture specially for the Radeon View, to be able to render the image
 	glGenTextures(1, &m_RadeonTextureBufferId_);
@@ -200,6 +184,7 @@ void HorusOpenGL::InitBuffers(int Width, int Height)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	Grid.Grid();
+	return true;
 }
 
 void HorusOpenGL::InitRender()

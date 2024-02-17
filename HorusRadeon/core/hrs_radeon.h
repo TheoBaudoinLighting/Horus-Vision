@@ -35,7 +35,7 @@ public:
 	HorusRadeon(const HorusRadeon&) = delete;
 	void operator=(const HorusRadeon&) = delete;
 
-	void CreateFrameBuffers(int width, int height);
+	bool CreateFrameBuffers(int width, int height);
 	bool Init(int width, int height, HorusWindowConfig* window) override;
 
 	void InitRender() override { }
