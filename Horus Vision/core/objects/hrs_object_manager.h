@@ -4,10 +4,10 @@
 #pragma warning(disable : 4267)
 #pragma warning(disable : 4005)
 
+#include "hrs_grid.h"
 #include "hrs_opengl_camera.h" // nothing -> Maybe glad later
 #include "hrs_scene.h" // nothing
 #include "hrs_radeon_camera.h"// nothing
-#include "hrs_importer.h" // nothing
 #include "hrs_mesh.h" // nothing
 #include "hrs_light.h" // nothing
 #include "hrs_material.h" // nothing
@@ -17,44 +17,6 @@
 #include <queue>
 #include <map>
 #include <ranges>
-
-
-class IDManager
-{
-public:
-	static IDManager& GetInstance()
-	{
-		static IDManager Instance;
-		return Instance;
-	}
-
-	IDManager(const IDManager&) = delete;
-	IDManager& operator=(const IDManager&) = delete;
-
-	int GetNewId()
-	{
-		if (!m_AvailableIDs_.empty())
-		{
-			int Id = m_AvailableIDs_.front();
-			m_AvailableIDs_.pop();
-			return Id;
-		}
-		return m_NextId_++;
-	}
-
-	void ReleaseId(int id)
-	{
-		m_AvailableIDs_.push(id);
-	}
-
-private:
-	IDManager() : m_NextId_(0)
-	{
-	}
-
-	int m_NextId_;
-	std::queue<int> m_AvailableIDs_;
-};
 
 class HorusObjectManager
 {
@@ -69,23 +31,6 @@ public:
 	HorusObjectManager(const HorusObjectManager&) = delete;
 	void operator=(const HorusObjectManager&) = delete;
 
-	int GetIdByName(const std::string& Name)
-	{
-		if (auto It = m_ObjectNameToIdMap_.find(Name); It != m_ObjectNameToIdMap_.end())
-		{
-			return It->second;
-		}
-
-		return -1;
-	}
-
-	// General ---------------------------------------
-
-	void SetActualSelectedId(int id)
-	{
-		m_ActualSelectedId_ = id;
-	}
-
 	// Other -----------------------------------------
 
 	void SetBackgroundImage(const std::string& path);
@@ -98,7 +43,7 @@ public:
 		for (const auto& Key : m_GroupShape_ | std::views::keys)
 		{
 			int Id = Key;
-			std::string Name = m_GroupShapeNames_[Id];
+			std::string Name = m_RadeonGroupShapeNames_[Id];
 			Meshes.push_back(Name);
 		}
 	}
@@ -111,15 +56,7 @@ public:
 			Materials.push_back(Name);
 		}
 	}
-	void GetOutlinerCameras(std::vector<std::string>& Cameras)
-	{
-		for (const auto& Key : m_RadeonCameras_ | std::views::keys)
-		{
-			int Id = Key;
-			std::string Name = m_RadeonCameraNames_[Id];
-			Cameras.push_back(Name);
-		}
-	}
+	
 	void GetOutlinerLights(std::vector<std::string>& Lights)
 	{
 		for (const auto& Key : m_Lights_ | std::views::keys)
@@ -130,109 +67,26 @@ public:
 		}
 	}
 
-	// Camera object ----------------------------------
+	
 
-	void CameraExtractor(rpr_camera& Camera);
+	// OpenGL Core Objects 
 
-	int CreateOpenGlCamera(std::string Name); // One unique camera for OpenGL
-	int CreateRadeonCamera(int SceneID, std::string Name);
-
-	int CreateRadeonCameraFromGLTF(int SceneID, std::string Name, rpr_camera Camera);
-
-	void TransfertDataBetwweenCamera(int id, int id2);
-
-	void DestroyCamera(int id);
-	void DestroyAllCameras()
-	{
-		for (auto& Val : m_RadeonCameras_ | std::views::values)
-		{
-			Val.Destroy();
-		}
-		m_RadeonCameras_.clear();
-	}
-
-	HorusRadeonCamera& GetRadeonCamera(int id) { return m_RadeonCameras_[id]; }
-	HorusOpenGLCamera& GetOpenGlCamera(int id) { return m_OpenGlCameras_[id]; }
-
-	void BindRadeonCamera(int id);
-	void UnbindRadeonCamera(int id);
-
-	void UpdateRadeonCamera(int id);
-	void UpdateOpenGLCamera(int id);
-	void SendToShaderOpenGLCamera(int id, const HorusShaderManager& Shader);
-	void GetOpenGLCameraMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
-	void GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model);
-
-	void PrintCameraInfo(int id);
-	void ResetCamera(int id);
-
-	void SetViewport(int id, int x, int y, int width, int height);
-
-	int GetActiveRadeonCameraId();
-	int GetActiveOpenGLCameraId();
-	void SetActiveRadeonCamera(int id);
-	void SetActiveOpenGLCamera(int id);
-
-	int GetCameraIdByName(const char* name);
-	std::string& GetCameraNameById(int id) { return m_RadeonCameraNames_[id]; }
-
-	void SetMoveCameraForward(int id) { m_RadeonCameras_[id].MoveCamera(Forward); }
-	void SetMoveCameraBackward(int id) { m_RadeonCameras_[id].MoveCamera(Backward); }
-	void SetMoveCameraLeft(int id) { m_RadeonCameras_[id].MoveCamera(Left); }
-	void SetMoveCameraRight(int id) { m_RadeonCameras_[id].MoveCamera(Right); }
-	void SetMoveCameraUp(int id) { m_RadeonCameras_[id].MoveCamera(Up); }
-	void SetMoveCameraDown(int id) { m_RadeonCameras_[id].MoveCamera(Down); }
-	void SetScrollCamera(int id, float delta) { m_RadeonCameras_[id].Zoom(delta); }
-
-	void SetPitch(int id, float pitch);
-	void SetHeading(int id, float heading);
-
-	void SetCameraLookat(int id, glm::vec3& pivot) { m_RadeonCameras_[id].SetLookAt(pivot); }
-
-	void SetTumbleCamera(int id, float x, float y, float sensitivity);
-	void SetPanCamera(int id, float x, float y, float sensitivity);
-	void SetZoomCamera(int id, float distance);
-
-	// Getters for inspector
-
-	glm::vec3 GetCameraLookAt(int id) { return m_RadeonCameras_[id].GetLookAt(); }
-	glm::vec3 GetCameraPosition(int id) { return m_RadeonCameras_[id].GetPosition(); }
-	glm::vec3 GetCameraTranslation(int id) { return m_RadeonCameras_[id].GetTranslation(); }
-	glm::vec3 GetCameraRotation(int id) { return m_RadeonCameras_[id].GetRotation(); }
-	glm::vec3 GetCameraScale(int id) { return m_RadeonCameras_[id].GetCameraScale(); }
-	float GetCameraFov(int id) { return m_RadeonCameras_[id].GetFov(); }
-	float GetCameraAspectRatio(int id) { return m_RadeonCameras_[id].GetAspect(); }
-	float GetCameraNearPlane(int id) { return m_RadeonCameras_[id].GetNear(); }
-	float GetCameraFarPlane(int id) { return m_RadeonCameras_[id].GetFar(); }
-	float GetCameraFocusDistance(int id) { return m_RadeonCameras_[id].GetFocusPlane(); }
-	float GetCameraFStop(int id) { return m_RadeonCameras_[id].GetFStop(); }
-	int GetCameraApertureBlades(int id) { return m_RadeonCameras_[id].GetApertureBlades(); }
-
-	// Setters for inspector
-
-	void SetCameraFov(int id, float fov) { m_RadeonCameras_[id].SetFov(fov); }
-	void SetCameraAspectRatio(int id, float aspect_ratio) { m_RadeonCameras_[id].SetAspect(aspect_ratio); }
-	void SetCameraNear(int id, float NearPlane) { m_RadeonCameras_[id].SetClipping(NearPlane, 1000.0f); }
-	void SetCameraFar(int id, float FarPlane) { m_RadeonCameras_[id].SetClipping(0.1f, FarPlane); }
-	void SetFocusDistance(int id, float focus_distance) { m_RadeonCameras_[id].SetFocusPlane(focus_distance); }
-	void SetFStop(int id, float fstop) { m_RadeonCameras_[id].SetFStop(fstop); }
-	void SetApertureBlades(int id, int blades) { m_RadeonCameras_[id].SetApertureBlades(blades); }
-	void SetSensorSize(int id, float width, float height) { m_RadeonCameras_[id].SetSensorSize(width, height);  }
-	void SetCameraLookAt(int id, glm::vec3 lookat) { m_RadeonCameras_[id].SetLookAt(lookat); }
-	void SetCameraPosition(int id, glm::vec3 position) { m_RadeonCameras_[id].SetPosition(position); }
-	void SetCameraRotation(int id, glm::vec3 rotation_axis) { m_RadeonCameras_[id].SetCameraRotation(rotation_axis.x, rotation_axis.y, rotation_axis.z); }
-	void SetCameraScale(int id, glm::vec3 scale) { m_RadeonCameras_[id].SetCameraScale(scale); }
+	int GetActiveGridId();
+	int CreateGrid(float Width, float Height, float Slices, const std::string& Name);
+	void DrawGrid(int id, GLuint ProgramID, HorusOpenGLCamera& Camera);
 
 	// Group Shape object ----------------------------------
+	int CreateGroupShape(const char* Path, const std::string& Name);
+	HorusOpenGlShape CreateSingleOpenGlShape(const char* path, const std::string& name);
 
-	int CreateGroupShape(const char* path, const std::string& name);
+	void DrawAllModel(GLuint ProgramID, HorusOpenGLCamera& Camera);
 
 	void DestroyGroupShape(int id);
 	void DestroyGroupShapeByName(const char* name);
 	void DestroyAllGroupShape();
 
 	// Getters for inspector
-	HorusGroupShape& GetGroupShape(int id /*, HorusGroupShape* mesh*/);
+	HorusShape& GetGroupShape(int id /*, HorusShape* mesh*/);
 
 	std::string& GetGroupShapeName(int id);
 	void SetActiveGroupShape(int id);
@@ -240,9 +94,6 @@ public:
 
 	int GetGroupShapeCount(int count);
 	int GetGroupShapeId(const char* name);
-	void GetGroupShapeIdByIndex(int index, int* id);
-	void GetGroupShapeIndexById(int id, int* index);
-	void GetGroupShapeIndexByName(const char* name);
 
 	std::map<std::string, std::vector<std::string>>& GetGroupShapeWithShapesAndNames();
 
@@ -270,6 +121,11 @@ public:
 	// Getters
 	rpr_shape GetShapeById(int id);
 	rpr_shape GetShapeFromGroup(int GroupId, const std::string& shapeName);
+
+	HorusOpenGlShape GetOpenGlShapeById(int id);
+	HorusOpenGlShape GetOpenGlShapeFromGroup(int GroupId, const std::string& shapeName);
+	std::vector<HorusOpenGlShape> GetOpenGlShapeToRender();
+	void DrawOpenGlShape(GLuint& ProgramID, HorusOpenGLCamera& Camera);
 
 	glm::vec3 GetShapePositionById(int id);
 	glm::vec3 GetShapeRotationById(int id);
@@ -876,19 +732,6 @@ public:
 	void SetOpacity(int id, const std::string& texturePath);
 	void SetOpacity(int id, glm::vec4 color);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 	void SetTransparency(int id, glm::vec4 color);
 	void SetTransparency(int id, const std::string& texturePath);
 
@@ -1059,35 +902,22 @@ private:
 
 	HorusObjectManager() = default;
 
-	std::map<std::string, int> m_ObjectNameToIdMap_;
-	int m_ActualSelectedId_ = -1;
-	std::string m_Name_;
-
-	// Camera object ----------------
-
-	std::map<int, HorusOpenGLCamera> m_OpenGlCameras_;
-	int m_ActiveOpenGLCameraId_ = 0;
-	int m_NextOpenGLCameraId_ = 0;
-	std::map<int, std::string> m_OpenGlCameraNames_;
-
-	std::map<int, HorusRadeonCamera> m_RadeonCameras_;
-	int m_ActiveRadeonCameraId_ = 0;
-	int m_NextRadeonCameraId_ = 0;
-	std::map<int, std::string> m_RadeonCameraNames_;
-
 	// Group Shape object ------------------
-
-	std::map<std::string, std::vector<rpr_shape>> m_MeshShapeMap_;
-	std::map<int, HorusGroupShape> m_GroupShape_;
-	int m_ActiveGroupShapeId_ = 0;
+	std::map<std::string, std::vector<HorusOpenGlShape>> m_OpenGlMeshShapeMap_;
+	std::map<std::string, std::vector<rpr_shape>> m_RadeonMeshShapeMap_;
+	std::map<int, HorusShape> m_GroupShape_ = {};
+	int m_ActiveOpenGlGroupShapeId_ = 0;
+	int m_ActiveRadeonGroupShapeId_ = 0;
 	int m_GroupShapeIndex_ = 0;
 	int m_GroupShapeCount_ = 0;
-	std::map<int, std::string> m_GroupShapeNames_;
+	std::map<int, std::string> m_OpenGlGroupShapeNames_;
+	std::map<int, std::string> m_RadeonGroupShapeNames_;
 	std::map<std::string, std::vector<std::string>> m_GroupObjectOutlinerData_;
 
 	// Shape object -----------------
 
-	std::map<int, rpr_shape> m_Shapes_;
+	std::map<int, rpr_shape> m_RadeonShapes_;
+	std::map<int, HorusOpenGlShape> m_OpenGlShapes_;
 	rpr_shape m_ActualShape_;
 	std::string m_ActualShapeName_;
 	glm::mat4 m_ActualShapeTransform_;
@@ -1097,6 +927,14 @@ private:
 	int m_ActiveShapeId_ = 0;
 	int m_ShapeIndex_ = 0;
 	int m_ShapeCount_ = 0;
+
+	// Sub Shape object --------------
+
+	std::map<int, HorusGrid> m_Grids_;
+	int m_ActiveGridId_ = 0;
+	std::string m_ActiveGridName_;
+	std::map<int, std::string> m_GridNames_;
+
 
 	// Material object --------------
 

@@ -120,7 +120,8 @@ void HorusMaterial::DestroyMaterial()
 	}
 }
 
-// Udims Textures management 
+// Textures management 
+
 bool IsUDIMPath(const std::string& path)
 {
 	return path.find("<UDIM>") != std::string::npos;
@@ -144,6 +145,46 @@ void HorusMaterial::LoadAndApplyUDIMTexture(const std::string& UDIMRootPath, con
 
 	// TODO : Apply the UDIM texture to the material
 
+}
+rpr_image HorusMaterial::LoadTexture(std::string Path)
+{
+	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	rpr_image Image = nullptr;
+
+	if (rprContextCreateImageFromFile(Radeon.GetContext(), Path.c_str(), &Image) != RPR_SUCCESS)
+	{
+		spdlog::error("Error: Texture -> {} not found.", Path);
+		Console.AddLog(" [error] Texture -> %s not found.", Path.c_str());
+		return nullptr;
+	}
+
+	if (Image == nullptr)
+	{
+		spdlog::error("Error: Texture -> {} not found.", Path);
+		Console.AddLog(" [error] Texture -> %s not found.", Path.c_str());
+		return nullptr;
+	}
+
+	/*if (IsUDIMPath(Path))
+	{
+		spdlog::info("Texture -> {} is a UDIM texture.", Path);
+		Console.AddLog(" [info] Texture -> %s is a UDIM texture.", Path.c_str());
+
+		CHECK(rprImageSetUDIM(Image, 1001, Image));
+	}*/
+
+	//CHECK(rprImageSetOcioColorspace(Image, "Utility - Linear - sRGB"));
+	CHECK(rprImageSetOcioColorspace(Image, "Utility - Raw"));
+
+	gc.Add(Image);
+
+	spdlog::info("Texture -> {} loaded.", Path);
+	Console.AddLog(" [info] Texture -> %s loaded.", Path.c_str());
+
+	return Image;
 }
 
 
@@ -173,18 +214,66 @@ void HorusMaterial::SetBaseColor(const std::string& TexturePath)
 				std::lock_guard<std::mutex> Lock(MaterialMutex);
 
 				rpr_image TextureBaseColor = LoadTexture(TexturePath);
-
 				rpr_material_node UberMat2ImgBasecolorTexture = nullptr;
-				CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &
-					UberMat2ImgBasecolorTexture))
-					Gc.Add(UberMat2ImgBasecolorTexture);
-				CHECK(rprMaterialNodeSetInputImageDataByKey(UberMat2ImgBasecolorTexture, RPR_MATERIAL_INPUT_DATA,
-					TextureBaseColor))
 
-					CHECK(rprMaterialNodeSetInputNByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR,
-						UberMat2ImgBasecolorTexture))
-					CHECK(rprMaterialNodeSetInputNByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_REFLECTION_COLOR,
-						UberMat2ImgBasecolorTexture))
+				if (TextureBaseColor == nullptr) {
+					spdlog::error("Error: Texture -> {} is null.", TexturePath);
+
+					m_BaseColor_ = { 0.5f, 0.5f, 0.5f, 1.0f };
+					if (rprMaterialNodeSetInputFByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 0.5f, 1.0f) != RPR_SUCCESS)
+					{
+						spdlog::warn("Warning: Texture -> {} not found or not usable.", TexturePath);
+						spdlog::warn("Warning: Texture replacing by default color.");
+						return;
+					}
+					return;
+				}
+				if (rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &UberMat2ImgBasecolorTexture) != RPR_SUCCESS)
+				{
+					spdlog::warn("Warning: Texture -> {} not found.", TexturePath);
+					m_BaseColor_ = { 0.5f, 0.5f, 0.5f, 1.0f };
+					if (rprMaterialNodeSetInputFByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 0.5f, 1.0f) != RPR_SUCCESS)
+					{
+						spdlog::warn("Warning: Texture -> {} not found or not usable.", TexturePath);
+						spdlog::warn("Warning: Texture replacing by default color.");
+						return;
+					}
+					return;
+				}
+
+				Gc.Add(UberMat2ImgBasecolorTexture);
+
+				if (rprMaterialNodeSetInputImageDataByKey(UberMat2ImgBasecolorTexture, RPR_MATERIAL_INPUT_DATA, TextureBaseColor) != RPR_SUCCESS)
+				{
+					spdlog::warn("Warning: Texture -> {} not found.", TexturePath);
+					if (rprMaterialNodeSetInputFByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 0.5f, 1.0f) != RPR_SUCCESS)
+					{
+						spdlog::warn("Warning: Texture -> {} not found or not usable.", TexturePath);
+						spdlog::warn("Warning: Texture replacing by default color.");
+						return;
+					}
+					return;
+				}
+				if (rprMaterialNodeSetInputNByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, UberMat2ImgBasecolorTexture) != RPR_SUCCESS)
+				{
+					spdlog::warn("Warning: Texture -> {} not found.", TexturePath);
+					if (rprMaterialNodeSetInputFByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_DIFFUSE_COLOR, 0.5f, 0.5f, 0.5f, 1.0f) != RPR_SUCCESS)
+					{
+						spdlog::warn("Warning: Texture -> {} not found or not usable.", TexturePath);
+						spdlog::warn("Warning: Texture replacing by default color.");
+						return;
+					}
+					return;
+				}
+				if (rprMaterialNodeSetInputNByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_REFLECTION_COLOR, UberMat2ImgBasecolorTexture) != RPR_SUCCESS)
+				{
+					spdlog::warn("Warning: Texture -> {} not found.", TexturePath);
+					if (rprMaterialNodeSetInputFByKey(m_Material_, RPR_MATERIAL_INPUT_UBER_REFLECTION_COLOR, 0.5f, 0.5f, 0.5f, 1.0f) != RPR_SUCCESS)
+					{
+						spdlog::warn("Warning: Texture -> {} not found or not usable.", TexturePath);
+						spdlog::warn("Warning: Texture replacing by default color.");
+					}
+				}
 			});
 		LoadTextureThread.join();
 	}
@@ -1346,7 +1435,7 @@ void HorusMaterial::SetNormalMap(const std::string& texturePath)
 				std::lock_guard<std::mutex> lock(MaterialMutex);
 
 				rpr_image TextureNormal = LoadTexture(texturePath);
-				
+
 
 				rpr_material_node uberMat2_img_normal_texture = nullptr;
 				CHECK(rprMaterialSystemCreateNode(Radeon.GetMatsys(), RPR_MATERIAL_NODE_IMAGE_TEXTURE, &uberMat2_img_normal_texture));
@@ -1384,7 +1473,7 @@ void HorusMaterial::SetNormalMapWeight(glm::vec4 weight)
 	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	m_NormalMapWeight_ = weight;
-	
+
 	if (m_UseNormalMapWeightImage_)
 	{
 		rpr_material_node uberMat3_bumpmap = nullptr;
@@ -1571,37 +1660,6 @@ void HorusMaterial::SetTransparency(const std::string& texturePath)
 
 		loadTextureThread.join();
 	}
-}
-
-
-
-// -----------------------------------------------------------------------------------------------
-// Texture management ----------------------------------------------------------------------------
-
-rpr_image HorusMaterial::LoadTexture(std::string path)
-{
-	HorusRadeon& Radeon = HorusRadeon::GetInstance();
-	HorusGarbageCollector& gc = HorusGarbageCollector::GetInstance();
-	HorusConsole& Console = HorusConsole::GetInstance();
-
-	rpr_image Image = nullptr;
-
-	if (rprContextCreateImageFromFile(Radeon.GetContext(), path.c_str(), &Image) != RPR_SUCCESS)
-	{
-		spdlog::error("Error: Texture -> {} not found.", path);
-		Console.AddLog(" [error] Texture -> %s not found.", path.c_str());
-		return nullptr;
-	}
-
-	//CHECK(rprImageSetOcioColorspace(Image, "Utility - Linear - sRGB"));
-	CHECK(rprImageSetOcioColorspace(Image, "Utility - Raw"));
-
-	gc.Add(Image);
-
-	spdlog::info("Texture -> {} loaded.", path);
-	Console.AddLog(" [info] Texture -> %s loaded.", path.c_str());
-
-	return Image;
 }
 
 // -----------------------------------------------------------------------------------------------

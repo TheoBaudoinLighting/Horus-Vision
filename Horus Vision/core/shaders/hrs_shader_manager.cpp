@@ -115,19 +115,6 @@ GLuint HorusShaderManager::CompileProgram(std::string const& ProgName)
 
 	return Program;
 }
-//GLuint HorusShaderManager::GetProgram(std::string const& ProgName)
-//{
-//	if (auto Iter = m_Programs_.find(ProgName); Iter != m_Programs_.end())
-//	{
-//		return Iter->second;
-//	}
-//	else
-//	{
-//		GLuint Program = CompileProgram(ProgName);
-//		m_Programs_[ProgName] = Program;
-//		return Program;
-//	}
-//}
 
 // New version of shader manager
 HorusShaderManager::HorusShaderManager()

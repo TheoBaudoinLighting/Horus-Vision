@@ -21,9 +21,6 @@
     <ClCompile Include="core\hrs_radeon_posteffect.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\hrs_radeon_render.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\hrs_radeon.h">
@@ -32,10 +29,10 @@
     <ClInclude Include="core\hrs_radeon_posteffect.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\hrs_radeon_render.h">
+    <ClInclude Include="core\hrs_radeon_imagefilter.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\hrs_radeon_imagefilter.h">
+    <ClInclude Include="core\hrs_render_progress_callback.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

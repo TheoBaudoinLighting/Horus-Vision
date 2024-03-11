@@ -1,4 +1,6 @@
 #include "hrs_help.h"
+
+#include "hrs_horus_parameters.h"
 #include "hrs_utils.h"
 
 #include "imgui.h"
@@ -7,7 +9,7 @@
 
 void HorusHelp::RenderHelp(bool* p_open)
 {
-    if (!ImGui::Begin("Help", p_open))
+    if (!ImGui::Begin(HORUS_UI_NAME_HELP.c_str(), p_open))
     {
         ImGui::End();
         return;

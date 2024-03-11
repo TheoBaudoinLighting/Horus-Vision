@@ -125,6 +125,9 @@ rpr_light CreateHdriLight(const std::string& HdriImage)
 
 		return Light; // Don't return nullptr because light is created
 	}
+
+	CHECK(rprImageSetOcioColorspace(Image, "Utility - Linear - sRGB"));
+
 	Gc.Add(Image);
 	CHECK(Status);
 

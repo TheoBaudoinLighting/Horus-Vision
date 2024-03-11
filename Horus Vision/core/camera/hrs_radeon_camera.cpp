@@ -16,29 +16,31 @@ using namespace RadeonProRender;
 void HorusRadeonCamera::VariableCheckers(std::string Name)
 {
 	cout << "Start info --------------------------" << '\n';
-	cout << "Camera : " << Name << '\n';
-	cout << "Camera type : " << m_CameraType_ << '\n';
-	cout << "Camera transform : " << m_Transform_[0][0] << m_Transform_[0][1] << m_Transform_[0][2] << m_Transform_[0][3] << '\n';
-	cout << "Camera look at : " << m_LookAt_.x << " " << m_LookAt_.y << " " << m_LookAt_.z << '\n';
-	cout << "Camera up : " << m_Up_.x << " " << m_Up_.y << " " << m_Up_.z << '\n';
-	cout << "Camera position : " << m_Position_.x << " " << m_Position_.y << " " << m_Position_.z << '\n';
-	cout << "Camera fstop : " << m_FStop_ << '\n';
-	cout << "Camera near : " << m_Near_ << '\n';
-	cout << "Camera far : " << m_Far_ << '\n';
-	cout << "Camera aspect : " << m_Aspect_ << '\n';
-	cout << "Camera fov : " << m_Fov_ << '\n';
-	cout << "Camera viewport x : " << m_ViewportX_ << '\n';
-	cout << "Camera viewport y : " << m_ViewportY_ << '\n';
-	cout << "Camera window width : " << m_WindowWidth_ << '\n';
-	cout << "Camera window height : " << m_WindowHeight_ << '\n';
-	cout << "Camera instance : " << m_Camera_ << '\n';
-	cout << "End info --------------------------" << '\n';
+	cout << "Camera Radeon transform : " << m_Transform_[0][0] << m_Transform_[0][1] << m_Transform_[0][2] << m_Transform_[0][3] << '\n';
+	cout << "Camera Radeon look at : " << m_LookAt_.x << " " << m_LookAt_.y << " " << m_LookAt_.z << '\n';
+	cout << "Camera Radeon up : " << m_Up_.x << " " << m_Up_.y << " " << m_Up_.z << '\n';
+	cout << "Camera Radeon position : " << m_Position_.x << " " << m_Position_.y << " " << m_Position_.z << '\n';
+	cout << "Camera Radeon fstop : " << m_FStop_ << '\n';
+	cout << "Camera Radeon near : " << m_Near_ << '\n';
+	cout << "Camera Radeon far : " << m_Far_ << '\n';
+	cout << "Camera Radeon aspect : " << m_Aspect_ << '\n';
+	cout << "Camera Radeon fov : " << m_Fov_ << '\n';
+	cout << "Camera Radeon viewport x : " << m_ViewportX_ << '\n';
+	cout << "Camera Radeon viewport y : " << m_ViewportY_ << '\n';
+	cout << "Camera Radeon window width : " << m_WindowWidth_ << '\n';
+	cout << "Camera Radeon window height : " << m_WindowHeight_ << '\n';
 
 	// Get RPR_CAMERA_FOCUS_DISTANCE
 	rpr_float m_FocusDistance_;
 	CHECK(rprCameraGetInfo(m_Camera_, RPR_CAMERA_FOCUS_DISTANCE, sizeof(m_FocusDistance_), &m_FocusDistance_, nullptr));
 	cout << "Camera focus distance : " << m_FocusDistance_ << '\n';
+	cout << "Camera instance : " << m_Camera_ << '\n';
+	cout << "End info --------------------------" << '\n';
 
+}
+void HorusRadeonCamera::PrintCameraInfo()
+{
+	VariableCheckers("Camera Radeon Manual Check");
 }
 void HorusRadeonCamera::GetCameraInfo()
 {
@@ -66,7 +68,7 @@ void HorusRadeonCamera::Init(std::string Name)
 	// Init camera variables
 	m_Up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_LookAt_ = glm::vec3(0.0f, 0.0f, 0.0f);
-	m_Position_ = glm::vec3(0.0f, 9.0f, 40.0f); // glm::vec3(0.0f, 9.0f, 40.0f);
+	m_Position_ = glm::vec3(28.0f, 21.0f, 28.0f); // glm::vec3(0.0f, 9.0f, 40.0f); -> Maya is 28.0f, 21.0f, 28.0f
 	m_Transform_ = glm::mat4(1.0f);
 	m_Aspect_ = static_cast<float>(m_WindowWidth_) / static_cast<float>(m_WindowHeight_);
 	m_Fov_ = 45.0f;
@@ -287,6 +289,61 @@ void HorusRadeonCamera::SetClipping(float NearClipDistance, float FarClipDistanc
 	VariableCheckers("Set Clipping");
 	UpdateCamera();
 }
+void HorusRadeonCamera::SetNear(float NearClipDistance)
+{
+	m_Near_ = NearClipDistance;
+	if (m_Near_ > m_Far_)
+	{
+		m_Near_ = m_Far_ - 0.1f;
+	}
+	
+	if (m_Near_ < 0.01f)
+	{
+		m_Near_ = 0.01f;
+	}
+	if (m_Near_ > 10000.0f)
+	{
+		m_Near_ = 10000.0f;
+	}
+
+	if (m_Near_ > m_Far_)
+	{
+		m_Near_ = m_Far_ - 0.1f;
+	}
+
+	if (rprCameraSetNearPlane(m_Camera_, m_Near_) != RPR_SUCCESS)
+	{
+		m_Near_ = m_Far_ - 0.1f;
+	}
+}
+void HorusRadeonCamera::SetFar(float FarClipDistance)
+{
+	m_Far_ = FarClipDistance;
+	if (m_Far_ < m_Near_)
+	{
+		m_Far_ = m_Near_ + 0.1f;
+	}
+
+	if (m_Far_ > 10000.0f)
+	{
+		m_Far_ = 10000.0f;
+	}
+
+	if (m_Far_ < 0.01f)
+	{
+		m_Far_ = 0.01f;
+	}
+
+	if (m_Far_ < m_Near_)
+	{
+		m_Far_ = m_Near_ + 0.1f;
+	}
+
+	if (rprCameraSetFarPlane(m_Camera_, m_Far_) != RPR_SUCCESS)
+	{
+		m_Far_ = m_Near_ + 0.1f;
+	}
+}
 
 void HorusRadeonCamera::Tumbling(float x, float y, float sensitivity)
 {
@@ -463,7 +520,7 @@ glm::vec3 HorusRadeonCamera::GetHeadingAxis()
 {
 	return m_HeadingAxis_;
 }
-glm::vec3 HorusRadeonCamera::GetCameraScale()
+glm::vec3 HorusRadeonCamera::GetScale()
 {
 	return m_Scale_;
 }
@@ -484,7 +541,7 @@ float HorusRadeonCamera::GetFStop()
 {
 	return m_FStop_;
 }
-float HorusRadeonCamera::GetAspect()
+float HorusRadeonCamera::GetAspectRatio()
 {
 	return m_Aspect_;
 }
@@ -544,7 +601,7 @@ void HorusRadeonCamera::SetSensorSize(float Width, float Height)
 
 	UpdateCamera();
 }
-void HorusRadeonCamera::SetAspect(const float Aspect)
+void HorusRadeonCamera::SetAspectRatio(const float Aspect)
 {
 	GetCameraInfo();
 

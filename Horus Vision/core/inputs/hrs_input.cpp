@@ -11,11 +11,8 @@ void HorusInput::OnChar(GLFWwindow* window, unsigned int c)
 	io.AddInputCharacter(c);
 }
 
-
 void HorusInput::OnScroll(GLFWwindow* window, double xoffset, double yoffset)
 {
-
-
 	// Debug Scroll Input
 	/*if (yoffset > 0)
 	{

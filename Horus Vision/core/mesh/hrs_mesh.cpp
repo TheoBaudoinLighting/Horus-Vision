@@ -1,10 +1,12 @@
 #include "hrs_mesh.h"
 
+
 #include "hrs_reset_buffers.h"
 #include "hrs_importer.h"
 #include "hrs_radeon.h"
 #include "hrs_object_manager.h"
 #include "hrs_console.h"
+#include "hrs_om_id_manager.h"
 
 void ResetBuffer()
 {
@@ -12,79 +14,125 @@ void ResetBuffer()
 }
 
 // Group Shape Section
-void HorusGroupShape::GetGroupShapeInfo()
-{
-	/*for (rpr_shape shape : m_Shape_)
-	{
-		rprShapeGetInfo(shape, RPR_SHAPE_TRANSFORM, sizeof(int), &m_Transform_, nullptr);
-	}*/
-}
-void HorusGroupShape::Init(const char* Path)
+void HorusShape::Init(const char* Path)
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusMeshImporter& MeshImporter = HorusMeshImporter::GetInstance();
+	HorusMeshImporterUtility& MeshUtility = HorusMeshImporterUtility::GetInstance();
 	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
+	HorusIdManager& HorusIdManager = HorusIdManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
-	m_Shape_ = MeshImporter.LoadMesh(Path);
+	//auto kModel = MeshUtility.GenerateModelData(Path); // Create Model Data from Path
 
-	GetGroupShapeInfo();
+	// Use the model data to create the shape for both OpenGL and Radeon
+	///*MeshUtility.CreateOpenGlObject(kModel);
+	//MeshUtility.CreateRadeonObject(kModel);*/
+
+
+
+
+
+	/*for (auto& kMesh : mOpenGlShape_)
+	{
+		HorusOpenGlShape kShape = std::get<0>(kMesh);
+		std::string kName = std::get<1>(kMesh);
+
+		int kShapeID = HorusIdManager.GetNewId();
+		HorusIdManager.SetObjectNameToID(kName, kShapeID);
+		mOpenGlShapes_[kShapeID] = kShape;
+
+	}
 
 	rpr_scene GScene = ObjectManager.GetScene();
-
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
-		rpr_shape shape = std::get<0>(ShapeAndName);
-		std::string name = std::get<1>(ShapeAndName);
+		rpr_shape kShape = std::get<0>(ShapeAndName);
+		std::string kName = std::get<1>(ShapeAndName);
 
-		CHECK(rprSceneAttachShape(GScene, shape));
-		CHECK(rprObjectSetName(shape, name.c_str())); // In testing for now (TODO : If it's working, apply it to all the shapes)
-		Gc.Add(shape);
-	}
+		int kShapeID = HorusIdManager.GetNewId();
+		HorusIdManager.SetObjectNameToID(kName, kShapeID);
+		mRadeonShapes_[kShapeID] = kShape;
+
+		CHECK(rprSceneAttachShape(GScene, kShape));
+		CHECK(rprObjectSetName(kShape, kName.c_str()));
+		Gc.Add(kShape);
+	}*/
+
 
 	spdlog::info("Mesh {} loaded", Path);
 	Console.AddLog("Mesh %s loaded", Path);
 
 	ResetBuffer();
 }
-void HorusGroupShape::DestroyGroupShape()
+
+void HorusShape::InitOpenGlShape(const char* Path)
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusGarbageCollector& Gc = HorusGarbageCollector::GetInstance();
+	HorusConsole& Console = HorusConsole::GetInstance();
+
+	std::vector<VertexData> Vertices;
+	std::vector<GLuint> Indices;
+
+
+	spdlog::info("Mesh {} loaded", Path);
+	Console.AddLog("Mesh %s loaded", Path);
+
+	ResetBuffer();
+}
+
+void HorusShape::DestroyGroupShape()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	rpr_scene GScene = ObjectManager.GetScene();
 
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
 		rpr_shape shape = std::get<0>(ShapeAndName);
 		std::string name = std::get<1>(ShapeAndName);
 
 		CHECK(rprSceneDetachShape(GScene, shape));
-		// Don't delete shape, it's done by the garbage collector
 	}
 
 	ResetBuffer();
 }
 
-std::vector<std::pair<rpr_shape, std::string>> HorusGroupShape::GetShapeAndName()
+std::vector<std::pair<rpr_shape, std::string>> HorusShape::GetShapeAndName()
 {
 	std::vector<std::pair<rpr_shape, std::string>> ShapesAndNames;
 
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
 		rpr_shape shape = std::get<0>(ShapeAndName);
 		std::string name = std::get<1>(ShapeAndName);
 
-		ShapesAndNames.push_back(std::make_pair(shape, name));
+		ShapesAndNames.emplace_back(shape, name);
 	}
 
 	return ShapesAndNames;
 }
 
-std::vector<rpr_shape> HorusGroupShape::GetShape()
+std::vector<std::pair<HorusOpenGlShape, std::string>> HorusShape::GetOpenGlShapeAndName()
+{
+	std::vector<std::pair<HorusOpenGlShape, std::string>> ShapesAndNames;
+
+	for (auto& ShapeAndName : mOpenGlShape_)
+	{
+		HorusOpenGlShape shape = std::get<0>(ShapeAndName);
+		std::string name = std::get<1>(ShapeAndName);
+
+		ShapesAndNames.emplace_back(shape, name);
+	}
+
+	return ShapesAndNames;
+}
+
+std::vector<rpr_shape> HorusShape::GetShape()
 {
 	std::vector<rpr_shape> Shapes;
 
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
 		rpr_shape shape = std::get<0>(ShapeAndName);
 
@@ -93,11 +141,11 @@ std::vector<rpr_shape> HorusGroupShape::GetShape()
 
 	return Shapes;
 }
-std::vector<std::string> HorusGroupShape::GetShapeName()
+std::vector<std::string> HorusShape::GetShapeName()
 {
 	std::vector<std::string> Names;
 
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
 		std::string name = std::get<1>(ShapeAndName);
 
@@ -107,34 +155,26 @@ std::vector<std::string> HorusGroupShape::GetShapeName()
 	return Names;
 }
 
-void HorusGroupShape::SetGroupShapePosition(glm::vec3 Pos)
+void HorusShape::SetGroupShapePosition(glm::vec3 Pos)
 {
-	GetGroupShapeInfo();
-
 	m_Position_ = Pos;
 
 	UpdateGroupShapeTransform();
 }
-void HorusGroupShape::SetGroupShapeRotation(glm::vec3 Rot)
+void HorusShape::SetGroupShapeRotation(glm::vec3 Rot)
 {
-	GetGroupShapeInfo();
-
 	m_Rotation_ = Rot;
 
 	UpdateGroupShapeTransform();
 }
-void HorusGroupShape::SetGroupShapeScale(glm::vec3 Scale)
+void HorusShape::SetGroupShapeScale(glm::vec3 Scale)
 {
-	GetGroupShapeInfo();
-
 	m_Scale_ = Scale;
 
 	UpdateGroupShapeTransform();
 }
-void HorusGroupShape::SetGroupResetTransform()
+void HorusShape::SetGroupResetTransform()
 {
-	GetGroupShapeInfo();
-
 	m_Position_ = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_Rotation_ = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_Scale_ = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -142,13 +182,13 @@ void HorusGroupShape::SetGroupResetTransform()
 	UpdateGroupShapeTransform();
 }
 
-void HorusGroupShape::SetGroupShapeToScene()
+void HorusShape::SetGroupShapeToScene()
 {
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
 
 	rpr_scene GScene = ObjectManager.GetScene();
 
-	for (auto& ShapeAndName : m_Shape_)
+	for (auto& ShapeAndName : mRadeonShape_)
 	{
 		rpr_shape shape = std::get<0>(ShapeAndName);
 		std::string name = std::get<1>(ShapeAndName);
@@ -156,7 +196,8 @@ void HorusGroupShape::SetGroupShapeToScene()
 		rprSceneAttachShape(GScene, shape);
 	}
 }
-void HorusGroupShape::UpdateGroupShapeTransform()
+
+void HorusShape::UpdateGroupShapeTransform()
 {
 	glm::mat4 Translate = translate(glm::mat4(1.0f), m_Position_);
 	glm::mat4 RotationX = rotate(glm::mat4(1.0f), glm::radians(m_Rotation_.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -168,15 +209,13 @@ void HorusGroupShape::UpdateGroupShapeTransform()
 
 	m_Transform_ = Translate * Rotation * Scale;
 
-	
-
-	//rprShapeSetTransform(m_Shape_, RPR_FALSE, &m_Transform_[0][0]); // RPR_TRUE = transpose matrix in row
+	//rprShapeSetTransform(m_RadeonShape_, RPR_FALSE, &m_Transform_[0][0]); // RPR_TRUE = transpose matrix in row
 }
 
 // Shape Section
-rpr_shape HorusGroupShape::GetShape(const std::string& shapeName)
+rpr_shape HorusShape::GetShape(const std::string& shapeName)
 {
-	for (const auto& ShapeTuple : m_Shape_)
+	for (const auto& ShapeTuple : mRadeonShape_)
 	{
 		if (std::get<1>(ShapeTuple) == shapeName)
 		{
@@ -184,6 +223,18 @@ rpr_shape HorusGroupShape::GetShape(const std::string& shapeName)
 		}
 	}
 	return nullptr;
+}
+
+HorusOpenGlShape HorusShape::GetOpenGlShape(const std::string& shapeName)
+{
+	for (const auto& ShapeTuple : mOpenGlShape_)
+	{
+		if (std::get<1>(ShapeTuple) == shapeName)
+		{
+			return std::get<0>(ShapeTuple);
+		}
+	}
+	return HorusOpenGlShape();
 }
 
 

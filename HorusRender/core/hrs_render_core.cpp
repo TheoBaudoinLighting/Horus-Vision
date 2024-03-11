@@ -4,5 +4,5 @@
 
 void HorusRenderCore::PrintMessage()
 {
-	std::cout << "Horus Render Core" << std::endl;
+	std::cout << "Horus Render Core" << '\n';
 }

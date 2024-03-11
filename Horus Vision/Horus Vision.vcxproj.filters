@@ -60,9 +60,6 @@
     <ClCompile Include="core\camera\hrs_radeon_camera.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\mesh\hrs_importer.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="core\mesh\hrs_mesh.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -105,9 +102,6 @@
     <ClCompile Include="core\ui\hrs_outliner.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="core\scene\hrs_grid.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="core\camera\hrs_opengl_camera.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -136,6 +130,18 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="core\ui\hrs_help.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_radeon_viewport.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_opengl_viewport.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\mesh\hrs_importer_utility.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="core\ui\hrs_import_mesh_ui.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1064,6 +1070,228 @@
     <ClInclude Include="core\config\hrs_context.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="core\camera\hrs_radeon_camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_mesh.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_material.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_object_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imnodes_internal.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imnodes.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\ImGuizmo.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\light\hrs_light.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\L2DFileDialog.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_material_editor.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_scene.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\material\hrs_graph.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imgui_notify.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\font_awesome_5.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\fa_solid_900.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\nlohmann\json.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\inputs\hrs_input.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_garbage_collector.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_ui.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_inspector.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_console.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_viewport.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_reset_buffers.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_outliner.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\IconsFontAwesome6.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_platform.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\camera\hrs_opengl_camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_timer.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_scene_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\scene\hrs_importer_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\ProRenderGLTF.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\eLut.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\float4.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\half.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\int2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\int3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\mathutils.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\matrix.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\quaternion.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\Math\toFloat.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender_v2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_utils.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_ocio.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_cl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_directx12.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_gl.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_metal.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_statistics.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_about.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_help.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image_write.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\ImageTools.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\RadeonImageFilter\include\Half\half.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_horus_parameters.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\config\hrs_dragdrop.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_radeon_viewport.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_opengl_viewport.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_outliner.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_materials.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_group_shapes.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_material_editor.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_light.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_scene.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\objects\hrs_om_id_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
     <ClInclude Include="external\spdlog\include\spdlog\cfg\argv.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1139,6 +1367,12 @@
     <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client_unix.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client_windows.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
     <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client-windows.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1149,6 +1383,12 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\spdlog\include\spdlog\details\udp_client.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client_unix.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client_windows.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="external\spdlog\include\spdlog\details\udp_client-windows.h">
@@ -1358,6 +1598,9 @@
     <ClInclude Include="external\spdlog\include\spdlog\pattern_formatter-inl.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="external\spdlog\include\spdlog\source_loc.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
     <ClInclude Include="external\spdlog\include\spdlog\spdlog.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -1373,196 +1616,271 @@
     <ClInclude Include="external\spdlog\include\spdlog\version.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\camera\hrs_radeon_camera.h">
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\poppack1.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\mesh\hrs_importer.h">
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\pstdint.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\mesh\hrs_mesh.h">
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\pushpack1.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\material\hrs_material.h">
+    <ClInclude Include="external\Assimp\include\assimp\port\AndroidJNI\AndroidJNIIOSystem.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\objects\hrs_object_manager.h">
+    <ClInclude Include="external\Assimp\include\assimp\port\AndroidJNI\BundledAssetIOSystem.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\imnodes_internal.h">
+    <ClInclude Include="external\Assimp\include\assimp\aabb.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\imnodes.h">
+    <ClInclude Include="external\Assimp\include\assimp\ai_assert.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\ImGuizmo.h">
+    <ClInclude Include="external\Assimp\include\assimp\anim.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\light\hrs_light.h">
+    <ClInclude Include="external\Assimp\include\assimp\Base64.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\L2DFileDialog.h">
+    <ClInclude Include="external\Assimp\include\assimp\BaseImporter.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\material\hrs_material_editor.h">
+    <ClInclude Include="external\Assimp\include\assimp\Bitmap.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\scene\hrs_scene.h">
+    <ClInclude Include="external\Assimp\include\assimp\BlobIOSystem.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\material\hrs_graph.h">
+    <ClInclude Include="external\Assimp\include\assimp\ByteSwapper.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\imgui_notify.h">
+    <ClInclude Include="external\Assimp\include\assimp\camera.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\font_awesome_5.h">
+    <ClInclude Include="external\Assimp\include\assimp\cexport.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\fa_solid_900.h">
+    <ClInclude Include="external\Assimp\include\assimp\cfileio.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\nlohmann\json.hpp">
+    <ClInclude Include="external\Assimp\include\assimp\cimport.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\inputs\hrs_input.h">
+    <ClInclude Include="external\Assimp\include\assimp\ColladaMetaData.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_garbage_collector.h">
+    <ClInclude Include="external\Assimp\include\assimp\color4.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_ui.h">
+    <ClInclude Include="external\Assimp\include\assimp\commonMetaData.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_inspector.h">
+    <ClInclude Include="external\Assimp\include\assimp\config.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_console.h">
+    <ClInclude Include="external\Assimp\include\assimp\CreateAnimMesh.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_viewport.h">
+    <ClInclude Include="external\Assimp\include\assimp\DefaultIOStream.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_reset_buffers.h">
+    <ClInclude Include="external\Assimp\include\assimp\DefaultIOSystem.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_outliner.h">
+    <ClInclude Include="external\Assimp\include\assimp\DefaultLogger.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\imgui\IconsFontAwesome6.h">
+    <ClInclude Include="external\Assimp\include\assimp\defs.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_platform.h">
+    <ClInclude Include="external\Assimp\include\assimp\Exceptional.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\scene\hrs_grid.h">
+    <ClInclude Include="external\Assimp\include\assimp\Exporter.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\camera\hrs_opengl_camera.h">
+    <ClInclude Include="external\Assimp\include\assimp\fast_atof.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_timer.h">
+    <ClInclude Include="external\Assimp\include\assimp\GenericProperty.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\scene\hrs_scene_manager.h">
+    <ClInclude Include="external\Assimp\include\assimp\GltfMaterial.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\scene\hrs_importer_manager.h">
+    <ClInclude Include="external\Assimp\include\assimp\Hash.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\ProRenderGLTF.h">
+    <ClInclude Include="external\Assimp\include\assimp\Importer.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\eLut.h">
+    <ClInclude Include="external\Assimp\include\assimp\importerdesc.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\float2.h">
+    <ClInclude Include="external\Assimp\include\assimp\IOStream.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\float3.h">
+    <ClInclude Include="external\Assimp\include\assimp\IOStreamBuffer.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\float4.h">
+    <ClInclude Include="external\Assimp\include\assimp\IOSystem.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\half.h">
+    <ClInclude Include="external\Assimp\include\assimp\light.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\int2.h">
+    <ClInclude Include="external\Assimp\include\assimp\LineSplitter.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\int3.h">
+    <ClInclude Include="external\Assimp\include\assimp\LogAux.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\mathutils.h">
+    <ClInclude Include="external\Assimp\include\assimp\Logger.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\matrix.h">
+    <ClInclude Include="external\Assimp\include\assimp\LogStream.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\quaternion.h">
+    <ClInclude Include="external\Assimp\include\assimp\material.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\Math\toFloat.h">
+    <ClInclude Include="external\Assimp\include\assimp\MathFunctions.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender_v2.h">
+    <ClInclude Include="external\Assimp\include\assimp\matrix3x3.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\RadeonProRender.h">
+    <ClInclude Include="external\Assimp\include\assimp\matrix4x4.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h">
+    <ClInclude Include="external\Assimp\include\assimp\MemoryIOWrapper.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp">
+    <ClInclude Include="external\Assimp\include\assimp\mesh.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_utils.h">
+    <ClInclude Include="external\Assimp\include\assimp\metadata.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h">
+    <ClInclude Include="external\Assimp\include\assimp\NullLogger.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\config\hrs_ocio.h">
+    <ClInclude Include="external\Assimp\include\assimp\ObjMaterial.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters.h">
+    <ClInclude Include="external\Assimp\include\assimp\ParsingUtils.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_cl.h">
+    <ClInclude Include="external\Assimp\include\assimp\pbrmaterial.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_directx12.h">
+    <ClInclude Include="external\Assimp\include\assimp\postprocess.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_gl.h">
+    <ClInclude Include="external\Assimp\include\assimp\Profiler.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_metal.h">
+    <ClInclude Include="external\Assimp\include\assimp\ProgressHandler.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h">
+    <ClInclude Include="external\Assimp\include\assimp\qnan.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_statistics.h">
+    <ClInclude Include="external\Assimp\include\assimp\quaternion.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_about.h">
+    <ClInclude Include="external\Assimp\include\assimp\RemoveComments.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="core\ui\hrs_help.h">
+    <ClInclude Include="external\Assimp\include\assimp\scene.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\stb_image_write.h">
+    <ClInclude Include="external\Assimp\include\assimp\SceneCombiner.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\stb_image.h">
+    <ClInclude Include="external\Assimp\include\assimp\SGSpatialSort.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\ImageTools.h">
+    <ClInclude Include="external\Assimp\include\assimp\SkeletonMeshBuilder.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="external\RadeonImageFilter\include\Half\half.hpp">
+    <ClInclude Include="external\Assimp\include\assimp\SmallVector.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\SmoothingGroups.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\SpatialSort.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\StandardShapes.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\StreamReader.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\StreamWriter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\StringComparison.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\StringUtils.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\Subdivision.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\texture.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\TinyFormatter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\types.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\vector2.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\vector3.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\version.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\Vertex.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\XmlParser.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\XMLTools.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="external\Assimp\include\assimp\ZipArchiveIOSystem.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_importer_utility.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ui\hrs_import_mesh_ui.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_vertex_data.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_mesh_data.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_model_data.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_preprocess_meshdata.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="core\mesh\hrs_import_flags.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1985,16 +2303,177 @@
     <None Include="external\glm\GTX\wrap.inl">
       <Filter>Fichiers d%27en-tête</Filter>
     </None>
-    <None Include="core\shaders\shader.frag" />
-    <None Include="core\shaders\shader.vert" />
-    <None Include="core\shaders\light.frag" />
-    <None Include="core\shaders\light.vert" />
-    <None Include="core\scene\dependencies\light\niederwihl_forest_4k.exr" />
+    <None Include="external\Assimp\include\assimp\color4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\material.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\matrix3x3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\matrix4x4.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\quaternion.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\SmoothingGroups.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\vector2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="external\Assimp\include\assimp\vector3.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="hipbin\.gitattributes" />
+    <None Include="hipbin\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\glfw\lib-vc2022\glfw3.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
     <Library Include="external\RadeonProRender\libWin64\ProRenderGLTF.lib" />
+    <Library Include="external\Assimp\lib\x64\assimp-vc143-mt.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Black.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBold.c">
+      <Filter>Fichiers sources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-BlackItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Bold.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-BoldItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraBold.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraBoldItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraLight.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraLightItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Italic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Light.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-LightItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Medium.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-MediumItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Regular.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBold.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBoldItalic.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Thin.ttf" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ThinItalic.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="core\shaders\Grid.frag" />
+    <CopyFileToFolders Include="core\shaders\shader.frag" />
+    <CopyFileToFolders Include="core\scene\dependencies\light\horus_hdri_main.exr" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3183454836.hipbin" />
+    <CopyFileToFolders Include="hipbin\AllPreCompilations.json" />
+    <CopyFileToFolders Include="core\scene\dependencies\light\niederwihl_forest_4k.exr" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourShaderKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourShaderKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_4107363481.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_4107363481.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernelFirstHit_966154944.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernelFirstHit_966154944.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_4107363481.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_4107363481.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_4107363481.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_4107363481.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_2736109841.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_2736109841.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3148400776.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3148400776.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3966506240.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3966506240.hipbin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_4107363481.cudabin" />
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_4107363481.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1595974256.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1595974256.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596105462.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596105462.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596301753.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596301753.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907729.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907729.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907733.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907733.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907734.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907734.hipbin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907735.cudabin" />
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907735.hipbin" />
+    <CopyFileToFolders Include="hipbin\OocCacheKernel_3197242002.cudabin" />
+    <CopyFileToFolders Include="hipbin\OocCacheKernel_3197242002.hipbin" />
+    <CopyFileToFolders Include="hipbin\PrefixScanKernels_966154944.cudabin" />
+    <CopyFileToFolders Include="hipbin\PrefixScanKernels_966154944.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_2182295485.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_2997749.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_3063894374.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_3063894374.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_883016494.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_883016494.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_2266755755.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_2692711584.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_574691048.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_86335715.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_2598100095.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_2598100095.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_3145764742.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_3145764742.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_417680951.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_417680951.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_968760782.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_968760782.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_1017944282.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_1017944282.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_3197242002.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_3197242002.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_1065433148.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_1065433148.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2184328579.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2184328579.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2266755755.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2266755755.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2598100095.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2598100095.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2683444055.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2683444055.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2692711584.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2692711584.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2773894024.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2773894024.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3096866140.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3096866140.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3183454836.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_417680951.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_417680951.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_499943711.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_499943711.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_574691048.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_574691048.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_661180864.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_661180864.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_829387.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_829387.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_86335715.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_86335715.hipbin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_984153876.cudabin" />
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_984153876.hipbin" />
+    <CopyFileToFolders Include="core\shaders\framebuffer.frag" />
+    <CopyFileToFolders Include="core\shaders\framebuffer.vert" />
+    <CopyFileToFolders Include="core\shaders\Grid.vert" />
+    <CopyFileToFolders Include="core\shaders\light.frag" />
+    <CopyFileToFolders Include="core\shaders\light.vert" />
+    <CopyFileToFolders Include="core\shaders\shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\Icons\Horus_Logo_100x20.png">
+      <Filter>Fichiers de ressources</Filter>
+    </Image>
   </ItemGroup>
 </Project>

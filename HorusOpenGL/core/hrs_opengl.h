@@ -1,4 +1,5 @@
 #pragma once
+#pragma warning(disable: 4005) // Macro redefinition
 
 // Project includes
 #include "hrs_opengl_manager.h" // glad.h
@@ -24,7 +25,7 @@ public:
 
 	bool Init(int width, int height, HorusWindowConfig* window) override;
 
-	bool InitBuffers(int Width, int Height);
+	bool InitViewportRenderTextures(int Width, int Height);
 
 	void Render();
 
@@ -39,13 +40,18 @@ public:
 	GLuint GetOpenGlTextureBuffer() { return m_OpenGlTextureBufferId_; }
 	GLFWwindow* GetWindow() { return m_HorusWindow_; }
 
+	// Setters
+	void BindOpenGLViewportFrameBuffer();
+	void UnbindOpenGLViewportFrameBuffer();
+	void ResizeOpenGLViewportFrameBuffer(int Width, int Height);
+
 	void ErrorManager();
 
 private:
 
-	HorusOpenGL(): m_HorusWindow_(nullptr), m_WindowWidth_(0), m_WindowHeight_(0), m_ProgramId_(0),
-	               m_VertexBufferId_(0), m_IndexBufferId_(0),
+	HorusOpenGL(): m_HorusWindow_(nullptr), m_ViewportWindowWidth_(0), m_ViewportWindowHeight_(0),
 	               m_RadeonTextureBufferId_(0), m_OpenGlTextureBufferId_(0), m_FramebufferObject_(0),
+	               m_RenderbufferObject_(0),
 	               m_TextureLocation_(0),
 	               m_PositionLocation_(0),
 	               m_TexcoordLocation_(0)
@@ -56,13 +62,13 @@ private:
 
 	// Window components
 	GLFWwindow* m_HorusWindow_;
-	int m_WindowWidth_, m_WindowHeight_;
+	int m_ViewportWindowWidth_, m_ViewportWindowHeight_;
+
+	bool m_IsDraggingFiles_ = false;
 
 	// Opengl components
-	GLuint m_ProgramId_;
-	GLuint m_VertexBufferId_;
-	GLuint m_IndexBufferId_;
 	GLuint m_FramebufferObject_;
+	GLuint m_RenderbufferObject_;
 
 	// Buffers to render in ImGui and Radeon
 	GLuint m_RadeonTextureBufferId_;
@@ -71,6 +77,7 @@ private:
 	// Shader
 	HorusShaderManager m_DefaultShader_;
 	HorusShaderManager m_LightShader_;
+	HorusShaderManager m_GridShader_;
 
 	// Shader variables
 	GLuint m_TextureLocation_, m_PositionLocation_, m_TexcoordLocation_;

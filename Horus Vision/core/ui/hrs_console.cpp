@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "hrs_horus_parameters.h"
+
 static int TextEditCallbackStub(ImGuiInputTextCallbackData* data)
 {
 	HorusConsole& Console = HorusConsole::GetInstance();
@@ -28,7 +30,7 @@ void HorusConsole::InitConsole()
 void HorusConsole::Console(bool* p_open)
 {
 	ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
-	if (!ImGui::Begin("Console", p_open))
+	if (!ImGui::Begin(HORUS_UI_NAME_CONSOLE.c_str(), p_open))
 	{
 		ImGui::End();
 		return;
@@ -43,9 +45,8 @@ void HorusConsole::Console(bool* p_open)
 
 	if (ImGui::CollapsingHeader("Console Parameters"))
 	{
-		
-
-		ImGui::TextWrapped("Test Console Text Horus Vision - Theo Baudoin - 2023");
+		// Code copy from ImGui Demo Window - Console (later will be replaced by a proper UI)
+		ImGui::TextWrapped("Test Console Text Horus Vision - Theo Baudoin - 2024");
 
 		if (ImGui::SmallButton("Add Dummy Text"))
 		{
@@ -87,7 +88,6 @@ void HorusConsole::Console(bool* p_open)
 
 	}
 	
-
 	// %d = int
 	// %s = string
 	// %f = float

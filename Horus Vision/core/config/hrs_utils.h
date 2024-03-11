@@ -26,6 +26,7 @@
 #include <string>
 #include <sstream>
 
+#include "hrs_horus_parameters.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "json.hpp"
@@ -39,9 +40,50 @@ using namespace std;
 
 struct Vertex
 {
-	rpr_float Pos[3];
-	rpr_float Norm[3];
-	rpr_float Tex[2];
+	RadeonProRender::float3 pos[3];
+	RadeonProRender::float3 normal[3];
+	RadeonProRender::float2 uv[3];
+};
+
+inline rpr_creation_flags GpuFlags[] = {
+	RPR_CREATION_FLAGS_ENABLE_GPU0,
+	RPR_CREATION_FLAGS_ENABLE_GPU1,
+	RPR_CREATION_FLAGS_ENABLE_GPU2,
+	RPR_CREATION_FLAGS_ENABLE_GPU3,
+	RPR_CREATION_FLAGS_ENABLE_GPU4,
+	RPR_CREATION_FLAGS_ENABLE_GPU5,
+	RPR_CREATION_FLAGS_ENABLE_GPU6,
+	RPR_CREATION_FLAGS_ENABLE_GPU7,
+	RPR_CREATION_FLAGS_ENABLE_GPU8,
+	RPR_CREATION_FLAGS_ENABLE_GPU9,
+	RPR_CREATION_FLAGS_ENABLE_GPU10,
+	RPR_CREATION_FLAGS_ENABLE_GPU11,
+	RPR_CREATION_FLAGS_ENABLE_GPU12,
+	RPR_CREATION_FLAGS_ENABLE_GPU13,
+	RPR_CREATION_FLAGS_ENABLE_GPU14,
+	RPR_CREATION_FLAGS_ENABLE_GPU15,
+};
+
+inline rpr_creation_flags CpuFlags[] = {
+	RPR_CREATION_FLAGS_ENABLE_CPU,
+};
+
+const rpr_context_properties ContextProperties[] =
+{
+	(rpr_context_properties)RPR_CONTEXT_PRECOMPILED_BINARY_PATH,
+	(rpr_context_properties)HORUS_APP_HIPBIN_PATH.c_str(),
+
+	(rpr_context_properties)RPR_CONTEXT_CACHE_PATH,
+	(rpr_context_properties)HORUS_APP_CACHE_PATH.c_str(),
+
+	(rpr_context_properties)RPR_CONTEXT_OOC_TEXTURE_CACHE,
+	(rpr_context_properties)HORUS_APP_TEXTURE_CACHE_PATH.c_str(),
+
+	(rpr_context_properties)RPR_CONTEXT_OOC_CACHE_PATH,
+	(rpr_context_properties)HORUS_APP_OOC_CACHE_PATH.c_str(),
+
+	// terminate the list of properties with a NULL <property name>
+	(rpr_context_properties)0,
 };
 
 inline rpr_shape CreateQuad(HorusGarbageCollector& Gc, rpr_context Context, rpr_scene Scene, Vertex* MeshVertices,
@@ -1123,6 +1165,20 @@ inline std::string BeautifyJson(const nlohmann::json& j)
 }
 
 // ImGui utility functions
+
+inline bool ImRightAlign(const char* str_id)
+{
+	if (ImGui::BeginTable(str_id, 2, ImGuiTableFlags_SizingFixedFit, ImVec2(-1, 0)))
+	{
+		ImGui::TableSetupColumn("a", ImGuiTableColumnFlags_WidthStretch);
+
+		ImGui::TableNextColumn();
+		ImGui::TableNextColumn();
+		return true;
+	}
+	return false;
+}
+#define IM_END_RIGHT_ALIGN ImGui::EndTable
 
 inline void ShowHandCursorOnHover()
 {

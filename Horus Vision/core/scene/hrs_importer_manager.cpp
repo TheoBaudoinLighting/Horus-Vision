@@ -6,6 +6,7 @@
 #include "ProRenderGLTF.h" 
 #include "common.h"
 #include "hrs_object_manager.h"
+#include "hrs_om_camera.h"
 
 const char* ExportGltfTimer = "ExportGltf";
 
@@ -14,6 +15,7 @@ bool HorusImporterManager::ImportGltf(const std::string& Path, rpr_context Conte
 	HorusGarbageCollector& GarbageCollector = HorusGarbageCollector::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusOmCamera& Camera = HorusOmCamera::GetInstance();
 
 	const int SaveSceneId = ObjectManager.GetActiveSceneId();
 
@@ -45,7 +47,7 @@ bool HorusImporterManager::ImportGltf(const std::string& Path, rpr_context Conte
 	{
 		rpr_camera Camera = Cameras[i];
 
-		ObjectManager.CameraExtractor(Camera);
+		//Camera.CameraExtractor(Camera);
 
 		//ObjectManager.CreateRadeonCameraFromGLTF(SaveSceneId, "Camera", Camera);
 

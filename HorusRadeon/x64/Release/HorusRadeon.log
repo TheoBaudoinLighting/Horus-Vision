@@ -1,0 +1,10 @@
+﻿  hrs_radeon.cpp
+  hrs_radeon_posteffect.cpp
+  hrs_radeon_render.cpp
+C:\Users\theob\source\repos\Horus Vision\HorusRadeon\core\hrs_radeon.cpp(2,10): error C1083: Impossible d'ouvrir le fichier include : 'hrs_engine.h' : No such file or directory
+C:\Users\theob\source\repos\Horus Vision\HorusRadeon\core\hrs_radeon_posteffect.h(3,10): error C1083: Impossible d'ouvrir le fichier include : 'hrs_reset_buffers.h' : No such file or directory
+  (compiler le fichier source 'core/hrs_radeon_posteffect.cpp')
+  
+C:\Users\theob\source\repos\Horus Vision\HorusRadeon\core\hrs_radeon_render.h(3,10): error C1083: Impossible d'ouvrir le fichier include : 'RadeonProRender_V2.h' : No such file or directory
+  (compiler le fichier source 'core/hrs_radeon_render.cpp')
+  

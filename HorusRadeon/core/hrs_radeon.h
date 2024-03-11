@@ -10,6 +10,12 @@
 #include <future>
 #include <ProRenderGLTF.h>
 
+#include <atomic>
+#include <thread>
+#include <vector>
+#include <condition_variable>
+#include <mutex>
+
 // External includes
 #include "common.h"
 #include "glm/glm.hpp"
@@ -43,7 +49,7 @@ public:
 	void QuitRender() override;
 
 	bool InitGraphics();
-	void ResizeRender(int width, int height);
+	void ResizeRenderWindow(int width, int height);
 
 	void RenderEngine();
 	void RenderClassic();
@@ -63,8 +69,8 @@ public:
 
 	void ResizeFrameBufferData(int Width, int Height);
 	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer Framebuffer);
-	glm::vec2 SetWindowSize(int Width, int Height);
-	glm::vec2 GetWindowSize() const { return glm::vec2(m_WindowWidth_, m_WindowHeight_); }
+	glm::vec2 SetRenderWindowSize(int Width, int Height);
+	glm::vec2 GetWindowSize() const { return glm::vec2(m_RenderWindowWidth_, m_RenderWindowHeight_); }
 
 	rpr_context GetContext() { return m_ContextA_; }
 	rpr_material_system GetMatsys() { return m_Matsys_; }
@@ -73,7 +79,11 @@ public:
 
 	rpr_framebuffer GetClassicRenderFrameBuffer() { return m_FrameBufferA_; }
 	rpr_framebuffer GetAdaptiveRenderFrameBuffer() { return m_FrameBufferAdaptive_; }
-	rpr_framebuffer GetFrameBufferResolved() { return m_FrameBufferB_; }
+	rpr_framebuffer GetFrameBufferResolved() { return m_FrameBufferDest_; }
+	int GetFramebufferDestSizeX() { return m_RenderWindowWidth_; }
+	int GetFramebufferDestSizeY() { return m_RenderWindowHeight_; }
+
+	const void* GetFbData() { return m_FbData_ ? m_FbData_.get() : nullptr; }
 
 	void SetSampleCount(int SampleCount) { m_SampleCount_ = SampleCount; }
 	void SetActivePixelRemains(unsigned int ActivePixelRemains) { m_ActivePixelRemains_ = ActivePixelRemains; }
@@ -84,7 +94,7 @@ public:
 	bool GetLockingRender() { return m_LockingRender_; }
 
 	bool SetIsDirty(bool IsDirty) { m_IsDirty_ = IsDirty; return m_IsDirty_; }
-	void SetLockingRender(bool LockingRender) { m_LockingRender_ = LockingRender; }
+	void SetLockingRender(bool LockingRender);
 
 	int GetSampleCount() { return m_SampleCount_; }
 	int GetMinSamples() { return m_MinSamples_; }
@@ -101,8 +111,8 @@ private:
 
 	// Render stuff
 
-	int m_WindowWidth_ = 800;
-	int m_WindowHeight_ = 600;
+	int m_RenderWindowWidth_ = 800;
+	int m_RenderWindowHeight_ = 600;
 	HorusWindowConfig* m_WindowConfig_;
 
 	// Classic render
@@ -117,6 +127,8 @@ private:
 	bool m_IsLockPreviewEnabled_ = false;
 	bool m_ChangeFB_ = true;
 
+	std::atomic<int> m_ActiveThreadsCount_ = 0;
+	std::condition_variable m_ConditionVariable_;
 
 	// Adaptive render
 	int m_MinAdaptiveTileSize_ = 8;
@@ -126,8 +138,8 @@ private:
 	unsigned int m_ActivePixelRemains_ = 0;
 
 	// General render stuff
-	int m_RenderTargetSizeX_ = m_WindowWidth_;
-	int m_RenderTargetSizeY_ = m_WindowHeight_;
+	int m_RenderTargetSizeX_ = m_RenderWindowWidth_;
+	int m_RenderTargetSizeY_ = m_RenderWindowHeight_;
 	const int m_MaxIterationTiledRendering_ = 128;
 
 	float m_SensorY_ = 36.0f;
@@ -148,7 +160,7 @@ private:
 
 	bool m_IsDirty_;
 	bool m_IsAdaptativeSampling_ = false;
-	bool m_LockingRender_ = false;
+	bool m_LockingRender_ = true;
 
 	// Radeon stuff
 	GLuint m_Program_;

@@ -7,15 +7,14 @@
 class HorusUI
 {
 public:
-
 	static HorusUI& GetInstance()
 	{
 		static HorusUI Instance;
 		return Instance;
 	}
 
-	HorusUI(HorusUI const&) = delete;
-	void operator=(HorusUI const&) = delete;
+	HorusUI(const HorusUI&) = delete;
+	void operator=(const HorusUI&) = delete;
 
 	void Init();
 
@@ -34,40 +33,35 @@ public:
 	void SetOptionsChanged(bool Value) { m_OptionsChanged_ = Value; }
 
 private:
-
 	HorusUI() = default;
 
 	// Init
-	inline static bool m_ShowOpenGLViewport_ = false;
-	inline static bool m_ShowRadeonViewport_ = true;
-	inline static bool m_ShowOutliner_ = true;
-	inline static bool m_ShowConsole_ = true;
-	inline static bool m_ShowScene_ = false;
-	inline static bool m_ShowInspector_ = true;
-	inline static bool m_ShowStatistics_ = true;
-	inline static bool m_ShowHelp_ = false;
-	inline static bool m_ShowAbout_ = false;
+	inline static bool mShowOpenGlViewport_ = true;
+	inline static bool mShowRadeonViewport_ = true;
+	inline static bool mShowOutliner_ = true;
+	inline static bool mShowConsole_ = true;
+	inline static bool mShowInspector_ = true;
+	inline static bool mShowStatistics_ = true;
+	inline static bool mShowHelp_ = false;
+	inline static bool mShowAbout_ = false;
+
+	// Sub Menu
+	inline static bool mShowImportMesh_ = false;
+
 
 	bool m_LoadLogoTexture_ = true;
-	bool m_LoadUILogoTexture_ = true;
+	bool m_LoadUiLogoTexture_ = true;
 
 	int m_LogoWidth_ = 0;
 	int m_LogoHeight_ = 0;
 	GLuint m_LogoTexture_ = 0;
 
-	int m_UILogoWidth_ = 0;
-	int m_UILogoHeight_ = 0;
+	int m_UiLogoWidth_ = 0;
+	int m_UiLogoHeight_ = 0;
 	GLuint m_UILogoTexture_ = 0;
 
 	// Main Menu Bar
 	bool m_IsRunning_ = true;
 	bool m_IsClosing_ = false;
 	bool m_OptionsChanged_ = false;
-
-	// Windows
-
-
-
-
 };
-

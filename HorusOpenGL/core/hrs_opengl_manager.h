@@ -79,8 +79,8 @@ public:
 	void Clear();
 
 	HorusVAO& CreateVAO(int ID);
-	HorusVBO& CreateVBO(int ID, GLfloat* vertices, GLsizeiptr size);
-	HorusEBO& CreateEBO(int ID, GLuint* indices, GLuint size);
+	HorusVBO& CreateVBO(int ID, std::vector<VertexData>& Vertices);
+	HorusEBO& CreateEBO(int ID, std::vector<unsigned>& Indices);
 
 	void BindVAO(int ID);
 	void BindVBO(int ID);

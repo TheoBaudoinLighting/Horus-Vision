@@ -1,21 +1,24 @@
 
 #include "hrs_outliner.h" // nothing
-#include <hrs_ui.h> // nothing
 #include <hrs_object_manager.h> // glfw3.h
 #include <hrs_console.h>
 #include <hrs_inspector.h>
 
+#include "hrs_horus_parameters.h"
+#include "hrs_om_camera.h"
 #include "ImGuizmo.h"
 
 void HorusOutliner::Outliner(bool* p_open)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusOmCamera& Camera = HorusOmCamera::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 
 	ImGuizmo::BeginFrame();
 	{
-		ImGui::Begin("Outliner", p_open);
-		ImGui::Text("Outliner");
+		ImGui::Begin(HORUS_UI_NAME_OUTLINER.c_str(), p_open);
+		ImGui::Text(HORUS_UI_NAME_OUTLINER.c_str());
 
 		// toggle button
 
@@ -26,7 +29,7 @@ void HorusOutliner::Outliner(bool* p_open)
 		ObjectManager.GetOutlinerMaterials(materials);
 
 		std::vector<std::string> cameras;
-		ObjectManager.GetOutlinerCameras(cameras);
+		Camera.GetOutlinerCameras(cameras);
 
 		std::vector<std::string> lights;
 		ObjectManager.GetOutlinerLights(lights);
@@ -145,12 +148,12 @@ void HorusOutliner::Outliner(bool* p_open)
 					m_SelectedMesh_ = fst;
 					m_SelectedObject_.clear();
 
-					int Id = ObjectManager.GetIdByName(m_SelectedMesh_);
+					int Id = IdManager.GetIDFromObjectName(m_SelectedMesh_);
 					spdlog::info("Group of shapes id : {}", Id);
 					Console.AddLog(" [info] Group of shapes id : %d ", Id);
 					spdlog::info("Group of shapes selected : {}", fst);
 					Console.AddLog(" [info] Group of shapes selected : %s ", fst.c_str());
-					ObjectManager.SetActualSelectedId(Id);
+					IdManager.SetActualSelectedId(Id);
 					ObjectManager.SetActiveGroupShape(Id);
 					HorusInspector::GetInstance().PopulateSelectedGroupShapeInfos();
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::GROUPSHAPE);
@@ -176,12 +179,12 @@ void HorusOutliner::Outliner(bool* p_open)
 						{
 							m_SelectedObject_ = ShapeName;
 
-							int Id = ObjectManager.GetIdByName(m_SelectedObject_);
+							int Id = IdManager.GetIDFromObjectName(m_SelectedObject_);
 							spdlog::info("Shapes id : {}", Id);
 							Console.AddLog(" [info] Shapes id : %d ", Id);
 							spdlog::info("Shape selected : {}", m_SelectedObject_);
 							Console.AddLog(" [info] Shape selected : %s ", m_SelectedObject_.c_str());
-							ObjectManager.SetActualSelectedId(Id);
+							IdManager.SetActualSelectedId(Id);
 							ObjectManager.SetActiveShapeId(Id);
 							HorusInspector::GetInstance().PopulateSelectedShapeInfos();
 							HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::SHAPE);
@@ -210,11 +213,11 @@ void HorusOutliner::Outliner(bool* p_open)
 					m_SelectedObject_ = material;
 					spdlog::info("Material selected: {}", material);
 					Console.AddLog(" [info] Material selected : %s ", material.c_str());
-					int Id = ObjectManager.GetIdByName(material);
+					int Id = IdManager.GetIDFromObjectName(material);
 					spdlog::info("Material id: {}", Id);
 					Console.AddLog(" [info] Material id : %d ", Id);
 
-					ObjectManager.SetActualSelectedId(Id);
+					IdManager.SetActualSelectedId(Id);
 					ObjectManager.SetActiveMaterialId(Id);
 					HorusInspector::GetInstance().PopulateSelectedMaterialInfos();
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::MATERIAL);
@@ -239,11 +242,11 @@ void HorusOutliner::Outliner(bool* p_open)
 					m_SelectedObject_ = Camera;
 					spdlog::info("Camera selected: {}", Camera);
 					Console.AddLog(" [info] Camera selected : %s ", Camera.c_str());
-					int Id = ObjectManager.GetIdByName(Camera);
+					int Id = IdManager.GetIDFromObjectName(Camera);
 					spdlog::info("Camera id: {}", Id);
 					Console.AddLog(" [info] Camera id : %d ", Id);
 
-					ObjectManager.SetActualSelectedId(Id);
+					IdManager.SetActualSelectedId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::CAMERA);
 					HorusInspector::GetInstance().PopulateSelectedCameraInfos();
 				}
@@ -267,11 +270,11 @@ void HorusOutliner::Outliner(bool* p_open)
 					m_SelectedObject_ = Light;
 					spdlog::info("Light selected: {}", Light);
 					Console.AddLog(" [info] Light selected : %s ", Light.c_str());
-					int Id = ObjectManager.GetIdByName(Light);
+					int Id = IdManager.GetIDFromObjectName(Light);
 					spdlog::info("Light id: {}", Id);
 					Console.AddLog(" [info] Light id : %d ", Id);
 
-					ObjectManager.SetActualSelectedId(Id);
+					IdManager.SetActualSelectedId(Id);
 					ObjectManager.SetActiveLightId(Id);
 					HorusInspector::GetInstance().SetInspectorType(HorusInspector::InspectorType::LIGHT);
 				}

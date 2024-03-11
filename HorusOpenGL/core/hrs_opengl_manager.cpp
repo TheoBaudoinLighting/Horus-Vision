@@ -85,35 +85,35 @@ void HorusOpenGLManager::LinkEBO()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO_);
 	glBindVertexArray(0);
 }
-void HorusOpenGLManager::LinkVBO(const HorusShaderManager& Shader, const std::string& attribute, VBOTYPE type, ComponentType componentType, DataType dataType)
-{
-	auto ShaderManager = Shader.GetCurrentProgram();
-
-	auto ID = glGetAttribLocation(ShaderManager, attribute.c_str());
-
-	glBindVertexArray(m_VAO_);
-
-	if (type == VBOTYPE::VERTEX)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO_);
-	}
-	else if (type == VBOTYPE::COLOR)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_ColorVBO_);
-	}
-	else if (type == VBOTYPE::TEXTURE)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_TextureVBO_);
-	}
-	else if (type == VBOTYPE::NORMAL)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_NormalVBO_);
-	}
-
-	glVertexAttribPointer(ID, static_cast<GLint>(componentType), static_cast<GLenum>(dataType), GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(ID);
-	glBindVertexArray(0);
-}
+//void HorusOpenGLManager::LinkVBO(const HorusShaderManager& Shader, const std::string& attribute, VBOTYPE type, ComponentType componentType, DataType dataType)
+//{
+//	auto ShaderManager = Shader.GetProgram();
+//
+//	auto ID = glGetAttribLocation(ShaderManager, attribute.c_str());
+//
+//	glBindVertexArray(m_VAO_);
+//
+//	if (type == VBOTYPE::VERTEX)
+//	{
+//		glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO_);
+//	}
+//	else if (type == VBOTYPE::COLOR)
+//	{
+//		glBindBuffer(GL_ARRAY_BUFFER, m_ColorVBO_);
+//	}
+//	else if (type == VBOTYPE::TEXTURE)
+//	{
+//		glBindBuffer(GL_ARRAY_BUFFER, m_TextureVBO_);
+//	}
+//	else if (type == VBOTYPE::NORMAL)
+//	{
+//		glBindBuffer(GL_ARRAY_BUFFER, m_NormalVBO_);
+//	}
+//
+//	glVertexAttribPointer(ID, static_cast<GLint>(componentType), static_cast<GLenum>(dataType), GL_FALSE, 0, nullptr);
+//	glEnableVertexAttribArray(ID);
+//	glBindVertexArray(0);
+//}
 void HorusOpenGLManager::Render(DrawType type)
 {
 	glBindVertexArray(m_VAO_);
@@ -153,14 +153,13 @@ HorusVAO& HorusOpenGLManager::CreateVAO(int ID)
 	}
 
 	HorusVAO VAO;
-	VAO.Init();
 	m_VAOs_[ID] = VAO;
 
 	spdlog::info("Created VAO with ID {}", ID);
 
 	return m_VAOs_[ID];
 }
-HorusVBO& HorusOpenGLManager::CreateVBO(int ID, GLfloat* vertices, GLsizeiptr size)
+HorusVBO& HorusOpenGLManager::CreateVBO(int ID, std::vector<VertexData>& Vertices)
 {
 	if (m_VBOs_.contains(ID))
 	{
@@ -169,15 +168,14 @@ HorusVBO& HorusOpenGLManager::CreateVBO(int ID, GLfloat* vertices, GLsizeiptr si
 		return m_VBOs_[ID];
 	}
 
-	HorusVBO VBO;
-	VBO.Init(vertices, size);
+	HorusVBO VBO(Vertices);
 	m_VBOs_[ID] = VBO;
 
 	spdlog::info("Created VBO with ID {}", ID);
 
 	return m_VBOs_[ID];
 }
-HorusEBO& HorusOpenGLManager::CreateEBO(int ID, GLuint* indices, GLuint size)
+HorusEBO& HorusOpenGLManager::CreateEBO(int ID, std::vector<unsigned int>& Indices)
 {
 	if (m_EBOs_.contains(ID))
 	{
@@ -186,8 +184,7 @@ HorusEBO& HorusOpenGLManager::CreateEBO(int ID, GLuint* indices, GLuint size)
 		return m_EBOs_[ID];
 	}
 
-	HorusEBO EBO;
-	EBO.Init(indices, size);
+	HorusEBO EBO(Indices);
 	m_EBOs_[ID] = EBO;
 
 	spdlog::info("Created EBO with ID {}", ID);
