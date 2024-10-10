@@ -190,6 +190,7 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 }
 bool HorusOpenGL::InitViewportRenderTextures(int Width, int Height)
 {
+<<<<<<< HEAD
     m_ViewportWindowWidth_ = Width;
     m_ViewportWindowHeight_ = Height;
 
@@ -269,6 +270,49 @@ bool HorusOpenGL::InitViewportRenderTextures(int Width, int Height)
     }
 
     return true;
+=======
+	m_ViewportWindowWidth_ = Width;
+	m_ViewportWindowHeight_ = Height;
+
+	// Texture specially for the Radeon View, to be able to render the image
+	glGenTextures(1, &m_RadeonTextureBufferId_);
+	glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBufferId_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_ViewportWindowWidth_, m_ViewportWindowHeight_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Create and init framebuffer and texture for OpenGL viewport
+	glGenFramebuffers(1, &m_FramebufferObject_);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
+
+	glGenTextures(1, &m_OpenGlTextureBufferId_);
+	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 500, 500, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
+
+	glGenRenderbuffers(1, &m_RenderbufferObject_);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferObject_);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 500, 500);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RenderbufferObject_);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		spdlog::error("Framebuffer is not complete!");
+		return false;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	return true;
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 }
 
 void HorusOpenGL::InitRender()
@@ -290,6 +334,7 @@ void HorusOpenGL::InitRender()
 		ImGui::Text("Dragging file '%s'", ImGui::GetDragDropPayload()->Data);
 		ImGui::EndDragDropSource();
 	}
+<<<<<<< HEAD
 
     // Vérification des erreurs OpenGL
     GLenum error = glGetError();
@@ -323,6 +368,34 @@ void HorusOpenGL::Render()
 	glUseProgram(0);
 	UnbindOpenGLViewportFrameBuffer();
 }
+=======
+}
+void HorusOpenGL::Render()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusGroupShapeManager& GroupShapeManager = HorusGroupShapeManager::GetInstance();
+	HorusOmCamera& CameraManager = HorusOmCamera::GetInstance();
+
+	BindOpenGLViewportFrameBuffer();
+	m_DefaultShader_.Use();
+
+	const auto BackgroundColorNormalised = glm::vec4(92.f, 92.f, 92.f, 255.f) / 255.f;
+	glClearColor(BackgroundColorNormalised.x, BackgroundColorNormalised.y, BackgroundColorNormalised.z, BackgroundColorNormalised.w);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Draw here
+	// Primary viewport object 
+	ObjectManager.DrawGrid(ObjectManager.GetActiveGridId(), m_GridShader_.GetProgram(), CameraManager.GetOpenGLCamera(CameraManager.GetActiveOpenGLCameraID()));
+
+	// Secondary viewport object
+	// Sub viewport object
+
+	GroupShapeManager.DrawAllGroupShapeInOpenGl(m_DefaultShader_.GetProgram(), CameraManager.GetOpenGLCamera(CameraManager.GetActiveOpenGLCameraID()));
+
+	glUseProgram(0);
+	UnbindOpenGLViewportFrameBuffer();
+}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 void HorusOpenGL::PostRender()
 {
 	//ErrorManager();

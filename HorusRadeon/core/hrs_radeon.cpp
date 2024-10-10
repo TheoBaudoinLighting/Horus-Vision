@@ -36,8 +36,11 @@
 #include "hrs_statistics.h"
 #include "hrs_utils.h"
 #include "hrs_radeon_imagefilter.h"
+<<<<<<< HEAD
 //#include <stb_image_write.h>
 
+=======
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 #include "hrs_radeon_viewport.h"
 #include "hrs_render_progress_callback.hpp"
 #include "picojson.h"
@@ -580,6 +583,7 @@ void HorusRadeon::RenderEngine()
 }
 void HorusRadeon::RenderClassic()
 {
+<<<<<<< HEAD
     static constexpr int MinSamplesToSwitch = 3;
 
     if (!m_LockingRender_)
@@ -591,6 +595,19 @@ void HorusRadeon::RenderClassic()
         // Benchmark
         {
             const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
+=======
+	static constexpr int MinSamplesToSwitch = 3;
+
+	if (!m_LockingRender_)
+	{
+		if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_) {
+			return;
+		}
+
+		// Benchmark
+		{
+			const auto TimeUpdateStarts = std::chrono::high_resolution_clock::now();
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
             if (BenchmarkStart == std::chrono::high_resolution_clock::time_point())
                 BenchmarkStart = TimeUpdateStarts;
@@ -608,6 +625,7 @@ void HorusRadeon::RenderClassic()
 
         RenderProgressCallback.Clear();
 
+<<<<<<< HEAD
         if (m_IsDirty_)
         {
            if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ > MinSamplesToSwitch) {
@@ -616,8 +634,84 @@ void HorusRadeon::RenderClassic()
     spdlog::warn("Invalid sample count: {}", m_SampleCount_);
     return;
 }
+=======
+		if (m_IsDirty_)
+		{
+			if (m_SampleCount_ <= MinSamplesToSwitch) {
+				m_ClassicRenderFuture_ = std::async(std::launch::async, &RenderJob, m_ContextA_, &RenderProgressCallback); // Simple Future
+				++m_ActiveThreadsCount_;
+			}
+			else if (m_SampleCount_ >= MinSamplesToSwitch + 1) {
+				m_RenderThread_ = std::jthread(RenderJob, m_ContextA_, &RenderProgressCallback);
+				m_RenderThread_.detach();
+			}
+			else {
+				spdlog::warn("Invalid sample count: {}", m_SampleCount_);
+				return;
+			}
 
+			if (m_SampleCount_ <= MinSamplesToSwitch && !m_IsLockPreviewEnabled_)
+			{
+				if (!m_IsPreviewEnabled_)
+				{
+					SetPreviewMode(true);
+				}
+			}
+			else if (m_SampleCount_ >= MinSamplesToSwitch + 1 && !m_IsLockPreviewEnabled_)
+			{
+				if (m_IsPreviewEnabled_)
+				{
+					SetPreviewMode(false);
+				}
+			}
+			else if (m_IsLockPreviewEnabled_)
+			{
+				if (!m_IsPreviewEnabled_)
+				{
+					SetPreviewMode(true);
+				}
+			}
 
+			m_ThreadRunning_ = true;
+		}
+
+		while (!RenderProgressCallback.Done)
+		{
+			if (!m_IsDirty_ && m_MaxSamples_ != -1 && m_SampleCount_ >= m_MaxSamples_) {
+				break;
+			}
+
+			if (RenderProgressCallback.HasUpdate)
+			{
+				RenderMutex.lock();
+				m_SampleCount_++;
+
+				m_ClassicRenderInfoFuture_ = std::async(std::launch::async, &HorusRadeon::AsyncFramebufferUpdate, this, m_ContextA_, m_FrameBufferA_);
+
+				glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBuffer_);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_RenderWindowWidth_, m_RenderWindowHeight_, GL_RGBA, GL_FLOAT, static_cast<GLvoid*>(m_FbData_.get()));
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				RenderProgressCallback.HasUpdate = false;
+
+				RenderMutex.unlock();
+				break;
+			}
+		}
+	}
+
+	if (m_ThreadRunning_ && m_ClassicRenderFuture_.valid() && m_ClassicRenderInfoFuture_.valid() || m_ActiveThreadsCount_ > 0)
+	{
+		if (m_SampleCount_ <= MinSamplesToSwitch || m_SampleCount_ >= m_MaxSamples_ && m_ClassicRenderFuture_.valid() && m_ClassicRenderInfoFuture_.valid() || m_ActiveThreadsCount_ > 0)
+		{
+			m_ClassicRenderFuture_.wait(); // Simple Future Wait
+			m_ClassicRenderInfoFuture_.wait();
+		}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
+
+		m_ThreadRunning_ = false;
+
+<<<<<<< HEAD
             if (m_SampleCount_ <= MinSamplesToSwitch && !m_IsLockPreviewEnabled_)
             {
                 SetPreviewMode(true);
@@ -671,6 +765,15 @@ void HorusRadeon::RenderClassic()
     {
         m_ThreadRunning_ = false;
     }
+=======
+		GetClassicRenderProgress();
+		BenchmarkNumberOfRenderIteration += m_BatchSize_;
+	}
+	else
+	{
+		m_ThreadRunning_ = false;
+	}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 }
 void HorusRadeon::RenderAdaptive()
 {
@@ -832,7 +935,11 @@ void HorusRadeon::CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles)
 	RenderMultiTiles(FbMetadata, ObjectManager.GetScene(), m_ContextA_, MaxIterationPerTiles);
 
 	// Save the final render image
+<<<<<<< HEAD
 	/*if (!stbi_write_png("FinalRender.png", m_RenderWindowWidth_, m_RenderWindowHeight_, 3, FbMetadata.FbData.data(), m_RenderWindowWidth_ * 3))
+=======
+	if (!stbi_write_png("FinalRender.png", m_RenderWindowWidth_, m_RenderWindowHeight_, 3, FbMetadata.FbData.data(), m_RenderWindowWidth_ * 3))
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	{
 		spdlog::error("Failed to save the final render image.");
 		Console.AddLog(" [error] Failed to save the final render image.");
@@ -841,7 +948,11 @@ void HorusRadeon::CallRenderMultiTiles(int Tile_Size, int MaxIterationPerTiles)
 	{
 		spdlog::info("Final Render : {} x {} : Saved", m_RenderWindowWidth_, m_RenderWindowHeight_);
 		Console.AddLog(" [success] Final Render : %d x %d : Saved", m_RenderWindowWidth_, m_RenderWindowHeight_);
+<<<<<<< HEAD
 	}*/
+=======
+	}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 	RadeonViewport.SetViewportLocked(false);
 	RadeonViewport.SetIsFullRender(false);

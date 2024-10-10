@@ -22,11 +22,20 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "RadeonImageFilters_gl.h"
 #endif
 
+<<<<<<< HEAD
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 //#include "ImageTools.h"
+=======
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#include "ImageTools.h"
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 inline unsigned char FloatToByte(float value)
 {
@@ -72,6 +81,7 @@ namespace TBM
 			return -1;
 		}
 
+<<<<<<< HEAD
 		// Load input image
 		// inputImage = ImageTools::LoadImageData("resources/Textures/art.jpg", context);
 		// if (!inputImage)
@@ -87,6 +97,26 @@ namespace TBM
 		// {
 		//     return -1;
 		// }
+=======
+
+
+
+		// Load input image
+		inputImage = ImageTools::LoadImageData("resources/Textures/art.jpg", context);
+		if (!inputImage)
+		{
+			return -1;
+		}
+
+		rif_image_desc desc;
+		size_t retSize;
+		rifImageGetInfo(inputImage, RIF_IMAGE_DESC, sizeof(desc), &desc, &retSize);
+		status = rifContextCreateImage(context, &desc, nullptr, &outputImage);
+		if (status != RIF_SUCCESS)
+		{
+			return -1;
+		}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 		status = rifImageFilterSetParameter1u(filter, "srcColorSpace", RIF_COLOR_SPACE_SRGB);
 		if (status != RIF_SUCCESS)
@@ -99,6 +129,10 @@ namespace TBM
 			return -1;
 		}
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 		status = rifCommandQueueAttachImageFilter(queue, filter, inputImage, outputImage);
 		if (status != RIF_SUCCESS)
 		{
@@ -116,11 +150,19 @@ namespace TBM
 
 		rif_image_desc descOut;
 		size_t retSizeOut;
+<<<<<<< HEAD
 		// rif_int statusOut = rifImageGetInfo(outputImage, RIF_IMAGE_DESC, sizeof(desc), &desc, &retSize);
 		// if (status != RIF_SUCCESS)
 		// {
 		//     return false;
 		// }
+=======
+		rif_int statusOut = rifImageGetInfo(outputImage, RIF_IMAGE_DESC, sizeof(desc), &desc, &retSize);
+		if (status != RIF_SUCCESS)
+		{
+			return false;
+		}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 		// get image data
 		rif_uchar* data;
@@ -131,12 +173,20 @@ namespace TBM
 		}
 
 		// write image to disk
+<<<<<<< HEAD
 		/*stbi_write_png("FlowerOut.png", desc.image_width, desc.image_height, desc.num_components, data, 0);
+=======
+		stbi_write_png("FlowerOut.png", desc.image_width, desc.image_height, desc.num_components, data, 0);
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 		status = rifImageUnmap(outputImage, data);
 		if (status != RIF_SUCCESS)
 		{
 			return false;
+<<<<<<< HEAD
 		}*/
+=======
+		}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 		//Free resources
 		rifCommandQueueDetachImageFilter(queue, filter);
@@ -149,6 +199,12 @@ namespace TBM
 		std::cout << "RIF test finished" << '\n';
 
 		return 0;
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	}
 
 	class HorusOCIO
@@ -244,6 +300,10 @@ namespace TBM
 			spdlog::info("OCIO exposure: {}", Exposure);
 			spdlog::info("OCIO gamma: {}", Gamma);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 			// Exposure
 			{
 				const double Slope4f[4] = { m_Exposure_, m_Exposure_, m_Exposure_, m_Exposure_ };
@@ -348,4 +408,10 @@ namespace TBM
 			return;
 		}
 	}
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 }

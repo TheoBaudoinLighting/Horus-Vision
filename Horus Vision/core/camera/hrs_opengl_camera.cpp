@@ -323,6 +323,7 @@ void HorusOpenGLCamera::SetAspectRatio(float AspectRatio)
 	UpdateMatrix(m_FOV_, m_NearPlane_, m_FarPlane_, m_WindowWidth_, m_WindowHeight_);
 }
 
+<<<<<<< HEAD
 void HorusOpenGLCamera::SetViewMatrix(const glm::mat4& viewMatrix)
 {
     m_ViewMatrix_ = viewMatrix;
@@ -330,4 +331,6 @@ void HorusOpenGLCamera::SetViewMatrix(const glm::mat4& viewMatrix)
     UpdateMatrix(m_FOV_, m_NearPlane_, m_FarPlane_, m_WindowWidth_, m_WindowHeight_);
 }
 
+=======
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 

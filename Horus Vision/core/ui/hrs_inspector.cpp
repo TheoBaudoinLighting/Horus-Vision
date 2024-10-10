@@ -14,7 +14,11 @@
 #include "hrs_dragdrop.h"
 #include "hrs_horus_parameters.h"
 #include "hrs_om_camera.h"
+<<<<<<< HEAD
 //#include "stb_image_write.h"
+=======
+#include "RadeonImageFilter/include/stb_image_write.h"
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 #pragma warning(disable: 4002)
 
@@ -4938,7 +4942,11 @@ bool HorusInspector::ExportToFile(const char* filepath, bool Overwrite = false, 
 
 		// Trying to save with a different method (stb_image)
 
+<<<<<<< HEAD
 		/*if (stbi_write_png(filepath, Radeon.GetFramebufferDestSizeX(), Radeon.GetFramebufferDestSizeY(), 4, Radeon.GetFbData(), 0) == 0 && EmergencyRender)
+=======
+		if (stbi_write_png(filepath, Radeon.GetFramebufferDestSizeX(), Radeon.GetFramebufferDestSizeY(), 4, Radeon.GetFbData(), 0) == 0 && EmergencyRender)
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 		{
 			spdlog::critical("Emergency render failed to save frame buffer to file with stb_image: {}", filepath);
 			return false;
@@ -4947,7 +4955,11 @@ bool HorusInspector::ExportToFile(const char* filepath, bool Overwrite = false, 
 		{
 			spdlog::info("Emergency render exported with success: {}", filepath);
 			return true;
+<<<<<<< HEAD
 		}*/
+=======
+		}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 
 

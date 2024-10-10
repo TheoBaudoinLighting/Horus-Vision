@@ -15,8 +15,11 @@
 #include <vector>
 #include <condition_variable>
 #include <mutex>
+<<<<<<< HEAD
 #include <queue>
 #include <functional>
+=======
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 // External includes
 #include "common.h"

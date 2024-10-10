@@ -2335,7 +2335,11 @@
     <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
     <Library Include="external\RadeonProRender\libWin64\ProRenderGLTF.lib" />
+<<<<<<< HEAD
     <Library Include="external\Assimp\lib\assimp-vc143-mtd.lib" />
+=======
+    <Library Include="external\Assimp\lib\x64\assimp-vc143-mt.lib" />
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="fonts\Montserrat\Montserrat-Black.ttf" />

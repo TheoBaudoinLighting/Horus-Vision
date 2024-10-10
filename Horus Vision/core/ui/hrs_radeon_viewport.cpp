@@ -158,7 +158,11 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			float RenderProgress = 10; // TODO : get the render progress of the tiled render
 			ImGui::SetCursorPos(ImVec2(CenterPos.x - m_ImageSize_.x / 2, CenterPos.y - 20));
 			ImGui::ProgressBar(RenderProgress, ImVec2(m_ImageSize_.x, 30), "Rendering...");
+<<<<<<< HEAD
 			//DrawRectangleAroundItem(m_GreenColor_);
+=======
+			DrawRectangleAroundItem(m_GreenColor_);
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 			// Bouton "Quit Render"
 			ImGui::SetCursorPos(ImVec2(CenterPos.x - m_ImageSize_.x / 2, CenterPos.y + m_ImageSize_.y - 50));
@@ -259,6 +263,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			m_OffsetY_ = (m_ViewerSize_.y - m_ImageSize_.y) * 0.5f;
 
 			ImGui::SetCursorPos(ImVec2(m_OffsetX_, m_OffsetY_));
+<<<<<<< HEAD
 			ImGui::Image((void*)intptr_t(TextureId), ImVec2(m_ViewerSize_.x, m_ViewerSize_.y), m_UvMin_, m_UvMax_);
 			//DrawRectangleAroundItem(m_GreenColor_);
 
@@ -275,6 +280,13 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			}
 
 			
+=======
+
+			ImGui::Image((void*)intptr_t(TextureId), ImVec2(m_ViewerSize_.x, m_ViewerSize_.y), m_UvMin_, m_UvMax_);
+			DrawRectangleAroundItem(m_GreenColor_);
+
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 		}
 		else
@@ -302,6 +314,7 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 			// TODO : Add move render options with mouse
 
 			ImGui::SetCursorPos(ImVec2(m_OffsetX_, m_OffsetY_));
+<<<<<<< HEAD
 			ImGui::Image((void*)intptr_t(TextureId), m_ImageSize_, m_UvMin_, m_UvMax_);
 			DrawRectangleAroundItem(m_GreenColor_);
 
@@ -316,11 +329,18 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
 				ImGui::TextColored(m_GreenColor_, "%s", StandByText);
 			}
 
+=======
+
+			ImGui::Image((void*)intptr_t(TextureId), m_ImageSize_, m_UvMin_, m_UvMax_);
+			DrawRectangleAroundItem(m_GreenColor_);
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 			if (m_IsZooming_)
 			{
 				if (ImGui::BeginItemTooltip())
 				{
 					const float Zoom = 4.0f;
+<<<<<<< HEAD
             float TextureH = m_ImageSize_.y;
             float TextureW = m_ImageSize_.x;
 
@@ -346,6 +366,29 @@ void HorusViewportRadeon::ViewportRadeon(bool* p_open)
             ImGui::Image((void*)intptr_t(TextureId), ImVec2(RegionSz * Zoom, RegionSz * Zoom), Uv0, Uv1, TintCol, BorderCol);
             DrawRectangleAroundItem(m_GreenColor_);
             ImGui::EndTooltip();
+=======
+					float TextureH = m_ImageSize_.y;
+					float TextureW = m_ImageSize_.x;
+
+					float RegionSz = 32.0f;
+					float RegionX = Io.MousePos.x - CursorScreenPosition.x - RegionSz * 0.5f;
+					float RegionY = Io.MousePos.y - CursorScreenPosition.y - RegionSz * 0.5f;
+
+					ImVec4 TintCol = m_UseTextColorForTint_ ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+					ImVec4 BorderCol = ImGui::GetStyleColorVec4(ImGuiCol_Border);
+
+					if (RegionX < 0.0f) { RegionX = 0.0f; }
+					else if (RegionX > TextureW - RegionSz) { RegionX = TextureW - RegionSz; }
+					if (RegionY < 0.0f) { RegionY = 0.0f; }
+					else if (RegionY > TextureH - RegionSz) { RegionY = TextureH - RegionSz; }
+					ImGui::Text("Min: (%.2f, %.2f)", RegionX, RegionY);
+					ImGui::Text("Max: (%.2f, %.2f)", RegionX + RegionSz, RegionY + RegionSz);
+					ImVec2 Uv0 = ImVec2((RegionX) / TextureW, (RegionY) / TextureH);
+					ImVec2 Uv1 = ImVec2((RegionX + RegionSz) / TextureW, (RegionY + RegionSz) / TextureH);
+					ImGui::Image((void*)intptr_t(TextureId), ImVec2(RegionSz * Zoom, RegionSz * Zoom), Uv0, Uv1, TintCol, BorderCol);
+					DrawRectangleAroundItem(m_GreenColor_);
+					ImGui::EndTooltip();
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 				}
 			}
 

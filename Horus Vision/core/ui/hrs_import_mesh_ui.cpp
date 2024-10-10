@@ -7,7 +7,11 @@
 #include <assimp/scene.h>
 #include <assimp/DefaultLogger.hpp>
 
+<<<<<<< HEAD
 //#include "commonMetaData.h"
+=======
+#include "commonMetaData.h"
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 #include "hrs_console.h"
 #include "hrs_importer_utility.h"
 #include "hrs_import_flags.h"
@@ -18,6 +22,7 @@
 
 void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 {
+<<<<<<< HEAD
     if (!ImGui::IsPopupOpen("Import Mesh"))
         ImGui::OpenPopup("Import Mesh");
     ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_Appearing);
@@ -45,6 +50,12 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
     }
     
 
+=======
+	if (!ImGui::IsPopupOpen("Import Mesh"))
+		ImGui::OpenPopup("Import Mesh");
+	ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_Appearing);
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2 - 300, ImGui::GetIO().DisplaySize.y / 2 - 200 * 1.5), ImGuiCond_Appearing);
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	if (ImGui::BeginPopupModal("Import Mesh", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Import file");
@@ -83,12 +94,17 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 			ImGui::BeginChild("Import options", ImVec2(0, 200), false);
 			{
 				ImGui::Columns(2, nullptr, false);
+<<<<<<< HEAD
        			 ImGui::SetColumnWidth(0, 200);
+=======
+				ImGui::SetColumnWidth(0, 200);
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 				{
 					ImGui::Separator();
 					ImGui::Text("Import options");
 					ImGui::Separator();
 
+<<<<<<< HEAD
 						ImGui::Checkbox("Calc Tangents", &mPreProcessMeshData_.bCalcTangentSpace); ShowHandCursorOnHover();
 						ImGui::Checkbox("Make Left Handed", &mPreProcessMeshData_.bMakeLeftHanded); ShowHandCursorOnHover();
 						ImGui::Checkbox("Remove Component", &mPreProcessMeshData_.bRemoveComponent); ShowHandCursorOnHover();
@@ -127,6 +143,45 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 						ImGui::Checkbox("Embed Textures", &mPreProcessMeshData_.bEmbedTextures); ShowHandCursorOnHover();
 						ImGui::Checkbox("Drop Normals", &mPreProcessMeshData_.bDropNormals); ShowHandCursorOnHover();
 					
+=======
+					ImGui::Checkbox("Calc Tangents", &mPreProcessMeshData_.bCalcTangentSpace); ShowHandCursorOnHover();
+					ImGui::Checkbox("Make Left Handed", &mPreProcessMeshData_.bMakeLeftHanded); ShowHandCursorOnHover();
+					ImGui::Checkbox("Remove Component", &mPreProcessMeshData_.bRemoveComponent); ShowHandCursorOnHover();
+					ImGui::Checkbox("Gen Normals", &mPreProcessMeshData_.bGenNormals); ShowHandCursorOnHover();
+					ImGui::Checkbox("Split Large Meshes", &mPreProcessMeshData_.bSplitLargeMeshes); ShowHandCursorOnHover();
+					ImGui::Checkbox("Limit Bone Weights", &mPreProcessMeshData_.bLimitBoneWeights); ShowHandCursorOnHover();
+					ImGui::Checkbox("Improve Cache Locality", &mPreProcessMeshData_.bImproveCacheLocality); ShowHandCursorOnHover();
+					ImGui::Checkbox("Fix Infacing Normals", &mPreProcessMeshData_.bFixInfacingNormals); ShowHandCursorOnHover();
+					ImGui::Checkbox("Sort By PType", &mPreProcessMeshData_.bSortByPType); ShowHandCursorOnHover();
+					ImGui::Checkbox("Find Invalid Data", &mPreProcessMeshData_.bFindInvalidData); ShowHandCursorOnHover();
+					ImGui::Checkbox("Transform UV Coords", &mPreProcessMeshData_.bTransformUVCoords); ShowHandCursorOnHover();
+					ImGui::Checkbox("Optimize Meshes", &mPreProcessMeshData_.bOptimizeMeshes); ShowHandCursorOnHover();
+					ImGui::Checkbox("Flip UVs", &mPreProcessMeshData_.bFlipUVs); ShowHandCursorOnHover();
+					ImGui::Checkbox("Split By Bone Count", &mPreProcessMeshData_.bSplitByBoneCount); ShowHandCursorOnHover();
+					ImGui::Checkbox("Force Gen Normals", &mPreProcessMeshData_.bForceGenNormals); ShowHandCursorOnHover();
+					ImGui::Checkbox("Gen Bounding Boxes", &mPreProcessMeshData_.bGenBoundingBoxes); ShowHandCursorOnHover();
+					ImGui::Checkbox("Convert Axis", &mPreProcessMeshData_.bConvertAxis); ShowHandCursorOnHover();
+
+					ImGui::NextColumn();
+					ImGui::Checkbox("Join Identical Vertices", &mPreProcessMeshData_.bJoinIdenticalVertices); ShowHandCursorOnHover();
+					ImGui::Checkbox("Triangulate", &mPreProcessMeshData_.bTriangulate);
+					ImGui::Checkbox("Gen Normals", &mPreProcessMeshData_.bGenNormals); ShowHandCursorOnHover();
+					ImGui::Checkbox("Gen Smooth Normals", &mPreProcessMeshData_.bGenSmoothNormals); ShowHandCursorOnHover();
+					ImGui::Checkbox("Pre Transform Vertices", &mPreProcessMeshData_.bPreTransformVertices); ShowHandCursorOnHover();
+					ImGui::Checkbox("Validate Data Structure", &mPreProcessMeshData_.bValidateDataStructure); ShowHandCursorOnHover();
+					ImGui::Checkbox("Remove Redundant Materials", &mPreProcessMeshData_.bRemoveRedundantMaterials); ShowHandCursorOnHover();
+					ImGui::Checkbox("Populate Armature Data", &mPreProcessMeshData_.bPopulateArmatureData); ShowHandCursorOnHover();
+					ImGui::Checkbox("Find Degenerates", &mPreProcessMeshData_.bFindDegenerates); ShowHandCursorOnHover();
+					ImGui::Checkbox("Gen UV Coords", &mPreProcessMeshData_.bGenUVCoords); ShowHandCursorOnHover();
+					ImGui::Checkbox("Find Instances", &mPreProcessMeshData_.bFindInstances); ShowHandCursorOnHover();
+					ImGui::Checkbox("Optimize Graph", &mPreProcessMeshData_.bOptimizeGraph); ShowHandCursorOnHover();
+					ImGui::Checkbox("Flip Winding Order", &mPreProcessMeshData_.bFlipWindingOrder); ShowHandCursorOnHover();
+					ImGui::Checkbox("Debone", &mPreProcessMeshData_.bDebone); ShowHandCursorOnHover();
+					ImGui::Checkbox("Global Scale", &mPreProcessMeshData_.bGlobalScale); ShowHandCursorOnHover();
+					ImGui::Checkbox("Embed Textures", &mPreProcessMeshData_.bEmbedTextures); ShowHandCursorOnHover();
+					ImGui::Checkbox("Drop Normals", &mPreProcessMeshData_.bDropNormals); ShowHandCursorOnHover();
+
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 				}
 			} ImGui::EndChild();
 
@@ -202,6 +257,7 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 			ImGui::SliderFloat3("##Rotate", &mPreProcessMeshData_.ImportRotate.x, -360.0f, 360.0f);
 
 			ImGui::Text("Scale");
+<<<<<<< HEAD
 			ImGui::PushID("Scale");
 			ImGui::SliderFloat3("##Scale", &mPreProcessMeshData_.ImportScale.x, 0.0f, 10.0f);
 			ImGui::SameLine();
@@ -213,6 +269,9 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 				mPreProcessMeshData_.ImportScale = glm::vec3(scaleMean);
 			}
 			ImGui::PopID();
+=======
+			ImGui::SliderFloat3("##Scale", &mPreProcessMeshData_.ImportScale.x, 0.0f, 10.0f);
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 			ImGui::Text("Uniform Scale");
 			ImGui::SliderFloat("##Uniform Scale", &mPreProcessMeshData_.ImportUniformScale.x, 0.0f, 10.0f);
@@ -222,6 +281,7 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 		ImGui::Separator();
 		if (ImGui::CollapsingHeader("File Informations"))
 		{
+<<<<<<< HEAD
 			if (mPreProcessMeshData_.FileVersion.empty())
 			{
 				ImGui::Text("File Version:");
@@ -260,6 +320,11 @@ void HorusImportMeshUI::ImportMeshUI(bool* p_open)
 				ImGui::SameLine();
 				ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "%s", mPreProcessMeshData_.FileFormat.c_str());
 			}
+=======
+			ImGui::Text("File Version: %s", mPreProcessMeshData_.FileVersion.c_str());
+			ImGui::Text("File Creator: %s", mPreProcessMeshData_.FileCreator.c_str());
+			ImGui::Text("File Format: %s", mPreProcessMeshData_.FileFormat.c_str());
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 		}
 
 		ImGui::Spacing();
@@ -415,23 +480,36 @@ bool HorusImportMeshUI::PreProcessFileInformations(PreProcessMeshData& Data, std
 		}
 	}
 
+<<<<<<< HEAD
 	// Vérifier si les informations du fichier sont manquantes et définir des valeurs par défaut
 	if (Data.FileVersion.empty())
 	{
 		Data.FileVersion = "Unknown";
 		spdlog::warn("File Version is unknown");
 		kConsole.AddLog(" [warn] File Version is unknown");
+=======
+	if (Data.FileVersion.empty())
+	{
+		spdlog::warn("File Version is empty");
+		kConsole.AddLog(" [warn] File Version is empty");
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	}
 
 	if (Data.FileCreator.empty())
 	{
+<<<<<<< HEAD
 		Data.FileCreator = "Unknown";
 		spdlog::warn("File Creator is unknown");
 		kConsole.AddLog(" [warn] File Creator is unknown");
+=======
+		spdlog::warn("File Creator is empty");
+		kConsole.AddLog(" [warn] File Creator is empty");
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	}
 
 	if (Data.FileFormat.empty())
 	{
+<<<<<<< HEAD
 		// Essayer de déduire le format du fichier à partir de l'extension
 		std::string extension = std::filesystem::path(kPath).extension().string();
 		if (!extension.empty()) {
@@ -441,6 +519,10 @@ bool HorusImportMeshUI::PreProcessFileInformations(PreProcessMeshData& Data, std
 		}
 		spdlog::warn("File Format is deduced from extension: {}", Data.FileFormat);
 		kConsole.AddLog(" [warn] File Format is deduced from extension: %s", Data.FileFormat.c_str());
+=======
+		spdlog::warn("File Format is empty");
+		kConsole.AddLog(" [warn] File Format is empty");
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	}
 
 	if (Data.NumMeshes == 0) {
@@ -583,4 +665,8 @@ void HorusImportMeshUI::CreateModelDataWithPreProcessedFile(PreProcessMeshData& 
 
 	ClearProcessedData(mPreProcessMeshData_, true);
 	HorusResetBuffers::GetInstance().CallResetBuffers();
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
