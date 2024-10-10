@@ -11,13 +11,16 @@
 #include "hrs_outliner.h"
 #include "hrs_inspector.h"
 #include "hrs_console.h"
+#include "hrs_horus_parameters.h"
 
 #include "hrs_imgui_core.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-
 #include "hrs_about.h"
 #include "hrs_help.h"
+#include "hrs_import_mesh_ui.h"
+#include "hrs_om_group_shapes.h"
+#include "hrs_opengl_viewport.h"
+#include "hrs_radeon_viewport.h"
 #include "hrs_statistics.h"
 #include "hrs_utils.h"
 #include "../scene/hrs_importer_manager.h"
@@ -88,7 +91,8 @@ void ImportObjectThread(std::string FilePath)
 	spdlog::debug("Starting Import thread.");
 
 	const std::string MeshName = std::filesystem::path(FilePath).stem().string();
-	HorusObjectManager::GetInstance().CreateGroupShape(FilePath.c_str(), MeshName);
+	// Change by HorusgroupShapeManager
+	HorusGroupShapeManager::GetInstance().CreateGroupShape(MeshName, FilePath.c_str());
 
 	spdlog::debug("Exiting Import thread.");
 }
@@ -100,7 +104,6 @@ void HorusUI::MainMenuBar()
 		if (m_LoadLogoTexture_ == true)
 		{
 			bool Ret = LoadTextureFromFile("resources/Icons/Horus_Logo_100x20.png", &m_LogoTexture_, &m_LogoWidth_, &m_LogoHeight_);
-			
 			if (!Ret)
 			{
 				spdlog::error("Can't load Horus logo texture.");
@@ -151,6 +154,7 @@ void HorusUI::MainMenuBar()
 				//threadCaller();
 			}
 			ShowHandCursorOnHover();
+			ImGui::EndDisabled();
 
 			if (ImGui::MenuItem("Load test scene", "Ctrl+L"))
 			{
@@ -158,26 +162,10 @@ void HorusUI::MainMenuBar()
 				//HorusObjectManager::GetInstance().ShowJaguardXKSS();
 			}
 			ShowHandCursorOnHover();
-			ImGui::EndDisabled();
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Import mesh.."))
-			{
-				std::string FilePath = Utils::HorusFileDialog::OpenFile("3D Files (*.fbx;*.obj;*.dae;*.3ds;*.blend;*.stl;*.gltf;*.ply;*.max;*.c4d)\0*.fbx;*.obj;*.dae;*.3ds;*.blend;*.stl;*.gltf;*.ply;*.max;*.c4d\0");
-
-				if (!FilePath.empty())
-				{
-					std::thread t(ImportObjectThread, FilePath);
-					t.detach();
-				}
-				else if (FilePath.empty())
-				{
-					spdlog::error("Can't import mesh : {} file path is empty.", FilePath);
-				}
-			}
-			ShowHandCursorOnHover();
-
+			ImGui::MenuItem("Import Mesh..", nullptr, &mShowImportMesh_); ShowHandCursorOnHover();
 
 			/*if (ImGui::MenuItem("Export mesh.."))
 			{
@@ -254,29 +242,28 @@ void HorusUI::MainMenuBar()
 		{
 			ImGui::SeparatorText("Show / Hide");
 
-			//ImGui::MenuItem("Viewer", nullptr, &m_ShowOpenGLViewport_); ShowHandCursorOnHover(); // TODO : Activate when OpenGL viewport is ready
-			ImGui::MenuItem("Render", nullptr, &m_ShowRadeonViewport_); ShowHandCursorOnHover();
-			ImGui::MenuItem("Outliner", nullptr, &m_ShowOutliner_); ShowHandCursorOnHover();
-			ImGui::MenuItem("Console", nullptr, &m_ShowConsole_); ShowHandCursorOnHover();
-			//ImGui::MenuItem("Scene", nullptr, &m_ShowScene_); ShowHandCursorOnHover();
-			ImGui::MenuItem("Inspector", nullptr, &m_ShowInspector_); ShowHandCursorOnHover();
-			ImGui::MenuItem("Statistics", nullptr, &m_ShowStatistics_); ShowHandCursorOnHover();
-			
+			ImGui::MenuItem(HORUS_UI_NAME_OPENGLVIEWPORT.c_str(), nullptr, &mShowOpenGlViewport_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_RADEONVIEWPORT.c_str(), nullptr, &mShowRadeonViewport_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_OUTLINER.c_str(), nullptr, &mShowOutliner_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_CONSOLE.c_str(), nullptr, &mShowConsole_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_INSPECTOR.c_str(), nullptr, &mShowInspector_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_STATISTICS.c_str(), nullptr, &mShowStatistics_); ShowHandCursorOnHover();
+
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Help"))
+		if (ImGui::BeginMenu(HORUS_UI_NAME_HELP.c_str()))
 		{
-			ImGui::MenuItem("Documentation", nullptr, &m_ShowHelp_); ShowHandCursorOnHover();
-			ImGui::MenuItem("About", nullptr, &m_ShowAbout_); ShowHandCursorOnHover();
+			ImGui::MenuItem("Documentation", nullptr, &mShowHelp_); ShowHandCursorOnHover();
+			ImGui::MenuItem(HORUS_UI_NAME_ABOUT.c_str(), nullptr, &mShowAbout_); ShowHandCursorOnHover();
 
 			ImGui::EndMenu();
 		}
 
 		const float WindowWidth = ImGui::GetWindowWidth();
-		const float TextWidth = ImGui::CalcTextSize("Version 1.3.0").x;
+		const float TextWidth = ImGui::CalcTextSize("Version 0.0.0").x; // for size of the text only
 		ImGui::SetCursorPosX(WindowWidth - TextWidth - ImGui::GetStyle().ItemSpacing.x);
-		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), "Version 1.3.0");
+		ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1.0f), HORUS_APP_VERSION.c_str());
 
 		ImGui::EndMainMenuBar();
 	}
@@ -285,46 +272,53 @@ void HorusUI::MainMenuBar()
 void HorusUI::RenderUI()
 {
 	MainMenuBar();
+	
 
-	if (m_ShowOpenGLViewport_)
+	if (mShowOpenGlViewport_)
 	{
-		HorusViewportOpenGL::GetInstance().ViewportOpenGL(&m_ShowOpenGLViewport_);
+		HorusViewportOpenGL::GetInstance().ViewportOpenGL(&mShowOpenGlViewport_);
 	}
 
-	if (m_ShowRadeonViewport_)
+	if (mShowRadeonViewport_)
 	{
-		HorusViewportRadeon::GetInstance().ViewportRadeon(&m_ShowRadeonViewport_);
+		HorusViewportRadeon::GetInstance().ViewportRadeon(&mShowRadeonViewport_);
 	}
 
-	if (m_ShowInspector_)
+	if (mShowInspector_)
 	{
-		HorusInspector::GetInstance().Inspector(&m_ShowInspector_);
+		HorusInspector::GetInstance().Inspector(&mShowInspector_);
 	}
 
-	if (m_ShowOutliner_)
+	if (mShowOutliner_)
 	{
-		HorusOutliner::GetInstance().Outliner(&m_ShowOutliner_);
+		HorusOutliner::GetInstance().Outliner(&mShowOutliner_);
 	}
 
-	if (m_ShowConsole_)
+	if (mShowConsole_)
 	{
-		HorusConsole::GetInstance().Console(&m_ShowConsole_);
+		HorusConsole::GetInstance().Console(&mShowConsole_);
 	}
 
-	if (m_ShowStatistics_)
+	if (mShowStatistics_)
 	{
-		HorusStatistics::GetInstance().Statistics(&m_ShowStatistics_);
+		HorusStatistics::GetInstance().Statistics(&mShowStatistics_);
 	}
 
-	if (m_ShowAbout_)
+	if (mShowAbout_)
 	{
-		HorusAbout::GetInstance().About(&m_ShowAbout_);
+		HorusAbout::GetInstance().About(&mShowAbout_);
 	}
 
-	if (m_ShowHelp_)
+	if (mShowHelp_)
 	{
-		HorusHelp::GetInstance().RenderHelp(&m_ShowHelp_);
+		HorusHelp::GetInstance().RenderHelp(&mShowHelp_);
 	}
+
+	if (mShowImportMesh_)
+	{
+		HorusImportMeshUI::GetInstance().ImportMeshUI(&mShowImportMesh_);
+	}
+
 }
 
 void HorusUI::ResetBuffers()

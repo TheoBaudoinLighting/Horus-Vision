@@ -69,15 +69,60 @@ public:
 	void Add(rpr_composite composite) { Adding((void*)composite, Composite); }
 	void Add(rpr_post_effect postEffect) { Adding((void*)postEffect, PostEffect); }
 
-	void Clean()
-	{
-		for (const auto& Fst : m_NodesCollector_ | std::views::keys)
-		{
-			//std::cout << "Cleaning " << Fst << '\n';
-			CHECK(rprObjectDelete(Fst));
+	//void Clean()
+	//{
+	//	for (const auto& Fst : m_NodesCollector_ | std::views::keys)
+	//	{
+	//		//std::cout << "Cleaning " << Fst << '\n';
+	//		CHECK(rprObjectDelete(Fst));
+	//	}
+	//	m_NodesCollector_.clear();
+	//}
+
+	void Clean() {
+		try {
+			for (const auto& [nodeId, objectPtr] : m_NodesCollector_) {
+
+				if (objectPtr == ObjectType::Material) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_material_node>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Image) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_image>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Shape) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_shape>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Light) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_light>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Framebuffer) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_framebuffer>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Camera) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_camera>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Scene) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_scene>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::Composite) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_composite>(nodeId)));
+				}
+				else if (objectPtr == ObjectType::PostEffect) {
+					CHECK(rprObjectDelete(reinterpret_cast<rpr_post_effect>(nodeId)));
+				}
+				else
+				{
+					std::cout << "Unknown object type" << '\n';
+				}
+			}
+
+			m_NodesCollector_.clear();
 		}
-		m_NodesCollector_.clear();
+		catch (const std::exception& e) {
+			std::cout << "Error cleaning garbage collector: " << e.what() << '\n';
+		}
 	}
+
 
 
 private:

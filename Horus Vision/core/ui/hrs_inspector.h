@@ -103,6 +103,8 @@ public:
 
 	// --- Texture ---
 
+	bool IsValidFileImage(const std::string& filePath);
+
 	// --- Material ---
 	void DrawSwitchColorToTextureButton(bool& switchVariable, const char* id);
 	void DrawParameterWithFileDialog(std::string& filePath, bool& parameterEnabled, const std::string& buttonID, const char* fileFilter, const std::string&
@@ -131,6 +133,7 @@ public:
 
 	// --- Project ---
 	void PopulateSelectedProjectInfos();
+	bool ExportToFile(const char* filepath, bool Overwrite, bool EmergencyRender);
 
 private:
 

@@ -1,158 +1,13 @@
-
 #include "hrs_opengl_camera.h"
 #include "hrs_object_manager.h"
+#include "hrs_grid.h"
 
+#include "hrs_om_camera.h"
+#include "hrs_om_id_manager.h"
 #include "ProRenderGLTF.h"
 #include "spdlog/spdlog.h"
 
 // Camera management ------------------------------------------------------------------------------
-
-void HorusObjectManager::TransfertDataBetwweenCamera(int id, int id2)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-	HorusOpenGLCamera& Camera2 = GetOpenGlCamera(id2);
-
-	Camera2.SetLookAt(Camera.GetLookAt());
-	Camera2.SetPosition(Camera.GetPosition());
-	Camera2.SetCameraRotation(Camera.GetRotation());
-	Camera2.SetCameraScale(Camera.GetCameraScale());
-	Camera2.SetFov(Camera.GetFov());
-	Camera2.SetAspectRatio(Camera.GetAspect());
-	Camera2.SetClipping(Camera.GetNear(), Camera.GetFar());
-}
-int HorusObjectManager::CreateOpenGlCamera(std::string Name)
-{
-	std::string CameraName = Name;
-
-	int Suffix = 001;
-
-	while (m_ObjectNameToIdMap_.contains(CameraName))
-	{
-		CameraName = Name + std::to_string(Suffix);
-		Suffix++;
-
-		spdlog::info("Camera name already exists, trying {} instead", CameraName);
-	}
-
-	int Id = IDManager::GetInstance().GetNewId();
-
-	HorusOpenGLCamera& NewCamera = m_OpenGlCameras_[Id];
-	NewCamera.Init();
-	m_OpenGlCameraNames_[Id] = CameraName;
-	m_ObjectNameToIdMap_[CameraName] = Id;
-	m_ActiveRadeonCameraId_ = Id;
-
-	spdlog::info("Camera {} created with id: {}", CameraName, Id);
-
-	return Id;
-}
-int HorusObjectManager::CreateRadeonCamera(int SceneID, const std::string Name)
-{
-	std::string CameraName = Name;
-
-	int Suffix = 001;
-
-	while (m_ObjectNameToIdMap_.contains(CameraName))
-	{
-		CameraName = Name + std::to_string(Suffix);
-		Suffix++;
-
-		spdlog::info("Camera name already exists, trying {} instead", CameraName);
-	}
-
-	int Id = IDManager::GetInstance().GetNewId();
-
-	HorusRadeonCamera& NewCamera = m_RadeonCameras_[Id];
-	NewCamera.Init(CameraName);
-	//m_cameras_[id] = new_camera;
-	m_RadeonCameraNames_[Id] = CameraName;
-	m_ObjectNameToIdMap_[CameraName] = Id;
-	m_ActiveRadeonCameraId_ = Id;
-
-	spdlog::info("Camera {} created with id: {}", CameraName, Id);
-
-	return Id;
-}
-int HorusObjectManager::CreateRadeonCameraFromGLTF(int SceneID, std::string Name, rpr_camera Camera)
-{
-	std::string CameraName = Name;
-
-	int Suffix = 001;
-
-	while (m_ObjectNameToIdMap_.contains(CameraName))
-	{
-		CameraName = Name + std::to_string(Suffix);
-		Suffix++;
-
-		spdlog::info("Camera name already exists, trying {} instead", CameraName);
-	}
-
-	int Id = IDManager::GetInstance().GetNewId();
-
-	HorusRadeonCamera& NewCamera = m_RadeonCameras_[Id];
-	NewCamera.Init(CameraName);
-	m_RadeonCameraNames_[Id] = CameraName;
-	m_ObjectNameToIdMap_[CameraName] = Id;
-	m_ActiveRadeonCameraId_ = Id;
-
-	spdlog::info("Camera {} created with id: {}", CameraName, Id);
-
-	return Id;
-}
-void HorusObjectManager::DestroyCamera(int id)
-{
-	if (id == m_ActiveRadeonCameraId_)
-	{
-		if (!m_RadeonCameras_.empty())
-		{
-			m_ActiveRadeonCameraId_ = m_RadeonCameras_.begin()->first;
-		}
-		else
-		{
-			CreateRadeonCamera(GetActiveSceneId(), "DefaultCamera");
-		}
-	}
-
-	if (auto It = m_RadeonCameras_.find(id); It != m_RadeonCameras_.end())
-	{
-		It->second.Destroy();
-		m_RadeonCameras_.erase(It);
-		m_RadeonCameraNames_.erase(id);
-	}
-	else
-	{
-		spdlog::error("no camera with this id exists. ");
-	}
-
-	IDManager::GetInstance().ReleaseId(id);
-
-	if (m_RadeonCameras_.empty())
-	{
-		CreateRadeonCamera(GetActiveSceneId(), "DefaultCamera");
-	}
-}
-
-void HorusObjectManager::BindRadeonCamera(int id)
-{
-	m_RadeonCameras_[id].Bind();
-}
-void HorusObjectManager::UnbindRadeonCamera(int id)
-{
-	m_RadeonCameras_[id].Unbind();
-}
-
-void HorusObjectManager::UpdateRadeonCamera(int id)
-{
-	m_RadeonCameras_[id].UpdateCamera();
-}
-void HorusObjectManager::UpdateOpenGLCamera(int id)
-{
-	m_OpenGlCameras_[id].UpdateCamera();
-}
-void HorusObjectManager::SendToShaderOpenGLCamera(int id, const HorusShaderManager& Shader)
-{
-	m_OpenGlCameras_[id].SendToShader(Shader);
-}
 
 void HorusObjectManager::SetBackgroundImage(const std::string& path)
 {
@@ -163,180 +18,130 @@ void HorusObjectManager::UnsetBackgroundImage()
 	m_BackgroundMaterial_.UnsetBackgroundImage();
 }
 
-void HorusObjectManager::CameraExtractor(rpr_camera& Camera)
+// OpenGL Core Objects ----------------------------------------------------------------------------
+
+int HorusObjectManager::CreateGrid(float Width, float Height, float Slices, const std::string& Name)
 {
-	if (Camera == nullptr)
-	{
-		std::cerr << "Camera is null" << '\n';
-		return;
-	}
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	std::string GridName = Name;
 
-	glm::mat4 Transform = glm::mat4(0.0f);
-	rprCameraGetInfo(Camera, RPR_CAMERA_TRANSFORM, sizeof(glm::mat4), &Transform, nullptr);
-	std::cout << "Transform: (" << Transform[0][0] << ", " << Transform[0][1] << ", " << Transform[0][2] << ", " << Transform[0][3] << ")" << '\n';
-
-	// Extract matricies from the camera
-	// Position in matrix
-	std::cout << "Position: (" << Transform[3][0] << ", " << Transform[3][1] << ", " << Transform[3][2] << ")" << '\n';
-	// Lookat in matrix
-	std::cout << "Lookat: (" << Transform[2][0] << ", " << Transform[2][1] << ", " << Transform[2][2] << ")" << '\n';
-	// Up in matrix
-	std::cout << "Up: (" << Transform[1][0] << ", " << Transform[1][1] << ", " << Transform[1][2] << ")" << '\n';
-
-
-
-
-
-
-	rpr_float fov = 0.0f;
-	rprCameraGetInfo(Camera, RPR_CAMERA_FSTOP, sizeof(fov), &fov, nullptr);
-	std::cout << "FOV: " << fov << " degrees" << '\n';
-}
-void HorusObjectManager::PrintCameraInfo(int id)
-{
-	m_RadeonCameras_[id].VariableCheckers("Manual Check");
-}
-void HorusObjectManager::ResetCamera(int id)
-{
-	m_RadeonCameras_[id].Reset();
-}
-
-// Getters
-void HorusObjectManager::GetMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model)
-{
-	m_RadeonCameras_[id].GetMatrices(projection, view, model);
-}
-void HorusObjectManager::GetOpenGLCameraMatrices(int id, glm::mat4& projection, glm::mat4& view, glm::mat4& model)
-{
-	m_OpenGlCameras_[id].GetMatricies(view, projection, model);
-}
-int HorusObjectManager::GetActiveRadeonCameraId()
-{
-	return m_ActiveRadeonCameraId_;
-}
-int HorusObjectManager::GetActiveOpenGLCameraId()
-{
-	return m_ActiveOpenGLCameraId_;
-}
-int HorusObjectManager::GetCameraIdByName(const char* name)
-{
-	if (!m_ObjectNameToIdMap_.contains(name))
-	{
-		spdlog::error("no camera with this name exists. ");
-	}
-
-	return m_ObjectNameToIdMap_[name];
-}
-
-// Setters
-void HorusObjectManager::SetPitch(int id, float pitch)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	spdlog::info("Camera ID: {} Pitch: {}", id, pitch);
-
-	Camera.ChangePitch(pitch);
-}
-void HorusObjectManager::SetHeading(int id, float heading)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	spdlog::info("Camera ID: {} Heading: {}", id, heading);
-
-	Camera.ChangeHeading(heading);
-}
-void HorusObjectManager::SetTumbleCamera(int id, float x, float y, float sensitivity)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.Tumbling(x, y, sensitivity);
-}
-void HorusObjectManager::SetPanCamera(int id, float x, float y, float sensitivity)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.Pan(x, y, sensitivity);
-}
-void HorusObjectManager::SetZoomCamera(int id, float distance)
-{
-	HorusRadeonCamera& Camera = GetRadeonCamera(id);
-
-	Camera.Zoom(distance);
-}
-void HorusObjectManager::SetViewport(int id, int x, int y, int width, int height)
-{
-	m_RadeonCameras_[id].SetViewport(x, y, width, height);
-}
-void HorusObjectManager::SetActiveRadeonCamera(int id)
-{
-	if (!m_RadeonCameras_.contains(id))
-	{
-		spdlog::error("no camera with this id exists. ");
-	}
-
-	m_ActiveRadeonCameraId_ = id;
-}
-void HorusObjectManager::SetActiveOpenGLCamera(int id)
-{
-	if (!m_OpenGlCameras_.contains(id))
-	{
-		spdlog::error("no camera with this id exists. ");
-	}
-
-	m_ActiveOpenGLCameraId_ = id;
-}
-
-// Group Shape management -------------------------------------------------------------------------------
-
-int HorusObjectManager::CreateGroupShape(const char* path, const std::string& name)
-{
-	std::string GroupShapeName = name;
 	int Suffix = 001;
 
-	// Check the uniqueness of the name
-	while (m_ObjectNameToIdMap_.contains(GroupShapeName))
+	while (IdManager.ContainsName(GridName))
 	{
-		GroupShapeName = name + std::to_string(Suffix);
+		GridName = Name + std::to_string(Suffix);
 		Suffix++;
 
-		spdlog::info("Mesh name already exists, trying {} instead", GroupShapeName);
+		spdlog::info("Grid name already exists, trying {} instead", GridName);
 	}
 
-	// Create a new ID for The group shape
-	int Id = IDManager::GetInstance().GetNewId();
+	int Id = HorusIdManager::GetInstance().GetNewId();
 
-	// Initializing the new group shape
-	auto& NewGroupShape = m_GroupShape_[Id];
-	NewGroupShape.Init(path);
+	HorusGrid& NewGrid = m_Grids_[Id];
+	NewGrid.Init(Width, Height, Slices);
+	m_GridNames_[Id] = GridName;
+	IdManager.SetObjectNameToID(GridName, Id);
+	m_ActiveGridId_ = Id;
 
-	// Attribuate an ID to each shape of the group shape and store it in a map
-	std::vector<std::pair<rpr_shape, std::string>> AssociatedShapes = NewGroupShape.GetShapeAndName();
-	std::vector<rpr_shape> ShapeVector;
 
-	for (const auto& [shape, shapeName] : AssociatedShapes)
-	{
-		int ShapeId = IDManager::GetInstance().GetNewId();
-		m_ObjectNameToIdMap_[shapeName] = ShapeId;
-		m_Shapes_[ShapeId] = shape;
-		ShapeVector.push_back(shape);
-	}
-
-	m_MeshShapeMap_[GroupShapeName] = ShapeVector;
-	m_GroupShapeNames_[Id] = GroupShapeName;
-	m_ObjectNameToIdMap_[GroupShapeName] = Id;
-	m_ActiveGroupShapeId_ = Id;
-
-	spdlog::info("Mesh {} created with id: {}", GroupShapeName, Id);
+	spdlog::info("Grid {} created with id: {}", GridName, Id);
 
 	return Id;
 }
+
+int HorusObjectManager::GetActiveGridId()
+{
+	return m_ActiveGridId_;
+}
+
+void HorusObjectManager::DrawGrid(int id, GLuint ProgramID, HorusOpenGLCamera& Camera)
+{
+    if (m_Grids_.find(id) != m_Grids_.end()) {
+        m_Grids_[id].Draw(ProgramID, Camera);
+    } else {
+        spdlog::error("Grid with id {} does not exist.", id);
+    }
+}
+// Group Shape management -------------------------------------------------------------------------------
+int HorusObjectManager::CreateGroupShape(const char* Path, const std::string& Name)
+{
+	HorusIdManager& kIdManager = HorusIdManager::GetInstance();
+	std::string kGroupShapeName = Name;
+	int kSuffix = 001;
+
+	// Check the uniqueness of the name
+	while (kIdManager.ContainsName(kGroupShapeName))
+	{
+		kGroupShapeName = Name + std::to_string(kSuffix);
+		kSuffix++;
+
+		spdlog::info("Mesh name already exists, trying {} instead", kGroupShapeName);
+	}
+
+	int Id = HorusIdManager::GetInstance().GetNewId();
+
+	auto& kNewGroupShape = m_GroupShape_[Id];
+	kNewGroupShape.Init(Path);
+
+
+
+
+
+
+	spdlog::info("Mesh {} created with id: {}", kGroupShapeName, Id);
+	return Id;
+}
+
+HorusOpenGlShape HorusObjectManager::CreateSingleOpenGlShape(const char* path, const std::string& name)
+{
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	std::string ShapeName = name;
+
+	int Suffix = 001;
+
+	while (IdManager.ContainsName(ShapeName))
+	{
+		ShapeName = name + std::to_string(Suffix);
+		Suffix++;
+
+		spdlog::info("Shape name already exists, trying {} instead", ShapeName);
+	}
+
+	int Id = HorusIdManager::GetInstance().GetNewId();
+
+	std::vector<VertexData> Vertices;
+	std::vector<GLuint> Indices;
+
+	std::vector<std::tuple<HorusOpenGlShape, std::string>> m_OpenGlShape_;
+
+
+	HorusOpenGlShape NewShape;
+
+	//NewShape = m_OpenGlShape_[0];*/
+
+	NewShape.InitOpenGlMesh(Vertices, Indices);
+	IdManager.SetObjectNameToID(ShapeName, Id);
+
+	spdlog::info("OpenGL shape {} created with id: {}", ShapeName, Id);
+
+	return NewShape;
+}
+
+void HorusObjectManager::DrawAllModel(GLuint ProgramID, HorusOpenGLCamera& Camera)
+{
+	for (auto& Mesh : m_OpenGlShapes_ | std::views::values)
+	{
+		Mesh.Draw(ProgramID, Camera);
+	}
+}
+
 void HorusObjectManager::DestroyGroupShape(int id)
 {
-	if (auto It = m_GroupShape_.find(id); It != m_GroupShape_.end())
+	/*if (auto It = m_GroupShape_.find(id); It != m_GroupShape_.end())
 	{
 		m_GroupShape_[id].DestroyGroupShape();
 		m_GroupShape_.erase(It);
-		m_GroupShapeNames_.erase(id);
+		m_RadeonGroupShapeNames_.erase(id);
 	}
 	else
 	{
@@ -348,47 +153,45 @@ void HorusObjectManager::DestroyGroupShape(int id)
 			m_ObjectNameToIdMap_.erase(It);
 			break;
 		}
-	}
+	}*/
 
-	IDManager::GetInstance().ReleaseId(id);
+	HorusIdManager::GetInstance().ReleaseId(id);
 }
 void HorusObjectManager::DestroyGroupShapeByName(const char* name)
 {
-	if (!m_ObjectNameToIdMap_.contains(name))
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	if (!IdManager.ContainsName(name))
 	{
 		spdlog::error("no mesh with this name exists. ");
 	}
 
-	int Id = m_ObjectNameToIdMap_[name];
+	int Id = IdManager.GetIdFromObjectName(name);
 
 	if (auto It = m_GroupShape_.find(Id); It != m_GroupShape_.end())
 	{
 		m_GroupShape_[Id].DestroyGroupShape();
 		m_GroupShape_.erase(It);
-		m_GroupShapeNames_.erase(Id);
+		m_RadeonGroupShapeNames_.erase(Id);
 	}
 	else
 	{
 		spdlog::error("no mesh with this id exists. ");
 	}
 
-	for (auto It = m_ObjectNameToIdMap_.begin(); It != m_ObjectNameToIdMap_.end(); ++It)
+	for (auto It = IdManager.GetObjectNameToIdMap().begin(); It != IdManager.GetObjectNameToIdMap().end(); ++It)
 	{
 		if (It->second == Id)
 		{
-			m_ObjectNameToIdMap_.erase(It);
+			IdManager.GetObjectNameToIdMap().erase(It);
 			break;
 		}
 	}
 
-	IDManager::GetInstance().ReleaseId(Id);
+	HorusIdManager::GetInstance().ReleaseId(Id);
 }
 void HorusObjectManager::DestroyAllGroupShape()
 {
-	for (auto& Val : m_GroupShape_ | std::views::values)
-	{
-		Val.DestroyGroupShape();
-	}
+	
 }
 
 // Getters
@@ -396,13 +199,13 @@ std::map<std::string, std::vector<std::string>>& HorusObjectManager::GetGroupSha
 {
 	return m_GroupObjectOutlinerData_;
 }
-HorusGroupShape& HorusObjectManager::GetGroupShape(int id)
+HorusShape& HorusObjectManager::GetGroupShape(int id)
 {
 	return m_GroupShape_[id];
 }
 std::string& HorusObjectManager::GetGroupShapeName(int id)
 {
-	std::string& Name = m_GroupShapeNames_[id];
+	std::string& Name = m_RadeonGroupShapeNames_[id];
 
 	return Name;
 }
@@ -412,16 +215,17 @@ int HorusObjectManager::GetGroupShapeCount(int count)
 }
 int HorusObjectManager::GetGroupShapeId(const char* name)
 {
-	if (!m_ObjectNameToIdMap_.contains(name))
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	if (!IdManager.GetObjectNameToIdMap().contains(name))
 	{
 		spdlog::error("no mesh with this name exists. ");
 	}
 
-	return m_ObjectNameToIdMap_[name];
+	return IdManager.GetObjectNameToIdMap()[name];
 }
 int HorusObjectManager::GetActiveGroupShapeId()
 {
-	return m_ActiveGroupShapeId_;
+	return m_ActiveRadeonGroupShapeId_;
 }
 glm::mat4 HorusObjectManager::GetGroupShapeTransform(int id)
 {
@@ -435,19 +239,19 @@ glm::mat4 HorusObjectManager::GetGroupShapeTransform(int id)
 }
 glm::vec3 HorusObjectManager::GetGroupShapePosition(int id)
 {
-	HorusGroupShape& Mesh = GetGroupShape(id);
+	HorusShape& Mesh = GetGroupShape(id);
 
 	return Mesh.GetGroupShapePosition();
 }
 glm::vec3 HorusObjectManager::GetGroupShapeRotation(int id)
 {
-	HorusGroupShape& Mesh = GetGroupShape(id);
+	HorusShape& Mesh = GetGroupShape(id);
 
 	return Mesh.GetGroupShapeRotation();
 }
 glm::vec3 HorusObjectManager::GetGroupShapeScale(int id)
 {
-	HorusGroupShape& Mesh = GetGroupShape(id);
+	HorusShape& Mesh = GetGroupShape(id);
 
 	return Mesh.GetGroupShapeScale();
 }
@@ -455,7 +259,7 @@ glm::vec3 HorusObjectManager::GetGroupShapeScale(int id)
 // Setters
 void HorusObjectManager::SetActiveGroupShape(int id)
 {
-	m_ActiveGroupShapeId_ = id;
+	m_ActiveRadeonGroupShapeId_ = id;
 }
 void HorusObjectManager::SetGroupShapeName(int id, const char* name)
 {
@@ -464,7 +268,7 @@ void HorusObjectManager::SetGroupShapeName(int id, const char* name)
 		spdlog::error("no mesh with this id exists. ");
 	}
 
-	m_GroupShapeNames_[id] = name;
+	m_RadeonGroupShapeNames_[id] = name;
 }
 void HorusObjectManager::SetGroupShapeId(int id, int new_id)
 {
@@ -486,7 +290,7 @@ void HorusObjectManager::SetGroupShapePosition(int id, glm::vec3 pos)
 
 	m_GroupShape_[id].SetGroupShapePosition(pos);
 
-	for (auto& shapeId : m_MeshShapeMap_[m_GroupShapeNames_[id]])
+	for (auto& shapeId : m_RadeonMeshShapeMap_[m_RadeonGroupShapeNames_[id]])
 	{
 		/*SetShapePositionById(shapeId, pos);
 		auto shape = GetShapeById(shapeId);
@@ -495,6 +299,7 @@ void HorusObjectManager::SetGroupShapePosition(int id, glm::vec3 pos)
 }
 void HorusObjectManager::SetGroupShapeRotation(int id, glm::vec3 rot)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	if (!m_GroupShape_.contains(id))
 	{
 		spdlog::error("no mesh with this id exists. ");
@@ -502,14 +307,15 @@ void HorusObjectManager::SetGroupShapeRotation(int id, glm::vec3 rot)
 
 	m_GroupShape_[id].SetGroupShapeRotation(rot);
 
-	for (auto& Shape : m_MeshShapeMap_[m_GroupShapeNames_[id]])
+	for (auto& Shape : m_RadeonMeshShapeMap_[m_RadeonGroupShapeNames_[id]])
 	{
-		SetShapeRotationById(m_ObjectNameToIdMap_[m_GroupShapeNames_[id]], rot);
+		SetShapeRotationById(IdManager.GetObjectNameToIdMap()[m_RadeonGroupShapeNames_[id]], rot);
 		UpdateShapeTransforms(Shape);
 	}
 }
 void HorusObjectManager::SetGroupShapeScale(int id, glm::vec3 scale)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	if (!m_GroupShape_.contains(id))
 	{
 		spdlog::error("no mesh with this id exists. ");
@@ -517,9 +323,9 @@ void HorusObjectManager::SetGroupShapeScale(int id, glm::vec3 scale)
 
 	m_GroupShape_[id].SetGroupShapeScale(scale);
 
-	for (auto& Shape : m_MeshShapeMap_[m_GroupShapeNames_[id]])
+	for (auto& Shape : m_RadeonMeshShapeMap_[m_RadeonGroupShapeNames_[id]])
 	{
-		SetShapeScaleById(m_ObjectNameToIdMap_[m_GroupShapeNames_[id]], scale);
+		SetShapeScaleById(IdManager.GetObjectNameToIdMap()[m_RadeonGroupShapeNames_[id]], scale);
 		UpdateShapeTransforms(Shape);
 	}
 }
@@ -535,9 +341,10 @@ void HorusObjectManager::SetGroupShapeResetTransform(int id)
 
 void HorusObjectManager::UpdateGroupShapeOutlinerData()
 {
-	for (const auto& Key : m_MeshShapeMap_ | std::views::keys)
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	for (const auto& Key : m_RadeonMeshShapeMap_ | std::views::keys)
 	{
-		HorusGroupShape& Mesh = m_GroupShape_[m_ObjectNameToIdMap_[Key]];
+		HorusShape& Mesh = m_GroupShape_[IdManager.GetObjectNameToIdMap()[Key]];
 		std::vector<std::string> ShapeNames = Mesh.GetShapeName();
 		m_GroupObjectOutlinerData_[Key] = ShapeNames;
 	}
@@ -551,8 +358,9 @@ int HorusObjectManager::GetActiveShapeId()
 }
 std::string HorusObjectManager::GetShapeNameById(int id)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	// Structured binding for check in m_ObjectNameToIdMap_ if the id exists (if not, return empty string)
-	for (const auto& [fst, snd] : m_ObjectNameToIdMap_)
+	for (const auto& [fst, snd] : IdManager.GetObjectNameToIdMap())
 	{
 		if (snd == id)
 		{
@@ -564,31 +372,32 @@ std::string HorusObjectManager::GetShapeNameById(int id)
 
 void HorusObjectManager::DeleteSelectedShape(int id)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	HorusGarbageCollector& GarbageCollector = HorusGarbageCollector::GetInstance();
 
-	if (m_Shapes_.contains(id))
+	if (m_RadeonShapes_.contains(id))
 	{
-		GarbageCollector.Remove(m_Shapes_[id]);
-		CHECK(rprObjectDelete(m_Shapes_[id]));
+		GarbageCollector.Remove(m_RadeonShapes_[id]);
+		CHECK(rprObjectDelete(m_RadeonShapes_[id]));
 		std::string ShapeName = GetShapeNameById(id);
 
-		for (auto& [key, shapes] : m_MeshShapeMap_)
+		for (auto& [key, shapes] : m_RadeonMeshShapeMap_)
 		{
-			auto it = std::find(shapes.begin(), shapes.end(), m_Shapes_[id]);
+			auto it = std::find(shapes.begin(), shapes.end(), m_RadeonShapes_[id]);
 			if (it != shapes.end())
 			{
 				shapes.erase(it);
 				if (shapes.empty()) {
-					m_MeshShapeMap_.erase(key);
+					m_RadeonMeshShapeMap_.erase(key);
 				}
 				break;
 			}
 		}
 
 
-		m_Shapes_.erase(id);
-		m_ObjectNameToIdMap_.erase(ShapeName);
-		IDManager::GetInstance().ReleaseId(id);
+		m_RadeonShapes_.erase(id);
+		IdManager.GetObjectNameToIdMap().erase(ShapeName);
+		HorusIdManager::GetInstance().ReleaseId(id);
 		UpdateGroupShapeOutlinerData();
 	}
 	else
@@ -600,9 +409,9 @@ void HorusObjectManager::DeleteSelectedShape(int id)
 // Getters
 rpr_shape HorusObjectManager::GetShapeById(int id)
 {
-	if (m_Shapes_.contains(id))
+	if (m_RadeonShapes_.contains(id))
 	{
-		return m_Shapes_[id];
+		return m_RadeonShapes_[id];
 	}
 	else
 	{
@@ -620,6 +429,79 @@ rpr_shape HorusObjectManager::GetShapeFromGroup(int GroupId, const std::string& 
 	}
 	return nullptr;
 }
+
+HorusOpenGlShape HorusObjectManager::GetOpenGlShapeById(int id)
+{
+	if (m_OpenGlShapes_.contains(id))
+	{
+		return m_OpenGlShapes_[id];
+	}
+
+	spdlog::error("no shape with this id exists. ");
+	return m_OpenGlShapes_[0];
+}
+
+HorusOpenGlShape HorusObjectManager::GetOpenGlShapeFromGroup(int GroupId, const std::string& shapeName)
+{
+	auto groupShapeIter = m_GroupShape_.find(GroupId);
+
+	if (groupShapeIter != m_GroupShape_.end())
+	{
+		return groupShapeIter->second.GetOpenGlShape(shapeName);
+	}
+	spdlog::error("no shape with this name exists. ");
+	return m_OpenGlShapes_[0];
+}
+
+std::vector<HorusOpenGlShape> HorusObjectManager::GetOpenGlShapeToRender()
+{
+	std::vector<HorusOpenGlShape> Shapes;
+	for (const auto& Value : m_OpenGlMeshShapeMap_ | std::views::values)
+	{
+		Shapes.insert(Shapes.end(), Value.begin(), Value.end());
+	}
+	return Shapes;
+}
+
+void HorusObjectManager::DrawOpenGlShape(GLuint& ProgramID, HorusOpenGLCamera& Camera)
+{
+	for (auto Value : m_OpenGlMeshShapeMap_ | std::views::values)
+	{
+		for (auto Shape : Value)
+		{
+			Shape.Draw(ProgramID, Camera, true);
+
+
+
+			/*spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[0][0], Shape.GetModelMatrix()[0][1], Shape.GetModelMatrix()[0][2], Shape.GetModelMatrix()[0][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[1][0], Shape.GetModelMatrix()[1][1], Shape.GetModelMatrix()[1][2], Shape.GetModelMatrix()[1][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[2][0], Shape.GetModelMatrix()[2][1], Shape.GetModelMatrix()[2][2], Shape.GetModelMatrix()[2][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[3][0], Shape.GetModelMatrix()[3][1], Shape.GetModelMatrix()[3][2], Shape.GetModelMatrix()[3][3]);
+			spdlog::info("Shape translation: ({}, {}, {})", Shape.GetTranslation().x, Shape.GetTranslation().y, Shape.GetTranslation().z);
+			spdlog::info("Shape rotation: ({}, {}, {})", Shape.GetRotation().x, Shape.GetRotation().y, Shape.GetRotation().z);
+			spdlog::info("Shape scale: ({}, {}, {})", Shape.GetScale().x, Shape.GetScale().y, Shape.GetScale().z);*/
+		}
+	}
+
+
+	/*for (unsigned int i = 0; i < m_OpenGlMeshShapeMap_.size(); i++)
+	{
+		for (auto Shape : m_OpenGlMeshShapeMap_[m_OpenGlGroupShapeNames_[i]])
+		{
+			Shape.Draw(ProgramID, Camera);
+			spdlog::info("Drawing shape {}", m_OpenGlGroupShapeNames_[i]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[0][0], Shape.GetModelMatrix()[0][1], Shape.GetModelMatrix()[0][2], Shape.GetModelMatrix()[0][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[1][0], Shape.GetModelMatrix()[1][1], Shape.GetModelMatrix()[1][2], Shape.GetModelMatrix()[1][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[2][0], Shape.GetModelMatrix()[2][1], Shape.GetModelMatrix()[2][2], Shape.GetModelMatrix()[2][3]);
+			spdlog::info("Shape Model Matrix: {}, {}, {}, {}", Shape.GetModelMatrix()[3][0], Shape.GetModelMatrix()[3][1], Shape.GetModelMatrix()[3][2], Shape.GetModelMatrix()[3][3]);
+			spdlog::info("Shape translation: ({}, {}, {})", Shape.GetTranslation().x, Shape.GetTranslation().y, Shape.GetTranslation().z);
+			spdlog::info("Shape rotation: ({}, {}, {})", Shape.GetRotation().x, Shape.GetRotation().y, Shape.GetRotation().z);
+			spdlog::info("Shape scale: ({}, {}, {})", Shape.GetScale().x, Shape.GetScale().y, Shape.GetScale().z);
+		}
+	}*/
+}
+
+
 glm::vec3 HorusObjectManager::GetShapePositionById(int id)
 {
 	auto Shape = GetShapeById(id);
@@ -749,12 +631,13 @@ int HorusObjectManager::GetActiveMaterialId()
 }
 int HorusObjectManager::GetMaterialIdByName(std::string Name)
 {
-	if (!m_ObjectNameToIdMap_.contains(Name))
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	if (!IdManager.ContainsName(Name))
 	{
 		spdlog::error("no material with this name exists. ");
 	}
 
-	return m_ObjectNameToIdMap_[Name];
+	return IdManager.GetObjectNameToIdMap()[Name];
 }
 std::string& HorusObjectManager::GetMaterialName(int Id)
 {
@@ -768,15 +651,16 @@ HorusMaterial& HorusObjectManager::GetMaterial(int Id)
 }
 bool HorusObjectManager::MaterialExists(std::string Name)
 {
-	return m_ObjectNameToIdMap_.contains(Name);
+	return HorusIdManager::GetInstance().ContainsName(Name);
 }
 int HorusObjectManager::CreateMaterial(std::string Name)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	std::string material_name = Name;
 
 	int Suffix = 0;
 
-	while (m_ObjectNameToIdMap_.contains(material_name))
+	while (IdManager.ContainsName(material_name))
 	{
 		material_name = Name + "_" + std::to_string(Suffix);
 		Suffix++;
@@ -784,13 +668,13 @@ int HorusObjectManager::CreateMaterial(std::string Name)
 		spdlog::info("Material with name {} already exists", Name);
 	}
 
-	int Id = IDManager::GetInstance().GetNewId();
+	int Id = HorusIdManager::GetInstance().GetNewId();
 
 	HorusMaterial NewMaterial;
 	NewMaterial.Init();
 	m_Materials_[Id] = NewMaterial;
 	m_MaterialNames_[Id] = material_name;
-	m_ObjectNameToIdMap_[material_name] = Id;
+	IdManager.GetObjectNameToIdMap()[material_name] = Id;
 	m_ActiveMaterialId_ = Id;
 
 	spdlog::info("Creating {} material with id {}", material_name, Id);
@@ -799,6 +683,7 @@ int HorusObjectManager::CreateMaterial(std::string Name)
 }
 void HorusObjectManager::DestroyMaterial(int Id)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	if (auto It = m_Materials_.find(Id); It != m_Materials_.end())
 	{
 		It->second.DestroyMaterial();
@@ -810,16 +695,16 @@ void HorusObjectManager::DestroyMaterial(int Id)
 		spdlog::error("Material with id {} does not exist", Id);
 	}
 
-	for (auto It = m_ObjectNameToIdMap_.begin(); It != m_ObjectNameToIdMap_.end(); ++It)
+	for (auto It = IdManager.GetObjectNameToIdMap().begin(); It != IdManager.GetObjectNameToIdMap().end(); ++It)
 	{
 		if (It->second == Id)
 		{
-			m_ObjectNameToIdMap_.erase(It);
+			IdManager.GetObjectNameToIdMap().erase(It);
 			break;
 		}
 	}
 
-	IDManager::GetInstance().ReleaseId(Id);
+	HorusIdManager::GetInstance().ReleaseId(Id);
 }
 void HorusObjectManager::DestroyAllMaterial()
 {
@@ -1587,11 +1472,12 @@ void HorusObjectManager::DestroyAllMaterialEditors()
 
 int HorusObjectManager::CreateLight(const std::string& Name, const std::string& LightType, const std::string& ImagePath)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	std::string LightName = Name;
 
 	int Suffix = 001;
 
-	while (m_ObjectNameToIdMap_.contains(LightName))
+	while (IdManager.GetObjectNameToIdMap().contains(LightName))
 	{
 		LightName = Name + std::to_string(Suffix);
 		Suffix++;
@@ -1599,13 +1485,13 @@ int HorusObjectManager::CreateLight(const std::string& Name, const std::string& 
 		spdlog::info("Light name already exists, trying {} instead", LightName);
 	}
 
-	int Id = IDManager::GetInstance().GetNewId();
+	int Id = HorusIdManager::GetInstance().GetNewId();
 
 	HorusLight NewLight;
 	NewLight.Init(LightType, ImagePath);
 	m_Lights_[Id] = NewLight;
 	m_LightNames_[Id] = LightName;
-	m_ObjectNameToIdMap_[LightName] = Id;
+	IdManager.GetObjectNameToIdMap()[LightName] = Id;
 	m_ActiveLightId_ = Id;
 
 	// TODO : Check If light are nullptr if true then destroy the light and release the id
@@ -1616,6 +1502,7 @@ int HorusObjectManager::CreateLight(const std::string& Name, const std::string& 
 }
 void HorusObjectManager::DestroyLight(int Id)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	if (auto It = m_Lights_.find(Id); It != m_Lights_.end())
 	{
 		m_Lights_[Id].DestroyLight();
@@ -1627,14 +1514,14 @@ void HorusObjectManager::DestroyLight(int Id)
 		spdlog::error("no light with this id exists. ");
 	}
 
-	for (auto It = m_ObjectNameToIdMap_.begin(); It != m_ObjectNameToIdMap_.end(); ++It) {
+	for (auto It = IdManager.GetObjectNameToIdMap().begin(); It != IdManager.GetObjectNameToIdMap().end(); ++It) {
 		if (It->second == Id) {
-			m_ObjectNameToIdMap_.erase(It);
+			IdManager.GetObjectNameToIdMap().erase(It);
 			break;
 		}
 	}
 
-	IDManager::GetInstance().ReleaseId(Id);
+	HorusIdManager::GetInstance().ReleaseId(Id);
 }
 void HorusObjectManager::DestroyAllLights()
 {
@@ -2050,18 +1937,19 @@ void HorusObjectManager::SetDiskLightInnerAngle(int id, const float& InnerAngle)
 
 int HorusObjectManager::CreateScene(const std::string& name)
 {
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
 	std::string SceneName = name;
 
 	int Suffix = 001;
 
-	int Id = IDManager::GetInstance().GetNewId();
+	int Id = HorusIdManager::GetInstance().GetNewId();
 
 	HorusScene NewScene;
 	NewScene.Init();
 	m_Scenes_[Id] = NewScene;
 	m_ActiveSceneId_ = Id;
 	m_SceneNames_[Id] = SceneName;
-	m_ObjectNameToIdMap_[SceneName] = Id;
+	IdManager.GetObjectNameToIdMap()[SceneName] = Id;
 
 	spdlog::info("Scene {} created with id: {}", SceneName, Id);
 
@@ -2069,9 +1957,12 @@ int HorusObjectManager::CreateScene(const std::string& name)
 }
 int HorusObjectManager::CreateDefaultScene()
 {
+	HorusOmCamera& CameraManager = HorusOmCamera::GetInstance();
 	int Id = CreateScene("DefaultScene");
 
-	CreateRadeonCamera(Id, "DefaultCamera");
+	// Create camera
+	CameraManager.CreateCamera("DefaultCamera");
+	//CreateRadeonCamera(Id, "DefaultCamera");
 
 	//create_light("HDRI", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
 	//int HDRI = CreateLight("Lgt_Dome01", "hdri", "resources/Textures/resting_place_2_2k.exr");
@@ -2109,7 +2000,7 @@ void HorusObjectManager::DestroyScene(int id)
 		}
 	}*/
 
-	IDManager::GetInstance().ReleaseId(id);
+	HorusIdManager::GetInstance().ReleaseId(id);
 
 	if (m_Scenes_.empty())
 	{
@@ -2152,12 +2043,13 @@ rpr_scene& HorusObjectManager::GetScene()
 }
 int HorusObjectManager::GetSceneIdByName(const char* name)
 {
-	while (!m_ObjectNameToIdMap_.contains(name))
+	HorusIdManager& IdManager = HorusIdManager::GetInstance();
+	while (!IdManager.GetObjectNameToIdMap().contains(name))
 	{
 		spdlog::info("Scene name does not exist, trying again");
 	}
 
-	return m_ObjectNameToIdMap_[name];
+	return IdManager.GetObjectNameToIdMap()[name];
 }
 int HorusObjectManager::GetActiveSceneId()
 {

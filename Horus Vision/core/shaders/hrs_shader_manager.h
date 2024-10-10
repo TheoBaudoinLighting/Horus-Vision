@@ -19,24 +19,10 @@ public:
 	HorusShaderManager();
 	~HorusShaderManager() = default;
 
-	// Singleton not used anymore
-	//static HorusShaderManager& GetInstance()
-	//{
-	//	static HorusShaderManager Instance; // Instance unique
-	//	return Instance;
-	//}
-
-	//HorusShaderManager(HorusShaderManager const&) = delete;
-	//void operator=(HorusShaderManager const&) = delete;
-
-	/*GLuint GetProgram(std::string const& ProgName);*/
-
 	static bool Initialize();
 	static void Uninitialize();
 
-
-	GLuint GetCurrentProgram() const { return m_CurrentProgram_; }
-
+	GLuint& GetProgram() { return m_CurrentProgram_; }
 	GLuint CreateShader(const std::string& ShaderFilepath);
 
 	bool SendData(const std::string& UniformName, GLint Data) const;
@@ -65,6 +51,5 @@ private:
 	GLuint m_CurrentProgram_ = 0;
 	inline static GLuint m_VertexShaderId_ = 0;
 	inline static GLuint m_FragmentShaderId_ = 0;
-
 };
 

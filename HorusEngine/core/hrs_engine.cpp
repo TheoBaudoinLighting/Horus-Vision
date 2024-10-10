@@ -17,28 +17,28 @@
 
 // External includes
 #include "ImGuizmo.h"
-#include <hrs_console.h>
 
+#include "hrs_console.h"
+#include "hrs_horus_parameters.h"
 #include "hrs_imgui_core.h"
 #include "hrs_inspector.h"
+#include "hrs_radeon_viewport.h"
 #include "hrs_timer.h"
 #include "hrs_viewport.h"
+
 
 // Pre load data for the engine in a separate jthread
 void LoadSetupEngineData()
 {
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-	HorusResetBuffers& ResetBuffers = HorusResetBuffers::GetInstance();
 	HorusTimerManager::GetInstance().StartTimer("LoadData");
 
-	int HDRI = ObjectManager.CreateLight("HDRI_01", "hdri", "core/scene/dependencies/light/niederwihl_forest_4k.exr");
-	//int HDRI = ObjectManager.CreateLight("Lgt_Dome01", "hdri", "core/scene/dependencies/light/horus_hdri_main.exr");
-	ObjectManager.SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
+	int HDRI = HorusObjectManager::GetInstance().CreateLight("HDRI_01", "hdri", "core/scene/dependencies/light/niederwihl_forest_4k.exr");
+	HorusObjectManager::GetInstance().SetLightRotation(HDRI, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	auto TimeLoad = HorusTimerManager::GetInstance().StopTimer("LoadData");
 	spdlog::info("Loading Engine data finished in {} ms.", TimeLoad);
 
-	ResetBuffers.CallResetBuffers();
+	HorusResetBuffers::CallResetBuffers();
 }
 
 int HorusEngine::ContextInfo(rpr_context& Context)
@@ -178,10 +178,15 @@ int HorusEngine::ContextInfo(rpr_context& Context)
 	return 0;
 }
 
-void HorusEngine::Init(int Width, int Height, const std::string& Title, const std::string& SavePath)
+void HorusEngine::Init(int Width, int Height, const std::string& Title, std::string SavePath)
 {
+	auto Config = CheckConfigFile(SavePath);
+	ExtractConfig(Config);
+
 	m_Window_ = std::make_unique<HorusWindow>();
 	m_Window_->InitWindow(Width, Height, Title);
+
+	InitContexts(Width, Height, m_Window_.get());
 }
 
 void HorusEngine::InitContexts(int Width, int Height, HorusWindow* Window)
@@ -215,29 +220,19 @@ void HorusEngine::PreRender()
 
 	m_IsClosing_ = GetIsClosing();
 
-	OpenGL.InitRender();
 	ImGuiCore.InitRender();
+	OpenGL.InitRender();
 	Radeon.InitRender();
 }
 
 void HorusEngine::Render()
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 	HorusUI& UI = HorusUI::GetInstance();
 
 	Radeon.RenderEngine();
-
-	{
-		//glm::mat4 model, view, projection; // Later for OpenGL
-		//OpenGL.Render(); // TODO : Make it work with Radeon
-
-		//ObjectManager.UpdateRadeonCamera(ObjectManager.get_active_camera_id());
-		//ObjectManager.GetMatrices(ObjectManager.get_active_camera_id(), model, view, projection);
-
-		//glm::mat4 mvp = model * view * projection; // Later for OpenGL
-		//glLoadMatrixf(glm::value_ptr(mvp)); // Later for OpenGL
-	}
-
+	OpenGL.Render();
 	UI.RenderUI();
 }
 
@@ -251,13 +246,13 @@ void HorusEngine::PostRender()
 	OpenGL.PostRender();
 	Radeon.PostRender();
 
-
 	if (m_EngineIsReady_)
 	{
 		if (m_IsSecondLaunch_)
 		{
 			// Need to recenter the viewport after loading all ImGui windows one Time
-			HorusViewportRadeon::GetInstance().RecenterViewport();
+			HorusRadeon::GetInstance().SetLockingRender(true);
+			//HorusViewportRadeon::GetInstance().CenterViewport();
 
 			m_IsSecondLaunch_ = false;
 		}
@@ -361,6 +356,8 @@ void HorusEngine::Close()
 	HorusOpenGL& OpenGL = HorusOpenGL::GetInstance();
 	HorusImGuiCore& ImGuiCore = HorusImGuiCore::GetInstance();
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
+
+	Radeon.SetLockingRender(true);
 
 	Radeon.QuitRender();
 	ImGuiCore.QuitRender();

@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 
 #include "hrs_vbo.h"
+#include "spdlog/spdlog.h"
 
 class HorusVAO
 {
@@ -10,36 +11,27 @@ public:
 
 	GLuint ID;
 
-	HorusVAO() : ID(0) {}
+	HorusVAO()
+	{
+		if (!glGenVertexArrays)
+		{
+			printf("Error: glGenVertexArrays is NULL\n");
+			return;
+		}
+		glGenVertexArrays(1, &ID);
+	}
 
-	void LinkAttrib(HorusVBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizei stride, void* offset)
+	static void LinkAttrib(const HorusVBO& VBO,GLuint Layout, GLuint NumComponents, GLenum Type, GLsizei Stride, void* Offset)
 	{
 		VBO.Bind();
-		glVertexAttribPointer(layout, numComponents, type, GL_FALSE, stride, offset);
-		glEnableVertexAttribArray(layout);
+		glEnableVertexAttribArray(Layout);
+		glVertexAttribPointer(Layout, NumComponents, Type, GL_FALSE, Stride, Offset);
 		VBO.Unbind();
 	}
 
-	void Init()
-	{
-		if (ID == 0)
-		{
-			glGenVertexArrays(1, &ID);
-		}
-	}
+	void GetId() { spdlog::info("VAO ID: {}", ID); }
 
-	void Bind()
-	{
-		glBindVertexArray(ID);
-	}
-
-	void Unbind()
-	{
-		glBindVertexArray(0);
-	}
-
-	void Delete()
-	{
-		glDeleteVertexArrays(1, &ID);
-	}
+	void Bind() const { glBindVertexArray(ID); }
+	static void Unbind() { glBindVertexArray(0); }
+	void Delete() const { glDeleteVertexArrays(1, &ID); }
 };

@@ -17,8 +17,6 @@
 #include "glm/fwd.hpp"
 #include "glm/detail/type_vec3.hpp"
 
-
-
 class HorusMaterial
 {
 public:
@@ -641,7 +639,7 @@ public:
 	// ----------------------------------------------
 	// Texture object -------------------------------
 
-	rpr_image LoadTexture(std::string path);
+	rpr_image LoadTexture(std::string Path);
 
 	// ----------------------------------------------
 

@@ -5,6 +5,9 @@
 #include <vector>
 #include <assimp/scene.h>
 
+#include "hrs_importer_utility.h"
+#include "hrs_mesh.h"
+#include "hrs_opengl_shape.h"
 #include "Math/mathutils.h"
 
 class HorusMeshImporter
@@ -24,8 +27,17 @@ public:
 
 	//-------------------------------------------------------------
 
+	// Utility functions
+	std::vector<VertexData> AssembleOpenGLVertices(std::vector<glm::vec3>& Vertices, std::vector<glm::vec3>& Normals, std::vector<glm::vec3>& TexCoords);
+
+
 	// Import mesh with assimp
 	std::vector<std::tuple<rpr_shape, std::string>> LoadMesh(const std::string& MeshPath);
+	std::vector<std::tuple<HorusOpenGlShape, std::string>> LoadOpenGlMesh(const std::string& MeshPath, std::vector<VertexData>& OpenGLVertices, std::vector<GLuint>& OpenGLIndices);
+	HorusOpenGlShape LoadSingleOpenGlMesh(const std::string& MeshPath, HorusOpenGlShape& Shape);
+	
+	void LoadAndConvertOBJToText(const std::string& MeshPath);
+
 	//rpr_shape LoadMeshTOL(const std::string& MeshPath);
 
 private:

@@ -65,7 +65,7 @@ bool HorusImGuiCore::Init(const int Width, const int Height, HorusWindowConfig* 
 	Io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
 	Io.ConfigDockingWithShift = true;
 
-	ImGui::StyleColorsDark();               // Apply the dark theme
+	ImGui::StyleColorsDark();            
 
 	// Get the style structure
 	ImGuiStyle* Style = &ImGui::GetStyle();
@@ -73,7 +73,7 @@ bool HorusImGuiCore::Init(const int Width, const int Height, HorusWindowConfig* 
 
 	if (Io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
-		
+		// GreenHorusTheme
 		Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.105f, 0.11f, 1.0f);
 		Colors[ImGuiCol_Header] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
 		Colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
@@ -104,7 +104,6 @@ bool HorusImGuiCore::Init(const int Width, const int Height, HorusWindowConfig* 
 		Colors[ImGuiCol_TabHovered] = ImVec4(0.35f, 0.63f, 0.39f, 1.0f);
 	}
 
-	
 	ImGui_ImplGlfw_InitForOpenGL(m_Window_->GetWindow(), true);
 	ImGui_ImplOpenGL3_Init(m_GlslVersion_);
 
@@ -135,7 +134,11 @@ void HorusImGuiCore::InitRender()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-	ImGui::Begin("Horus_MainDockspace", nullptr, WindowFlags);
+	if (!ImGui::Begin("Horus_MainDockspace", nullptr, WindowFlags))
+	{
+		ImGui::End();
+		return;
+	}
 
 	ImGui::PopStyleVar(3);
 	const ImGuiID DockspaceId = ImGui::GetID("Horus_MainDockspace");

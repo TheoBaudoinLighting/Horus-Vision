@@ -15,12 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="hrs_render_core.h">
+    <ClInclude Include="core\hrs_render_core.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="hrs_render_core.cpp">
+    <ClCompile Include="core\hrs_render_core.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>

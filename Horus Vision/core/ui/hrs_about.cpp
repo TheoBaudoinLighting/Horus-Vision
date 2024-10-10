@@ -1,4 +1,6 @@
 #include "hrs_about.h"
+
+#include "hrs_horus_parameters.h"
 #include "hrs_utils.h"
 
 #include "imgui.h"
@@ -6,7 +8,7 @@
 
 void HorusAbout::About(bool* p_open)
 {
-	if (!ImGui::Begin("About Horus", p_open))
+	if (!ImGui::Begin(HORUS_UI_NAME_ABOUT.c_str(), p_open))
 	{
 		ImGui::End();
 		return;
@@ -28,7 +30,7 @@ void HorusAbout::About(bool* p_open)
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	ImGui::TextWrapped("Version 1.3.0");
+	ImGui::TextWrapped(HORUS_APP_VERSION.c_str());
 	ImGui::Separator();
 	ImGui::TextWrapped("Horus Vision is an advanced, physically-based rendering engine powered by Radeon Pro Render. Designed for high-quality, realistic output, it provides a range of features to cater to diverse rendering needs.");
 	ImGui::Separator();

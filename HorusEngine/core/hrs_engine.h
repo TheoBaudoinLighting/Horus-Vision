@@ -33,7 +33,7 @@ public:
 
 	int ContextInfo(rpr_context& Context);
 
-	void Init(int Width, int Height, const std::string& Title, const std::string& SaveFilename);
+	void Init(int Width, int Height, const std::string& Title, std::string SavePath);
 	void InitContexts(int Width, int Height, HorusWindow* Window);
 	void PreRender();
 	void Render();

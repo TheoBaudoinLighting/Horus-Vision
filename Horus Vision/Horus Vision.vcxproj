@@ -52,7 +52,8 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -73,11 +74,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>C:\opencv\build\x64\vc16\lib;C:\opencv\build\x64\vc16\bin;$(ProjectDir)external\glfw\include\lib-vc2022;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\opencv\build\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)out\$(Configuration)\HorusVision</IntDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusVisionIntermediate\</IntDir>
+    <TargetName>HorusVision_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\HorusVision\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusVisionIntermediate\</IntDir>
     <TargetName>HorusVision</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,16 +119,17 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CONSOLE;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CONSOLE;_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;C:\opencv\build\include;$(TBB_DIR);$(ASSIMP_DIR);$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;$(SolutionDir)Horus Vision\external\Assimp\include;$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusOpenGL\objects;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;$(SolutionDir)Horus Vision\external\Assimp\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)external\glfw\include\lib-vc2022;C:\opencv\build\x64\vc16\lib;$(ProjectDir)external\RadeonProRender\libWin64;$(TBB_X64_LIB);$(ASSIMP_LIB_X64);$(ASSIMP_DLL_X64);$(ProjectDir)external\OpenColorIO\lib;$(ProjectDir)external\RadeonImageFilter\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RadeonProRender64.lib;ProRenderGLTF.lib;RprLoadStore64.lib;opencv_world481d.lib;d3d9.lib;opengl32.lib;assimp-vc143-mt.lib;OpenColorIO.lib;RadeonImageFilters.lib;RadeonML.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\glfw\include\lib-vc2022;$(ProjectDir)external\RadeonProRender\libWin64;$(ProjectDir)external\OpenColorIO\lib;$(ProjectDir)external\RadeonImageFilter\lib;$(ProjectDir)external\Assimp\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>RadeonProRender64.lib;ProRenderGLTF.lib;RprLoadStore64.lib;assimp-vc143-mtd.lib;OpenColorIO.lib;RadeonImageFilters.lib;RadeonML.lib;%(AdditionalDependencies);$(CoreLibraryDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -132,19 +141,30 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_GLFW;RPR_API_USE_HEADER_V2;_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS;_WINDOWS;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;$(SolutionDir)Horus Vision\external\Assimp\include;$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusOpenGL\objects;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;$(SolutionDir)Horus Vision\external\Assimp\include\assimp\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\glfw\include\lib-vc2022;$(ProjectDir)external\RadeonProRender\libWin64;$(ProjectDir)external\OpenColorIO\lib;$(ProjectDir)external\RadeonImageFilter\lib;$(ProjectDir)external\Assimp\lib\x64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>RadeonProRender64.lib;ProRenderGLTF.lib;RprLoadStore64.lib;assimp-vc143-mtd.lib;OpenColorIO.lib;RadeonImageFilters.lib;RadeonML.lib;%(AdditionalDependencies);$(CoreLibraryDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\config\hrs_ocio.cpp" />
     <ClCompile Include="core\hrs_horus.cpp" />
+    <ClCompile Include="core\mesh\hrs_importer_utility.cpp" />
+    <ClCompile Include="core\ui\hrs_import_mesh_ui.cpp" />
+    <ClCompile Include="core\ui\hrs_opengl_viewport.cpp" />
+    <ClCompile Include="core\ui\hrs_radeon_viewport.cpp" />
     <ClCompile Include="external\GLAD\SRC\glad.c" />
     <ClCompile Include="external\glm\DETAIL\glm.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp" />
@@ -161,7 +181,6 @@
     <ClCompile Include="core\window\hrs_window.cpp" />
     <ClCompile Include="core\config\hrs_logger.cpp" />
     <ClCompile Include="core\camera\hrs_radeon_camera.cpp" />
-    <ClCompile Include="core\mesh\hrs_importer.cpp" />
     <ClCompile Include="core\mesh\hrs_mesh.cpp" />
     <ClCompile Include="core\material\hrs_material.cpp" />
     <ClCompile Include="core\objects\hrs_object_manager.cpp" />
@@ -174,7 +193,6 @@
     <ClCompile Include="core\ui\hrs_console.cpp" />
     <ClCompile Include="core\ui\hrs_viewport.cpp" />
     <ClCompile Include="core\ui\hrs_outliner.cpp" />
-    <ClCompile Include="core\scene\hrs_grid.cpp" />
     <ClCompile Include="core\camera\hrs_opengl_camera.cpp" />
     <ClCompile Include="core\scene\hrs_scene_manager.cpp" />
     <ClCompile Include="core\scene\hrs_importer_manager.cpp" />
@@ -184,16 +202,120 @@
     <ClCompile Include="core\ui\hrs_about.cpp" />
     <ClCompile Include="core\ui\hrs_statistics.cpp" />
     <ClCompile Include="core\ui\hrs_help.cpp" />
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBold.c">
+      <FileType>CppCode</FileType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\config\hrs_config.h" />
     <ClInclude Include="core\config\hrs_context.h" />
+    <ClInclude Include="core\config\hrs_dragdrop.h" />
+    <ClInclude Include="core\config\hrs_horus_parameters.h" />
     <ClInclude Include="core\config\hrs_ocio.h" />
     <ClInclude Include="core\config\hrs_platform.h" />
     <ClInclude Include="core\config\hrs_reset_buffers.h" />
     <ClInclude Include="core\config\hrs_timer.h" />
     <ClInclude Include="core\config\hrs_utils.h" />
     <ClInclude Include="core\material\hrs_graph.h" />
+    <ClInclude Include="core\mesh\hrs_importer_utility.h" />
+    <ClInclude Include="core\mesh\hrs_import_flags.h" />
+    <ClInclude Include="core\mesh\hrs_mesh_data.h" />
+    <ClInclude Include="core\mesh\hrs_model_data.h" />
+    <ClInclude Include="core\mesh\hrs_preprocess_meshdata.h" />
+    <ClInclude Include="core\mesh\hrs_vertex_data.h" />
+    <ClInclude Include="core\objects\hrs_om_camera.h" />
+    <ClInclude Include="core\objects\hrs_om_id_manager.h" />
+    <ClInclude Include="core\objects\hrs_om_light.h" />
+    <ClInclude Include="core\objects\hrs_om_materials.h" />
+    <ClInclude Include="core\objects\hrs_om_group_shapes.h" />
+    <ClInclude Include="core\objects\hrs_om_material_editor.h" />
+    <ClInclude Include="core\objects\hrs_om_outliner.h" />
+    <ClInclude Include="core\objects\hrs_om_scene.h" />
+    <ClInclude Include="core\ui\hrs_import_mesh_ui.h" />
+    <ClInclude Include="core\ui\hrs_opengl_viewport.h" />
+    <ClInclude Include="core\ui\hrs_radeon_viewport.h" />
+    <ClInclude Include="external\Assimp\include\assimp\aabb.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ai_assert.h" />
+    <ClInclude Include="external\Assimp\include\assimp\anim.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Base64.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\BaseImporter.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Bitmap.h" />
+    <ClInclude Include="external\Assimp\include\assimp\BlobIOSystem.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ByteSwapper.h" />
+    <ClInclude Include="external\Assimp\include\assimp\camera.h" />
+    <ClInclude Include="external\Assimp\include\assimp\cexport.h" />
+    <ClInclude Include="external\Assimp\include\assimp\cfileio.h" />
+    <ClInclude Include="external\Assimp\include\assimp\cimport.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ColladaMetaData.h" />
+    <ClInclude Include="external\Assimp\include\assimp\color4.h" />
+    <ClInclude Include="external\Assimp\include\assimp\commonMetaData.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="external\Assimp\include\assimp\config.h" />
+    <ClInclude Include="external\Assimp\include\assimp\CreateAnimMesh.h" />
+    <ClInclude Include="external\Assimp\include\assimp\DefaultIOStream.h" />
+    <ClInclude Include="external\Assimp\include\assimp\DefaultIOSystem.h" />
+    <ClInclude Include="external\Assimp\include\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\defs.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Exceptional.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Exporter.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\fast_atof.h" />
+    <ClInclude Include="external\Assimp\include\assimp\GenericProperty.h" />
+    <ClInclude Include="external\Assimp\include\assimp\GltfMaterial.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Hash.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Importer.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\importerdesc.h" />
+    <ClInclude Include="external\Assimp\include\assimp\IOStream.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\IOStreamBuffer.h" />
+    <ClInclude Include="external\Assimp\include\assimp\IOSystem.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\light.h" />
+    <ClInclude Include="external\Assimp\include\assimp\LineSplitter.h" />
+    <ClInclude Include="external\Assimp\include\assimp\LogAux.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Logger.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\LogStream.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\material.h" />
+    <ClInclude Include="external\Assimp\include\assimp\MathFunctions.h" />
+    <ClInclude Include="external\Assimp\include\assimp\matrix3x3.h" />
+    <ClInclude Include="external\Assimp\include\assimp\matrix4x4.h" />
+    <ClInclude Include="external\Assimp\include\assimp\MemoryIOWrapper.h" />
+    <ClInclude Include="external\Assimp\include\assimp\mesh.h" />
+    <ClInclude Include="external\Assimp\include\assimp\metadata.h" />
+    <ClInclude Include="external\Assimp\include\assimp\NullLogger.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\ObjMaterial.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ParsingUtils.h" />
+    <ClInclude Include="external\Assimp\include\assimp\pbrmaterial.h" />
+    <ClInclude Include="external\Assimp\include\assimp\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="external\Assimp\include\assimp\port\AndroidJNI\BundledAssetIOSystem.h" />
+    <ClInclude Include="external\Assimp\include\assimp\postprocess.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Profiler.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="external\Assimp\include\assimp\qnan.h" />
+    <ClInclude Include="external\Assimp\include\assimp\quaternion.h" />
+    <ClInclude Include="external\Assimp\include\assimp\RemoveComments.h" />
+    <ClInclude Include="external\Assimp\include\assimp\scene.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SceneCombiner.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SGSpatialSort.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SkeletonMeshBuilder.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SmallVector.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SmoothingGroups.h" />
+    <ClInclude Include="external\Assimp\include\assimp\SpatialSort.h" />
+    <ClInclude Include="external\Assimp\include\assimp\StandardShapes.h" />
+    <ClInclude Include="external\Assimp\include\assimp\StreamReader.h" />
+    <ClInclude Include="external\Assimp\include\assimp\StreamWriter.h" />
+    <ClInclude Include="external\Assimp\include\assimp\StringComparison.h" />
+    <ClInclude Include="external\Assimp\include\assimp\StringUtils.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Subdivision.h" />
+    <ClInclude Include="external\Assimp\include\assimp\texture.h" />
+    <ClInclude Include="external\Assimp\include\assimp\TinyFormatter.h" />
+    <ClInclude Include="external\Assimp\include\assimp\types.h" />
+    <ClInclude Include="external\Assimp\include\assimp\vector2.h" />
+    <ClInclude Include="external\Assimp\include\assimp\vector3.h" />
+    <ClInclude Include="external\Assimp\include\assimp\version.h" />
+    <ClInclude Include="external\Assimp\include\assimp\Vertex.h" />
+    <ClInclude Include="external\Assimp\include\assimp\XmlParser.h" />
+    <ClInclude Include="external\Assimp\include\assimp\XMLTools.h" />
+    <ClInclude Include="external\Assimp\include\assimp\ZipArchiveIOSystem.h" />
     <ClInclude Include="external\GLAD\INCLUDE\GLAD\glad.h" />
     <ClInclude Include="external\GLAD\INCLUDE\KHR\khrplatform.h" />
     <ClInclude Include="external\GLFW\INCLUDE\GLFW\glfw3.h" />
@@ -503,12 +625,16 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\imgui\L2DFileDialog.h" />
     <ClInclude Include="external\nlohmann\json.hpp" />
+    <ClInclude Include="external\RadeonImageFilter\include\Half\half.hpp" />
+    <ClInclude Include="external\RadeonImageFilter\include\ImageTools.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_cl.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_directx12.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_gl.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_metal.h" />
     <ClInclude Include="external\RadeonImageFilter\include\RadeonImageFilters_version.h" />
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image.h" />
+    <ClInclude Include="external\RadeonImageFilter\include\stb_image_write.h" />
     <ClInclude Include="external\RadeonProRender\common\common.h" />
     <ClInclude Include="external\RadeonProRender\common\picojson.h" />
     <ClInclude Include="external\RadeonProRender\common\tiny_obj_loader.h" />
@@ -532,6 +658,26 @@
     <ClInclude Include="external\RadeonProRender\inc\RprLoadStore.h" />
     <ClInclude Include="external\RadeonProRender\rprTools\RadeonProRender.hpp" />
     <ClInclude Include="external\RadeonProRender\rprTools\RPRStringIDMapper.h" />
+    <ClInclude Include="core\camera\hrs_radeon_camera.h" />
+    <ClInclude Include="core\mesh\hrs_mesh.h" />
+    <ClInclude Include="core\material\hrs_material.h" />
+    <ClInclude Include="core\objects\hrs_object_manager.h" />
+    <ClInclude Include="core\light\hrs_light.h" />
+    <ClInclude Include="core\material\hrs_material_editor.h" />
+    <ClInclude Include="core\scene\hrs_scene.h" />
+    <ClInclude Include="core\inputs\hrs_input.h" />
+    <ClInclude Include="core\config\hrs_garbage_collector.h" />
+    <ClInclude Include="core\ui\hrs_ui.h" />
+    <ClInclude Include="core\ui\hrs_inspector.h" />
+    <ClInclude Include="core\ui\hrs_console.h" />
+    <ClInclude Include="core\ui\hrs_viewport.h" />
+    <ClInclude Include="core\ui\hrs_outliner.h" />
+    <ClInclude Include="core\camera\hrs_opengl_camera.h" />
+    <ClInclude Include="core\scene\hrs_scene_manager.h" />
+    <ClInclude Include="core\scene\hrs_importer_manager.h" />
+    <ClInclude Include="core\ui\hrs_about.h" />
+    <ClInclude Include="core\ui\hrs_statistics.h" />
+    <ClInclude Include="core\ui\hrs_help.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\async_logger.h" />
@@ -563,10 +709,14 @@
     <ClInclude Include="external\spdlog\include\spdlog\details\synchronous_factory.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client-windows.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client.h" />
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client_unix.h" />
+    <ClInclude Include="external\spdlog\include\spdlog\details\tcp_client_windows.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\thread_pool-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\thread_pool.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\udp_client-windows.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\udp_client.h" />
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client_unix.h" />
+    <ClInclude Include="external\spdlog\include\spdlog\details\udp_client_windows.h" />
     <ClInclude Include="external\spdlog\include\spdlog\details\windows_include.h" />
     <ClInclude Include="external\spdlog\include\spdlog\fmt\bin_to_hex.h" />
     <ClInclude Include="external\spdlog\include\spdlog\fmt\bundled\args.h" />
@@ -630,40 +780,460 @@
     <ClInclude Include="external\spdlog\include\spdlog\sinks\wincolor_sink-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\sinks\wincolor_sink.h" />
     <ClInclude Include="external\spdlog\include\spdlog\sinks\win_eventlog_sink.h" />
+    <ClInclude Include="external\spdlog\include\spdlog\source_loc.h" />
     <ClInclude Include="external\spdlog\include\spdlog\spdlog-inl.h" />
     <ClInclude Include="external\spdlog\include\spdlog\spdlog.h" />
     <ClInclude Include="external\spdlog\include\spdlog\stopwatch.h" />
     <ClInclude Include="external\spdlog\include\spdlog\tweakme.h" />
     <ClInclude Include="external\spdlog\include\spdlog\version.h" />
-    <ClInclude Include="core\camera\hrs_radeon_camera.h" />
-    <ClInclude Include="core\mesh\hrs_importer.h" />
-    <ClInclude Include="core\mesh\hrs_mesh.h" />
-    <ClInclude Include="core\material\hrs_material.h" />
-    <ClInclude Include="core\objects\hrs_object_manager.h" />
-    <ClInclude Include="core\light\hrs_light.h" />
-    <ClInclude Include="core\material\hrs_material_editor.h" />
-    <ClInclude Include="core\scene\hrs_scene.h" />
-    <ClInclude Include="core\inputs\hrs_input.h" />
-    <ClInclude Include="core\config\hrs_garbage_collector.h" />
-    <ClInclude Include="core\ui\hrs_ui.h" />
-    <ClInclude Include="core\ui\hrs_inspector.h" />
-    <ClInclude Include="core\ui\hrs_console.h" />
-    <ClInclude Include="core\ui\hrs_viewport.h" />
-    <ClInclude Include="core\ui\hrs_outliner.h" />
-    <ClInclude Include="core\scene\hrs_grid.h" />
-    <ClInclude Include="core\camera\hrs_opengl_camera.h" />
-    <ClInclude Include="core\scene\hrs_scene_manager.h" />
-    <ClInclude Include="core\scene\hrs_importer_manager.h" />
-    <ClInclude Include="core\ui\hrs_about.h" />
-    <ClInclude Include="core\ui\hrs_statistics.h" />
-    <ClInclude Include="core\ui\hrs_help.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="core\scene\dependencies\light\niederwihl_forest_4k.exr" />
-    <None Include="core\shaders\light.frag" />
-    <None Include="core\shaders\light.vert" />
-    <None Include="core\shaders\shader.frag" />
-    <None Include="core\shaders\shader.vert" />
+    <CopyFileToFolders Include="core\scene\dependencies\light\horus_hdri_main.exr">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\scene\dependencies\light</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\scene\dependencies\light\niederwihl_forest_4k.exr">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\scene\dependencies\light</DestinationFolders>
+    </CopyFileToFolders>
+    <None Include="hipbin\.gitattributes" />
+    <CopyFileToFolders Include="hipbin\AllPreCompilations.json">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourShaderKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuContourShaderKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_4107363481.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleAovKernel_4107363481.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernelFirstHit_966154944.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernelFirstHit_966154944.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_4107363481.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleKernel_4107363481.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_4107363481.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleLightSampleKernel_4107363481.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_2736109841.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_2736109841.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3148400776.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3148400776.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3966506240.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_3966506240.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_4107363481.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\IntegratorGpuSimpleShaderKernel_4107363481.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1595974256.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1595974256.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596105462.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596105462.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596301753.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_1596301753.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907729.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907729.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907733.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907733.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907734.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907734.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907735.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\LpeRegex_936907735.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\OocCacheKernel_3197242002.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\OocCacheKernel_3197242002.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\PrefixScanKernels_966154944.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\PrefixScanKernels_966154944.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_2182295485.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_2997749.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_3063894374.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_3063894374.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_883016494.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastCurveKernel_883016494.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_2266755755.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_2692711584.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_574691048.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastHWIKernels_86335715.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_2598100095.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_2598100095.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_3145764742.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_3145764742.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_417680951.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_417680951.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_968760782.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOoc1Kernels_968760782.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_1017944282.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_1017944282.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_3197242002.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastOocKernels_3197242002.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_1065433148.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_1065433148.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2184328579.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2184328579.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2266755755.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2266755755.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2598100095.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2598100095.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2683444055.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2683444055.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2692711584.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2692711584.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2773894024.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_2773894024.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3096866140.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3096866140.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3183454836.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_3183454836.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_417680951.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_417680951.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_499943711.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_499943711.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_574691048.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_574691048.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_661180864.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_661180864.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_829387.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_829387.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_86335715.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_86335715.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_984153876.cudabin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hipbin\RayCastSimpleKernels_984153876.hipbin">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)hipbin</DestinationFolders>
+    </CopyFileToFolders>
+    <None Include="hipbin\README.md" />
+    <CopyFileToFolders Include="core\shaders\framebuffer.frag">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\framebuffer.vert">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\Grid.frag">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\Grid.vert">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\light.frag">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\light.vert">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\shader.frag">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="core\shaders\shader.vert">
+      <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)core\shaders\</DestinationFolders>
+    </CopyFileToFolders>
+    <None Include="external\Assimp\include\assimp\color4.inl" />
+    <None Include="external\Assimp\include\assimp\material.inl" />
+    <None Include="external\Assimp\include\assimp\matrix3x3.inl" />
+    <None Include="external\Assimp\include\assimp\matrix4x4.inl" />
+    <None Include="external\Assimp\include\assimp\quaternion.inl" />
+    <None Include="external\Assimp\include\assimp\SmoothingGroups.inl" />
+    <None Include="external\Assimp\include\assimp\vector2.inl" />
+    <None Include="external\Assimp\include\assimp\vector3.inl" />
     <None Include="external\GLFW\LIB-VC2022\glfw3.dll" />
     <None Include="external\glm\DETAIL\func_common.inl" />
     <None Include="external\glm\DETAIL\func_common_simd.inl" />
@@ -806,6 +1376,7 @@
     <None Include="external\glm\GTX\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="external\Assimp\lib\assimp-vc143-mtd.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3dll.lib" />
     <Library Include="external\glfw\lib-vc2022\glfw3_mt.lib" />
@@ -827,6 +1398,65 @@
     <ProjectReference Include="..\HorusRender\HorusRender.vcxproj">
       <Project>{72389478-96da-4fc2-a1c6-0854a1a5f332}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Black.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-BlackItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Bold.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-BoldItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraBold.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraBoldItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraLight.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ExtraLightItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Italic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Light.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-LightItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Medium.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-MediumItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Regular.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBold.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-SemiBoldItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-Thin.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\Montserrat\Montserrat-ThinItalic.ttf">
+      <FileType>Document</FileType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\Icons\Horus_Logo_100x20.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,9 +1,9 @@
-#version 460
+#version 460 core
 
-in vec4 colorOut;
-out vec4 fragColor;
+out vec4 FragColor;
+uniform vec4 GridColor = vec4(0.2, 0.2, 0.2, 1.0);
 
 void main()
 {
-	fragColor = colorOut;
+	FragColor = GridColor;
 }

@@ -26,7 +26,7 @@ bool HorusWindow::InitWindow(int width, int height, const std::string& title)
 	WindowHeight = height;
 	WindowTitle = title;
 
-	Engine.InitContexts(WindowWidth, WindowHeight, this);
+	//Engine.InitContexts(WindowWidth, WindowHeight, this);
 
 	ImGui::InsertNotification({ ImGuiToastType_Info, 3000, "Window initialized sucessfully !" });
 	spdlog::info("Window initialized.");
@@ -124,7 +124,7 @@ void HorusWindow::ProcessInput()
 				ImgSize.y = ImgSize.x / ImgAspectRatio;
 			}
 
-			Radeon.ResizeRender(ImgSize.x, ImgSize.y);
+			Radeon.ResizeRenderWindow(ImgSize.x, ImgSize.y);
 		}
 	}
 }

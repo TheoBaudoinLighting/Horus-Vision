@@ -20,14 +20,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\hrs_ebo.h" />
+    <ClInclude Include="core\hrs_grid.h" />
     <ClInclude Include="core\hrs_opengl.h" />
-    <ClInclude Include="core\hrs_opengl_manager.h" />
+    <ClInclude Include="core\hrs_opengl_resource.h" />
+    <ClInclude Include="core\hrs_opengl_shape.h" />
+    <ClInclude Include="core\hrs_opengl_texture.h" />
     <ClInclude Include="core\hrs_vao.h" />
     <ClInclude Include="core\hrs_vbo.h" />
+    <ClInclude Include="core\hrs_opengl_viewport_object.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\hrs_opengl.cpp" />
-    <ClCompile Include="core\hrs_opengl_manager.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -86,10 +89,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)out\$(Configuration)\HorusOpenGL</IntDir>
+    <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\HorusVision\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusOpenGL\</IntDir>
+    <TargetName>HorusOpenGL_d</TargetName>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)out\HorusVision\$(Configuration)\HorusVision\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Configuration)\HorusOpenGL\</IntDir>
     <TargetName>HorusOpenGL</TargetName>
-    <LibraryPath>C:\opencv\build\x64\vc16\lib;C:\opencv\build\x64\vc16\bin;$(ProjectDir)external\glfw\include\lib-vc2022;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,10 +133,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CONSOLE;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CONSOLE;_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;C:\opencv\build\include;$(TBB_DIR);$(ASSIMP_DIR);$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;$(SolutionDir)Horus Vision\external\Assimp\;$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusOpenGL\objects;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;$(SolutionDir)HorusOpenGL\grid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,9 +149,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;WIN32;_WINDOWS;RPR_API_USE_HEADER_V2;USE_GLFW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Horus Vision\external\RadeonProRender\inc;$(SolutionDir)Horus Vision\external\RadeonProRender\common;$(SolutionDir)Horus Vision\external;$(SolutionDir)Horus Vision\external\glad\include;$(SolutionDir)Horus Vision\external\imgui;$(SolutionDir)Horus Vision\external\imgui\backends;$(SolutionDir)Horus Vision\external\glfw;$(SolutionDir)Horus Vision\external\glfw\include;$(SolutionDir)Horus Vision\external\Assimp\include;$(SolutionDir)Horus Vision\core;$(SolutionDir)Horus Vision\core\config;$(SolutionDir)Horus Vision\core\implementations;$(SolutionDir)Horus Vision\core\shaders;$(SolutionDir)Horus Vision\core\window;$(SolutionDir)Horus Vision\external\spdlog\include;$(SolutionDir)Horus Vision\core\camera;$(SolutionDir)Horus Vision\core\light;$(SolutionDir)Horus Vision\core\material;$(SolutionDir)Horus Vision\core\mesh;$(SolutionDir)Horus Vision\core\texture;$(SolutionDir)Horus Vision\external\ImGuizmo;$(SolutionDir)Horus Vision\external\imnodes;$(SolutionDir)Horus Vision\core\scene;$(SolutionDir)Horus Vision\external\nlohmann;$(SolutionDir)Horus Vision\external\stbi;$(SolutionDir)Horus Vision\core\objects;$(SolutionDir)Horus Vision\core\inputs;$(SolutionDir)Horus Vision\core\implementations\opengl;$(SolutionDir)Horus Vision\core\implementations\radeon;$(SolutionDir)Horus Vision\core\implementations\imgui;$(SolutionDir)Horus Vision\core\ui;$(SolutionDir)Horus Vision\external\HorusEngine\bin;$(SolutionDir)Horus Vision\external\RadeonProRender;$(SolutionDir)Horus Vision\external\RadeonProRender\rprTools;$(SolutionDir)Horus Vision\external\RadeonProRender\libWin64;$(SolutionDir)HorusOpenGL;$(SolutionDir)HorusOpenGL\core;$(SolutionDir)HorusOpenGL\objects;$(SolutionDir)HorusEngine;$(SolutionDir)HorusEngine\core;$(SolutionDir)HorusImGui;$(SolutionDir)HorusImGui\core;$(SolutionDir)HorusRadeon;$(SolutionDir)HorusRadeon\core;$(SolutionDir)HorusRender;$(SolutionDir)HorusRender\core;$(SolutionDir)Horus Vision\external\OpenColorIO;$(SolutionDir)Horus Vision\external\OpenEXR;$(SolutionDir)Horus Vision\external\OpenImageIO;$(SolutionDir)Horus Vision\external\RadeonImageFilter\include;$(SolutionDir)HorusOpenGL\grid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

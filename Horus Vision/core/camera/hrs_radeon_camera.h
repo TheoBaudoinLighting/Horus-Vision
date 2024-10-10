@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -57,6 +56,7 @@ public:
 	void Destroy();
 
 	void VariableCheckers(std::string Name);
+	void PrintCameraInfo();
 
 	void Bind();
 	void Unbind();
@@ -90,13 +90,13 @@ public:
 	glm::vec3 GetDirection();
 	glm::vec3 GetPitchAxis();
 	glm::vec3 GetHeadingAxis();
-	glm::vec3 GetCameraScale();
+	glm::vec3 GetScale();
 
 	float GetFov();
 	float GetNear();
 	float GetFar();
 	float GetFStop();
-	float GetAspect();
+	float GetAspectRatio();
 	float GetAperture();
 	float GetFocusPlane();
 
@@ -111,7 +111,9 @@ public:
 	void SetFov(const float Fov);
 	void SetViewport(int loc_x, int loc_y, int width, int height);
 	void SetClipping(float NearClipDistance, float FarClipDistance);
-	void SetAspect(float Aspect);
+	void SetNear(float NearClipDistance);
+	void SetFar(float FarClipDistance);
+	void SetAspectRatio(float Aspect);
 	void SetCameraScale(glm::vec3 Scale);
 	void SetCameraRotation(float pitch, float yaw, float roll);
 	void SetFocusPlane(float FocusDistance);
@@ -152,6 +154,7 @@ private:
 	glm::vec3 m_Right_ = glm::vec3(0, 0, 0);
 	glm::vec3 m_PitchAxis_ = glm::vec3(0, 0, 0);
 	glm::vec3 m_HeadingAxis_ = glm::vec3(0, 0, 0);
+	glm::quat m_CameraOrientation_ = glm::quat(1, 0, 0, 0);
 
 	rpr_camera m_Camera_ = nullptr;
 };

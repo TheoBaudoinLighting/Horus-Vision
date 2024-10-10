@@ -1,8 +1,8 @@
 #pragma once
-#pragma warning(disable : 4996)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4267)
-#pragma warning(disable : 4005)
+
+// Disable specific warnings
+#pragma warning(push)
+#pragma warning(disable : 4996 4244 4267 4005)
 
 // Project includes
 #include "hrs_context.h" // glfw3.h
@@ -10,10 +10,97 @@
 #include <future>
 #include <ProRenderGLTF.h>
 
+#include <atomic>
+#include <thread>
+#include <vector>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <functional>
+
 // External includes
 #include "common.h"
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
+
+class ThreadPool
+	{
+	public:
+		ThreadPool(size_t numThreads)
+		{
+			for (size_t i = 0; i < numThreads; ++i)
+			{
+				m_Threads.emplace_back([this]
+				{
+					while (true)
+					{
+						std::function<void()> task;
+						{
+							std::unique_lock<std::mutex> lock(m_QueueMutex);
+							m_Condition.wait(lock, [this] { return !m_Tasks.empty() || m_Stopping; });
+							if (m_Stopping && m_Tasks.empty())
+								return;
+							task = std::move(m_Tasks.front());
+							m_Tasks.pop();
+						}
+						task();
+					}
+				});
+			}
+		}
+
+		~ThreadPool()
+		{
+			{
+				std::unique_lock<std::mutex> lock(m_QueueMutex);
+				m_Stopping = true;
+			}
+			m_Condition.notify_all();
+			for (auto& thread : m_Threads)
+				thread.join();
+		}
+
+		template <class F, class... Args>
+		auto Enqueue(F&& f, Args&&... args)
+		{
+			using ReturnType = std::invoke_result_t<F, Args...>;
+			auto task = std::make_shared<std::packaged_task<ReturnType()>>(
+				std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+			{
+				std::unique_lock<std::mutex> lock(m_QueueMutex);
+				if (m_Stopping)
+					throw std::runtime_error("Enqueue on stopped ThreadPool");
+				m_Tasks.emplace([task]() { (*task)(); });
+			}
+			m_Condition.notify_one();
+			return task->get_future();
+		}
+
+		template <class F, class... Args>
+		auto enqueue(F&& f, Args&&... args)
+		{
+			return Enqueue(std::forward<F>(f), std::forward<Args>(args)...);
+		}
+
+		template <class F, class... Args>
+		auto push(F&& f, Args&&... args)
+		{
+			return Enqueue(std::forward<F>(f), std::forward<Args>(args)...);
+		}
+
+		void wait_for_tasks()
+		{
+			std::unique_lock<std::mutex> lock(m_QueueMutex);
+			m_Condition.wait(lock, [this] { return m_Tasks.empty(); });
+		}
+
+	private:
+		std::vector<std::thread> m_Threads;
+		std::queue<std::function<void()>> m_Tasks;
+		std::mutex m_QueueMutex;
+		std::condition_variable m_Condition;
+		bool m_Stopping = false;
+	};
 
 class HorusRadeon : public HorusContext
 {
@@ -35,7 +122,7 @@ public:
 	HorusRadeon(const HorusRadeon&) = delete;
 	void operator=(const HorusRadeon&) = delete;
 
-	void CreateFrameBuffers(int width, int height);
+	bool CreateFrameBuffers(int width, int height);
 	bool Init(int width, int height, HorusWindowConfig* window) override;
 
 	void InitRender() override { }
@@ -43,7 +130,7 @@ public:
 	void QuitRender() override;
 
 	bool InitGraphics();
-	void ResizeRender(int width, int height);
+	void ResizeRenderWindow(int width, int height);
 
 	void RenderEngine();
 	void RenderClassic();
@@ -63,8 +150,8 @@ public:
 
 	void ResizeFrameBufferData(int Width, int Height);
 	void AsyncFramebufferUpdate(rpr_context Context, rpr_framebuffer Framebuffer);
-	glm::vec2 SetWindowSize(int Width, int Height);
-	glm::vec2 GetWindowSize() const { return glm::vec2(m_WindowWidth_, m_WindowHeight_); }
+	glm::vec2 SetRenderWindowSize(int Width, int Height);
+	glm::vec2 GetWindowSize() const { return glm::vec2(m_RenderWindowWidth_, m_RenderWindowHeight_); }
 
 	rpr_context GetContext() { return m_ContextA_; }
 	rpr_material_system GetMatsys() { return m_Matsys_; }
@@ -73,7 +160,11 @@ public:
 
 	rpr_framebuffer GetClassicRenderFrameBuffer() { return m_FrameBufferA_; }
 	rpr_framebuffer GetAdaptiveRenderFrameBuffer() { return m_FrameBufferAdaptive_; }
-	rpr_framebuffer GetFrameBufferResolved() { return m_FrameBufferB_; }
+	rpr_framebuffer GetFrameBufferResolved() { return m_FrameBufferDest_; }
+	int GetFramebufferDestSizeX() { return m_RenderWindowWidth_; }
+	int GetFramebufferDestSizeY() { return m_RenderWindowHeight_; }
+
+	const void* GetFbData() { return m_FbData_ ? m_FbData_.get() : nullptr; }
 
 	void SetSampleCount(int SampleCount) { m_SampleCount_ = SampleCount; }
 	void SetActivePixelRemains(unsigned int ActivePixelRemains) { m_ActivePixelRemains_ = ActivePixelRemains; }
@@ -84,7 +175,7 @@ public:
 	bool GetLockingRender() { return m_LockingRender_; }
 
 	bool SetIsDirty(bool IsDirty) { m_IsDirty_ = IsDirty; return m_IsDirty_; }
-	void SetLockingRender(bool LockingRender) { m_LockingRender_ = LockingRender; }
+	void SetLockingRender(bool LockingRender);
 
 	int GetSampleCount() { return m_SampleCount_; }
 	int GetMinSamples() { return m_MinSamples_; }
@@ -97,12 +188,13 @@ private:
 
 	HorusRadeon() : m_WindowConfig_(nullptr), m_IsDirty_(false), m_Program_(0)
 	{
+		m_ThreadPool = std::make_unique<ThreadPool>(std::thread::hardware_concurrency());
 	}
 
 	// Render stuff
 
-	int m_WindowWidth_ = 800;
-	int m_WindowHeight_ = 600;
+	int m_RenderWindowWidth_ = 800;
+	int m_RenderWindowHeight_ = 600;
 	HorusWindowConfig* m_WindowConfig_;
 
 	// Classic render
@@ -117,6 +209,8 @@ private:
 	bool m_IsLockPreviewEnabled_ = false;
 	bool m_ChangeFB_ = true;
 
+	std::atomic<int> m_ActiveThreadsCount_ = 0;
+	std::condition_variable m_ConditionVariable_;
 
 	// Adaptive render
 	int m_MinAdaptiveTileSize_ = 8;
@@ -126,8 +220,8 @@ private:
 	unsigned int m_ActivePixelRemains_ = 0;
 
 	// General render stuff
-	int m_RenderTargetSizeX_ = m_WindowWidth_;
-	int m_RenderTargetSizeY_ = m_WindowHeight_;
+	int m_RenderTargetSizeX_ = m_RenderWindowWidth_;
+	int m_RenderTargetSizeY_ = m_RenderWindowHeight_;
 	const int m_MaxIterationTiledRendering_ = 128;
 
 	float m_SensorY_ = 36.0f;
@@ -148,7 +242,7 @@ private:
 
 	bool m_IsDirty_;
 	bool m_IsAdaptativeSampling_ = false;
-	bool m_LockingRender_ = false;
+	bool m_LockingRender_ = true;
 
 	// Radeon stuff
 	GLuint m_Program_;
@@ -177,4 +271,8 @@ private:
 
 	std::shared_ptr<float[]> m_FbData_ = nullptr;
 	mutable size_t m_CurrentFramebufferSize_;
+
+	std::unique_ptr<ThreadPool> m_ThreadPool;
+
+	//std::unique_ptr<ThreadPool> m_ThreadPool;
 };

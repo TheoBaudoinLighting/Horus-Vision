@@ -2,35 +2,24 @@
 
 #include <glad/glad.h>
 
+#include <vector>
+
 class HorusEBO
 {
 public:
 
 	GLuint ID;
 
-	HorusEBO() : ID(0) {}
-
-	void Init(GLuint* indices, GLuint size)
+	HorusEBO(std::vector<GLuint> Indices)
 	{
 		glGenBuffers(1, &ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(GLuint), Indices.data(), GL_STATIC_DRAW);
 	}
 
-	void Bind()
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
-	}
-
-	void Unbind()
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	}
-
-	void Delete()
-	{
-		glDeleteBuffers(1, &ID);
-	}
+	void Bind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID); }
+	void Unbind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+	void Delete() { glDeleteBuffers(1, &ID); }
 };
 
 

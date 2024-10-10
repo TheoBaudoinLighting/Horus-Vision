@@ -4,17 +4,38 @@
 #include <spdlog/spdlog.h>
 #include <hrs_console.h>
 
-#include <stdio.h>
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include <oleidl.h>
+
+#include <cstdio>
 #include <cassert>
 #include <chrono>
 
-#include "hrs_grid.h"
 #include "hrs_object_manager.h"
 #include "hrs_timer.h"
 
 // Horus libraries
+#include "hrs_dragdrop.h"
 #include "hrs_imgui_core.h"
+#include "hrs_om_camera.h"
+#include "hrs_om_group_shapes.h"
 #include "imgui_impl_glfw.h"
+
+// Temporary
+float RectangleVertices[] =
+{
+	// Coords    // texCoords
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f,
+
+	 1.0f,  1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f
+};
 
 void GLAPIENTRY MessageCallback(GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar* message, [[maybe_unused]] const void* userParam)
 {
@@ -49,31 +70,37 @@ void WindowCloseCallback(GLFWwindow* window)
 	HorusInput::GetInstance().OnClose();
 }
 
+// TODO : Move to a better place and make it more generic
+static const char* NewExternalData = nullptr;
+static size_t NewExternalDataLength = 0;
+#define EXTERNAL_PAYLOAD_TYPE "IMAGE"
+
+void DropCallback(GLFWwindow* window, int count, const char** paths)
+{
+	if (count > 0)
+	{
+		NewExternalData = strdup(paths[0]);
+		NewExternalDataLength = strlen(NewExternalData) + 1;
+	}
+}
+
 bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 {
 	[[maybe_unused]] HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
 	HorusConsole& Console = HorusConsole::GetInstance();
 	HorusTimerManager& Timer = HorusTimerManager::GetInstance();
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusOmCamera& CameraManager = HorusOmCamera::GetInstance();
 
 	Timer.StartTimer("OpenGL");
 
 	m_Logger_.Init();
-
-	// Test print message from library
-	/*HorusOpenGLCore::GetInstance().PrintMessage();
-	HorusImGuiCore::GetInstance().PrintMessage();
-	HorusRadeonCore::GetInstance().PrintMessage();
-	HorusEngineCore::GetInstance().PrintMessage();
-	HorusRenderCore::GetInstance().PrintMessage();*/
-
 	spdlog::info("Horus Engine initialization");
 	Console.AddLog(" [info] Horus Engine initialization");
 
-	__super::Init(width, height, window); // Call base class init
-
-	m_WindowWidth_ = width;
-	m_WindowHeight_ = height;
-
+	__super::Init(width, height, window);
+	m_ViewportWindowWidth_ = width;
+	m_ViewportWindowHeight_ = height;
 
 	if (!glfwInit())
 	{
@@ -81,17 +108,17 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 		return false;
 	}
 
-	/*GLFWmonitor* PrimaryMonitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* Mode = glfwGetVideoMode(PrimaryMonitor);*/
-
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	if (glVertexAttrib2sv == NULL && glVertexAttrib2svARB != NULL) glVertexAttrib2sv = (PFNGLVERTEXATTRIB2SVPROC)glVertexAttrib2svARB;
+	if (glVertexAttrib2sv == NULL && glVertexAttrib2svNV != NULL) glVertexAttrib2sv = (PFNGLVERTEXATTRIB2SVPROC)glVertexAttrib2svNV;
+
 	glfwSetErrorCallback([]([[maybe_unused]] int Error, const char* Description) { spdlog::error("GLFW error: {}", Description); });
 
-	m_HorusWindow_ = glfwCreateWindow(m_WindowWidth_, m_WindowHeight_, window->WindowTitle.c_str(), nullptr, nullptr);
+	m_HorusWindow_ = glfwCreateWindow(m_ViewportWindowWidth_, m_ViewportWindowHeight_, window->WindowTitle.c_str(), nullptr, nullptr);
 
 	if (!m_HorusWindow_)
 	{
@@ -113,188 +140,189 @@ bool HorusOpenGL::Init(int width, int height, HorusWindowConfig* window)
 	glfwSetCursorPosCallback(m_HorusWindow_, CursorPositionCallback);
 	glfwSetWindowSizeCallback(m_HorusWindow_, WindowResizeCallback);
 	glfwSetWindowCloseCallback(m_HorusWindow_, WindowCloseCallback);
+	glfwSetDropCallback(m_HorusWindow_, DropCallback);
 
-
+	// Enable V-Sync
 	glfwSwapInterval(1);
 
 	gladLoadGL();
-
 	if (!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
 	{
 		spdlog::error("Failed to initialize GLAD");
 		return false;
 	}
 
-	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
+	glViewport(0, 0, m_ViewportWindowWidth_, m_ViewportWindowHeight_);
 
-	/*m_ProgramId_ = ShaderManager.GetProgram("core/shaders/shader");
-	GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");*/
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	m_DefaultShader_.CreateShader("core/shaders/shader");
 	m_LightShader_.CreateShader("core/shaders/light");
+	m_GridShader_.CreateShader("core/shaders/Grid");
 
-	InitBuffers(m_WindowWidth_, m_WindowHeight_);
+	InitViewportRenderTextures(m_ViewportWindowWidth_, m_ViewportWindowHeight_);
 
+	std::vector<VertexData> GridVertices;
+	std::vector<GLuint> GridIndices;
+	glm::vec4 GridColor = glm::vec4(0.25f, 0.25f, 0.25f, 1.0f);
+	glm::mat4 GridModel = glm::mat4(1.0f);
+	GridModel = glm::translate(GridModel, glm::vec3(0.0f, 0.0f, 0.0f));
+
+	ObjectManager.CreateGrid(30.f, 30.0f, 10.0f, "DefaultGrid");
+
+	m_GridShader_.Use();
+	glUniformMatrix4fv(glGetUniformLocation(m_GridShader_.GetProgram(), "Model"), 1, GL_FALSE, &GridModel[0][0]);
+	glUniform4f(glGetUniformLocation(m_GridShader_.GetProgram(), "GridColor"), GridColor.x, GridColor.y, GridColor.z, GridColor.w);
+
+
+	// Print OpenGL version and renderer
 	spdlog::info("OpenGL version: {}.{}", GLVersion.major, GLVersion.minor);
 	spdlog::info("OpenGL initialized successfully.");
 
 	Console.AddLog(" [info] OpenGL initialized successfully.");
 	Console.AddLog(" [info] OpenGL version: %d.%d", GLVersion.major, GLVersion.minor);
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	/*glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);*/
-
 	auto TimerEnd = Timer.StopTimer("OpenGL");
 	spdlog::info("OpenGL initialization took {} ms", TimerEnd);
 
 	return true;
 }
-
-void HorusOpenGL::InitBuffers(int Width, int Height)
+bool HorusOpenGL::InitViewportRenderTextures(int Width, int Height)
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
-	HorusGrid& Grid = HorusGrid::GetInstance();
+    m_ViewportWindowWidth_ = Width;
+    m_ViewportWindowHeight_ = Height;
 
-	m_WindowWidth_ = Width;
-	m_WindowHeight_ = Height;
+    // Texture specially for the Radeon View, to be able to render the image
+    glGenTextures(1, &m_RadeonTextureBufferId_);
+    glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBufferId_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_ViewportWindowWidth_, m_ViewportWindowHeight_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-	//glEnable(GL_DEPTH_TEST);
+    // Create and init framebuffer and texture for OpenGL viewport
+    glGenFramebuffers(1, &m_FramebufferObject_);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
 
-	/*OpenGLManager.CreateVAO(0);
-	OpenGLManager.BindVAO(0);
+    glGenTextures(1, &m_OpenGlTextureBufferId_);
+    glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
 
-	OpenGLManager.CreateVBO(0, m_QuadVertexData_, sizeof(m_QuadVertexData_));
-	OpenGLManager.CreateEBO(0, m_QuadIndexData_, sizeof(m_QuadIndexData_));
+    glGenRenderbuffers(1, &m_RenderbufferObject_);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferObject_);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Width, Height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RenderbufferObject_);
 
-	OpenGLManager.SetVaoAttrib(0, 0, 3, 5 * sizeof(GLfloat), 0);
-	OpenGLManager.SetVaoAttrib(0, 1, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
-	OpenGLManager.SetVaoAttrib(0, 2, 2, 5 * sizeof(GLfloat), 3 * sizeof(GLfloat));
+    GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
+    {
+        switch (framebufferStatus)
+        {
+            case GL_FRAMEBUFFER_UNDEFINED:
+                spdlog::error("Framebuffer is undefined!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                spdlog::error("Framebuffer incomplete attachment!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                spdlog::error("Framebuffer missing attachment!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                spdlog::error("Framebuffer incomplete draw buffer!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                spdlog::error("Framebuffer incomplete read buffer!");
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                spdlog::error("Framebuffer unsupported!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+                spdlog::error("Framebuffer incomplete multisample!");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+                spdlog::error("Framebuffer incomplete layer targets!");
+                break;
+            default:
+                spdlog::error("Unknown framebuffer error!");
+                break;
+        }
+        return false;
+    }
 
-	OpenGLManager.UnbindVAO(0);
-	OpenGLManager.UnbindVBO(0);
-	OpenGLManager.UnbindEBO(0);*/
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-	// Texture specially for the Radeon View, to be able to render the image
-	glGenTextures(1, &m_RadeonTextureBufferId_);
-	glBindTexture(GL_TEXTURE_2D, m_RadeonTextureBufferId_);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_WindowWidth_, m_WindowHeight_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
+    // Vérification des erreurs OpenGL
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        spdlog::error("OpenGL error during InitViewportRenderTextures: {}", error);
+        return false;
+    }
 
-	glGenTextures(1, &m_OpenGlTextureBufferId_);
-	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // GL_NEAREST = no smoothing
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // GL_CLAMP_TO_EDGE = no wrapping
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_WindowWidth_, m_WindowHeight_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	Grid.Grid();
+    return true;
 }
 
 void HorusOpenGL::InitRender()
 {
-	//HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
+	// Handle external payloads
+	const ImGuiPayload* Payload = ImGui::GetDragDropPayload();
+	bool UserIsDraggingExternalData = Payload != nullptr && Payload->IsDataType(EXTERNAL_PAYLOAD_TYPE);
 
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+	if ((UserIsDraggingExternalData || NewExternalData != nullptr) && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))
+	{
+		if (NewExternalData)
+		{
+			ImGui::SetDragDropPayload(EXTERNAL_PAYLOAD_TYPE, NewExternalData, NewExternalDataLength, ImGuiCond_Once);
+			free((void*)NewExternalData);
+			NewExternalData = nullptr;
+			NewExternalDataLength = 0;
+		}
 
-	//glClearColor(0.298f, 0.384f, 0.419f, 1.0f); // green - blue pastel
-	////glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // sky blue
-
-	//glEnable(GL_BLEND);
-	//glEnable(GL_CULL_FACE);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	/*OpenGLManager.BindVAO(0);
-	OpenGLManager.BindVBO(0);*/
-
-	//auto [texture_location, position_location, texcoord_location] = GetShaderVariables(m_ProgramId_, "g_Texture", "inPosition", "inTexcoord");
-
-	//glUseProgram(m_ProgramId_);
-
-	/*glUniform1i(m_TextureLocation_, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
-
-	glVertexAttribPointer(m_PositionLocation_, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
-	glVertexAttribPointer(m_TexcoordLocation_, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-
-	glEnableVertexAttribArray(m_PositionLocation_);
-	glEnableVertexAttribArray(m_TexcoordLocation_);
-
-	glDrawElements(GL_TRIANGLES, sizeof(m_QuadIndexData_) / sizeof(int), GL_UNSIGNED_INT, 0);
-
-	glDisableVertexAttribArray(m_PositionLocation_);
-	glDisableVertexAttribArray(m_TexcoordLocation_);
-
-	OpenGLManager.UnbindVAO(0);
-	OpenGLManager.UnbindVBO(0);
-	glBindTexture(GL_TEXTURE_2D, 0);*/
-	/*glUseProgram(0);
-	glBindTexture(GL_TEXTURE_2D, 0);*/
-
-
-}
-
-void HorusOpenGL::Render()
-{
-	HorusGrid& Grid = HorusGrid::GetInstance();
-	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
-
-	glGenFramebuffers(1, &m_FramebufferObject_);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
-
-	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		spdlog::error("Framebuffer is not complete!");
+		ImGui::Text("Dragging file '%s'", ImGui::GetDragDropPayload()->Data);
+		ImGui::EndDragDropSource();
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
-
-	glClearColor(0.35f, 0.4f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, m_WindowWidth_, m_WindowHeight_);
-
-	// Render here
-
-	/*glm::mat4 model, view, projection;
-
-	m_DefaultShader_.Use();
-	ObjectManager.SendToShaderOpenGLCamera(ObjectManager.GetActiveOpenGLCameraId(), m_DefaultShader_);
-
-	ObjectManager.UpdateOpenGLCamera(ObjectManager.GetActiveOpenGLCameraId());
-	ObjectManager.GetOpenGLCameraMatrices(ObjectManager.GetActiveOpenGLCameraId(), projection, view, model);
-
-	glm::mat4 mvp = projection * view * model;
-
-	glLoadMatrixf(glm::value_ptr(mvp));
-
-	Grid.Render(m_DefaultShader_);*/
-
-
-
-
-
-
-
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDeleteFramebuffers(1, &m_FramebufferObject_);
+    // Vérification des erreurs OpenGL
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        spdlog::error("OpenGL error during InitRender: {}", error);
+    }
 }
+void HorusOpenGL::Render()
+{
+	HorusObjectManager& ObjectManager = HorusObjectManager::GetInstance();
+	HorusGroupShapeManager& GroupShapeManager = HorusGroupShapeManager::GetInstance();
+	HorusOmCamera& CameraManager = HorusOmCamera::GetInstance();
 
+	BindOpenGLViewportFrameBuffer();
+	m_DefaultShader_.Use();
+
+	const auto BackgroundColorNormalised = glm::vec4(92.f, 92.f, 92.f, 255.f) / 255.f;
+	glClearColor(BackgroundColorNormalised.x, BackgroundColorNormalised.y, BackgroundColorNormalised.z, BackgroundColorNormalised.w);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Draw here
+	// Primary viewport object 
+	ObjectManager.DrawGrid(ObjectManager.GetActiveGridId(), m_GridShader_.GetProgram(), CameraManager.GetOpenGLCamera(CameraManager.GetActiveOpenGLCameraID()));
+
+	// Secondary viewport object
+	// Sub viewport object
+
+	GroupShapeManager.DrawAllGroupShapeInOpenGl(m_DefaultShader_.GetProgram(), CameraManager.GetOpenGLCamera(CameraManager.GetActiveOpenGLCameraID()));
+
+	glUseProgram(0);
+	UnbindOpenGLViewportFrameBuffer();
+}
 void HorusOpenGL::PostRender()
 {
 	//ErrorManager();
@@ -304,13 +332,13 @@ void HorusOpenGL::PostRender()
 
 void HorusOpenGL::QuitRender()
 {
-	HorusOpenGLManager& OpenGLManager = HorusOpenGLManager::GetInstance();
-
-	spdlog::info("Unloading OpenGL..");
-
-	OpenGLManager.DeleteAllVAOs();
-	OpenGLManager.DeleteAllVBOs();
-	OpenGLManager.DeleteAllEBOs();
+	glDeleteFramebuffers(1, &m_FramebufferObject_);
+	glDeleteRenderbuffers(1, &m_RenderbufferObject_);
+	glDeleteTextures(1, &m_OpenGlTextureBufferId_);
+	glDeleteTextures(1, &m_RadeonTextureBufferId_);
+	glDeleteProgram(m_DefaultShader_.GetProgram());
+	glDeleteProgram(m_LightShader_.GetProgram());
+	glDeleteProgram(m_GridShader_.GetProgram());
 
 	glfwDestroyWindow(m_HorusWindow_);
 	glfwTerminate();
@@ -329,6 +357,41 @@ std::tuple<GLuint, GLuint, GLuint> HorusOpenGL::GetShaderVariables(GLuint progra
 	GLuint TexcoordLocation = m_TexcoordLocation_;
 
 	return std::make_tuple(TextureLocation, PositionLocation, TexcoordLocation);
+}
+
+void HorusOpenGL::BindOpenGLViewportFrameBuffer()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferObject_);
+}
+void HorusOpenGL::UnbindOpenGLViewportFrameBuffer()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+void HorusOpenGL::ResizeOpenGLViewportFrameBuffer(int Width, int Height)
+{
+	HorusOmCamera& CameraManager = HorusOmCamera::GetInstance();
+
+	glBindTexture(GL_TEXTURE_2D, m_OpenGlTextureBufferId_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OpenGlTextureBufferId_, 0);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferObject_);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Width, Height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RenderbufferObject_);
+	glViewport(0, 0, Width, Height);
+
+	glViewport(0, 0, Width, Height);
+
+	if (Width > 0 && Height > 0)
+	{
+		float Aspect = (float)Width / (float)Height;
+		CameraManager.SetCameraAspectRatio(CameraManager.GetActiveCameraID(), Aspect);
+	}
+
+	m_ViewportWindowWidth_ = Width;
+	m_ViewportWindowHeight_ = Height;
 }
 
 void HorusOpenGL::ErrorManager()

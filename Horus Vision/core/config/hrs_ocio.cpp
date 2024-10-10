@@ -5,10 +5,10 @@
 #include "common.h"
 #include "spdlog/spdlog.h"
 
-unsigned char FloatToByte(float f)
-{
-	return static_cast<unsigned char>(RadeonProRender::clamp(static_cast<int>(f * 255.0f), (int)0, (int)255));
-}
+//unsigned char FloatToByte(float f)
+//{
+//	return static_cast<unsigned char>(RadeonProRender::clamp(static_cast<int>(f * 255.0f), (int)0, (int)255));
+//}
 
 rpr_status HorusOCIO::Init(rpr_context Context, rpr_framebuffer Framebuffer, std::shared_ptr<float[]> FramebufferData, const std::string& OcioFile,
 	const std::string& Source, const std::string& Display, const std::string& View,

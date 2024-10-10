@@ -1,5 +1,6 @@
 #include "hrs_statistics.h"
 
+#include "hrs_horus_parameters.h"
 #include "hrs_object_manager.h"
 #include "hrs_radeon.h"
 #include "imgui.h"
@@ -13,7 +14,7 @@ void HorusStatistics::Statistics(bool* p_open)
 {
 	HorusRadeon& Radeon = HorusRadeon::GetInstance();
 
-	if (!ImGui::Begin("Statistic", p_open))
+	if (!ImGui::Begin(HORUS_UI_NAME_STATISTICS.c_str(), p_open))
 	{
 		ImGui::End();
 		return;
