@@ -19,6 +19,8 @@ Horus Vision is an advanced, physically-based rendering engine powered by Radeon
 - **Lights**: Robust lighting options to create the perfect ambiance and illumination for your scenes.
 - **Console**: A console for real-time feedback and commands, aiding in efficient workflow and troubleshooting.
 - **Assimp Loader for Radeon**: Efficient object loading with support for various file formats.
+  
+![2024-10-10 22_46_52-NVIDIA GeForce Overlay DT](https://github.com/user-attachments/assets/3eaa91b3-1a23-40d1-aaae-30e2f3b2b11e)
 
 ## Upcoming Features
 
