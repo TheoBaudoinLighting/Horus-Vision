@@ -68,10 +68,7 @@ public:
 	void SetFar(float farPlane);
 	void SetAspectRatio(int Width, int Height);
 	void SetAspectRatio(float AspectRatio);
-<<<<<<< HEAD
 	void SetViewMatrix(const glm::mat4& viewMatrix);
-=======
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 
 private:
 

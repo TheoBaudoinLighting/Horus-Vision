@@ -27,12 +27,6 @@
     <ClInclude Include="core\hrs_vbo.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-<<<<<<< HEAD
-=======
-    <ClInclude Include="core\hrs_grid.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
     <ClInclude Include="core\hrs_opengl_resource.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -45,12 +39,9 @@
     <ClInclude Include="core\hrs_opengl_shape.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-<<<<<<< HEAD
     <ClInclude Include="core\hrs_grid.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-=======
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\hrs_opengl.cpp">

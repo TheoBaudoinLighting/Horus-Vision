@@ -9,10 +9,6 @@
 
 // Camera management ------------------------------------------------------------------------------
 
-<<<<<<< HEAD
-=======
-
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 void HorusObjectManager::SetBackgroundImage(const std::string& path)
 {
 	m_BackgroundMaterial_.SetBackgroundImage(path);
@@ -60,18 +56,12 @@ int HorusObjectManager::GetActiveGridId()
 
 void HorusObjectManager::DrawGrid(int id, GLuint ProgramID, HorusOpenGLCamera& Camera)
 {
-<<<<<<< HEAD
     if (m_Grids_.find(id) != m_Grids_.end()) {
         m_Grids_[id].Draw(ProgramID, Camera);
     } else {
         spdlog::error("Grid with id {} does not exist.", id);
     }
 }
-=======
-	m_Grids_[id].Draw(ProgramID, Camera);
-}
-
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 // Group Shape management -------------------------------------------------------------------------------
 int HorusObjectManager::CreateGroupShape(const char* Path, const std::string& Name)
 {

@@ -106,15 +106,11 @@ void HorusViewportOpenGL::ViewportOpenGL(bool* p_open)
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ProjectionMatrix = Camera.GetProjectionMatrix();
 
-<<<<<<< HEAD
 		// Update the view matrix after manipulation
 		ImGuizmo::ViewManipulate(&ViewMatrix[0][0], 8, ImVec2(ViewManipulateRight - 128, ViewManipulateTop), ImVec2(128, 128), 0x10101010);
 
 		// Set the updated view matrix back to the camera
 		Camera.SetViewMatrix(ViewMatrix);
-=======
-		ImGuizmo::ViewManipulate(&ViewMatrix[0][0], 8, ImVec2(ViewManipulateRight - 128, ViewManipulateTop), ImVec2(128, 128), 0x10101010);
->>>>>>> a1ed1e70247775fc7e5838236b110539432b8a15
 	}
 
 	// Here we process the input for the viewport (need to be set between the ImGui::Begin and the ImGui::End for get the focus)
