@@ -1,5 +1,7 @@
 # Horus Vision: Physically-Based Renderer
 
+![horusvision_banner](https://github.com/user-attachments/assets/c986d1a9-b40a-4232-8c03-795bc475f9cc)
+
 ## Introduction
 
 Horus Vision is an advanced, physically-based rendering engine powered by Radeon Pro Render. Designed for high-quality, realistic output, it provides a range of features to cater to diverse rendering needs.
